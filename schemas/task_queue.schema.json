@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Task Queue Schema",
+  "description": "Queue of law-grade task packets generated from spec mining",
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "generated_at",
+    "inputs",
+    "packets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Version of this task queue schema",
+      "const": "1.0"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "description": "Version of the ChatX pipeline",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "UTC ISO timestamp of generation",
+      "format": "date-time"
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["spec_path", "source_index_path", "mode", "max_packets", "seed", "input_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_path": {
+          "type": "string",
+          "description": "Path to MASTER_DESIGN_SPEC"
+        },
+        "source_index_path": {
+          "type": "string",
+          "description": "Path to SOURCE_INDEX.json"
+        },
+        "mode": {
+          "type": "string",
+          "description": "Compilation mode",
+          "enum": ["mvp", "hardening", "full"]
+        },
+        "max_packets": {
+          "type": "integer",
+          "description": "Maximum number of packets to generate",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Seed value (for reproducibility, not randomness)"
+        },
+        "input_hash": {
+          "type": "string",
+          "description": "SHA256 hash of inputs for cache invalidation",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "packets": {
+      "type": "array",
+      "description": "Task packets in priority order",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "priority",
+          "effort",
+          "risk",
+          "depends_on",
+          "allowlist",
+          "sources",
+          "goals",
+          "verification",
+          "outputs",
+          "notes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Task packet ID (e.g., TP_0001)",
+            "pattern": "^TP_[0-9]{4}$"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Kebab-case slug for filename"
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable title"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Priority (1=highest, 5=lowest)",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "effort": {
+            "type": "string",
+            "description": "Effort estimate",
+            "enum": ["S", "M", "L"]
+          },
+          "risk": {
+            "type": "string",
+            "description": "Risk level",
+            "enum": ["low", "med", "high"]
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "IDs of prerequisite task packets",
+            "items": {
+              "type": "string",
+              "pattern": "^TP_[0-9]{4}$"
+            }
+          },
+          "allowlist": {
+            "type": "array",
+            "description": "Files this packet may edit/create",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "description": "Source file citations from SOURCE_INDEX",
+            "items": {
+              "type": "object",
+              "required": ["path"],
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Repo-relative path"
+                },
+                "heading_text": {
+                  "type": "string",
+                  "description": "Optional heading context"
+                }
+              }
+            }
+          },
+          "goals": {
+            "type": "array",
+            "description": "Specific goals for this packet",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verification": {
+            "type": "array",
+            "description": "Verification commands to run",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Expected output artifacts",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes or context"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,453 @@
+#!/usr/bin/env bash
+# TaskX Unified Installer
+# Supports: GitHub Packages, Git tag/commit, Local editable install
+# Verifies installation with taskx doctor
+
+set -euo pipefail
+
+# ============================================================================
+# Configuration & Defaults
+# ============================================================================
+
+MODE="${1:-auto}"
+VERIFY_ONLY=false
+LOCKFILE="./TASKX_VERSION.lock"
+WRITE_LOCK=false
+PRINT_CONFIG=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mode)
+      MODE="$2"
+      shift 2
+      ;;
+    --verify-only)
+      VERIFY_ONLY=true
+      shift
+      ;;
+    --lockfile)
+      LOCKFILE="$2"
+      shift 2
+      ;;
+    --write-lock)
+      WRITE_LOCK=true
+      shift
+      ;;
+    --print-config)
+      PRINT_CONFIG=true
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+# Environment variable defaults
+TASKX_VERSION="${TASKX_VERSION:-}"
+TASKX_REF="${TASKX_REF:-}"
+TASKX_OWNER="${TASKX_OWNER:-}"
+TASKX_REPO="${TASKX_REPO:-}"
+TASKX_GIT_URL="${TASKX_GIT_URL:-}"
+TASKX_LOCAL_PATH="${TASKX_LOCAL_PATH:-}"
+TASKX_PKG_TOKEN="${TASKX_PKG_TOKEN:-}"
+TASKX_INDEX_URL="${TASKX_INDEX_URL:-}"
+TASKX_EXTRA_INDEX_URL="${TASKX_EXTRA_INDEX_URL:-https://pypi.org/simple}"
+TASKX_PIP="${TASKX_PIP:-python -m pip}"
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+log_info() {
+  echo "[INFO] $*"
+}
+
+log_error() {
+  echo "[ERROR] $*" >&2
+}
+
+log_warn() {
+  echo "[WARN] $*"
+}
+
+fail() {
+  log_error "$@"
+  exit 1
+}
+
+check_python() {
+  if ! command -v python &> /dev/null; then
+    fail "Python not found. Please install Python 3.8+."
+  fi
+  
+  if ! $TASKX_PIP --version &> /dev/null; then
+    fail "pip not working. Check your Python installation."
+  fi
+}
+
+# Allowed lockfile keys
+ALLOWED_LOCKFILE_KEYS=(
+  "version"
+  "ref"
+  "mode"
+  "owner"
+  "repo"
+  "git_url"
+  "index_url"
+  "extra_index_url"
+)
+
+is_valid_lockfile_key() {
+  local key="$1"
+  for allowed in "${ALLOWED_LOCKFILE_KEYS[@]}"; do
+    if [[ "$key" == "$allowed" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+validate_version() {
+  local version="$1"
+  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    fail "Invalid version format: '$version'. Must be X.Y.Z (e.g., 0.3.0)"
+  fi
+}
+
+parse_lockfile() {
+  local lockfile="$1"
+  
+  if [[ ! -f "$lockfile" ]]; then
+    log_info "Lockfile not found: $lockfile (will use env vars only)"
+    return
+  fi
+  
+  log_info "Reading lockfile: $lockfile"
+  
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # Strip leading/trailing whitespace
+    line="$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    
+    # Skip blank lines
+    [[ -z "$line" ]] && continue
+    
+    # Skip comments
+    [[ "$line" =~ ^# ]] && continue
+    
+    # Parse key = value
+    if [[ "$line" =~ ^([a-z_]+)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+      local key="${BASH_REMATCH[1]}"
+      local value="${BASH_REMATCH[2]}"
+      
+      # Trim value
+      value="$(echo "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      
+      # Validate key
+      if ! is_valid_lockfile_key "$key"; then
+        fail "Unknown key in lockfile: '$key'. Allowed keys: ${ALLOWED_LOCKFILE_KEYS[*]}"
+      fi
+      
+      # Set env vars only if not already set
+      case "$key" in
+        version)
+          validate_version "$value"
+          [[ -z "$TASKX_VERSION" ]] && TASKX_VERSION="$value" && log_info "  version = $value (from lockfile)"
+          ;;
+        ref)
+          [[ -z "$TASKX_REF" ]] && TASKX_REF="$value" && log_info "  ref = $value (from lockfile)"
+          ;;
+        mode)
+          [[ "$MODE" == "auto" ]] && MODE="$value" && log_info "  mode = $value (from lockfile)"
+          ;;
+        owner)
+          [[ -z "$TASKX_OWNER" ]] && TASKX_OWNER="$value" && log_info "  owner = $value (from lockfile)"
+          ;;
+        repo)
+          [[ -z "$TASKX_REPO" ]] && TASKX_REPO="$value" && log_info "  repo = $value (from lockfile)"
+          ;;
+        git_url)
+          [[ -z "$TASKX_GIT_URL" ]] && TASKX_GIT_URL="$value" && log_info "  git_url = $value (from lockfile)"
+          ;;
+        index_url)
+          [[ -z "$TASKX_INDEX_URL" ]] && TASKX_INDEX_URL="$value" && log_info "  index_url = $value (from lockfile)"
+          ;;
+        extra_index_url)
+          [[ "$TASKX_EXTRA_INDEX_URL" == "https://pypi.org/simple" ]] && TASKX_EXTRA_INDEX_URL="$value" && log_info "  extra_index_url = $value (from lockfile)"
+          ;;
+      esac
+    else
+      fail "Invalid lockfile syntax at line: '$line'"
+    fi
+  done < "$lockfile"
+}
+
+write_lockfile() {
+  local lockfile="$1"
+  
+  log_info "Writing lockfile: $lockfile"
+  
+  cat > "$lockfile" <<EOF
+# TaskX install pin for this repo
+# Generated by install_taskx.sh on $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+# Required:
+version = ${TASKX_VERSION:-0.0.0}
+
+# Optional:
+EOF
+
+  if [[ -n "$TASKX_REF" ]]; then
+    echo "ref = $TASKX_REF" >> "$lockfile"
+  fi
+  
+  if [[ "$MODE" != "auto" ]]; then
+    echo "mode = $MODE" >> "$lockfile"
+  fi
+  
+  if [[ -n "$TASKX_OWNER" ]]; then
+    echo "owner = $TASKX_OWNER" >> "$lockfile"
+  fi
+  
+  if [[ -n "$TASKX_REPO" ]]; then
+    echo "repo = $TASKX_REPO" >> "$lockfile"
+  fi
+  
+  if [[ -n "$TASKX_GIT_URL" ]]; then
+    echo "git_url = $TASKX_GIT_URL" >> "$lockfile"
+  fi
+  
+  if [[ -n "$TASKX_INDEX_URL" ]]; then
+    echo "index_url = $TASKX_INDEX_URL" >> "$lockfile"
+  fi
+  
+  if [[ "$TASKX_EXTRA_INDEX_URL" != "https://pypi.org/simple" ]]; then
+    echo "extra_index_url = $TASKX_EXTRA_INDEX_URL" >> "$lockfile"
+  fi
+  
+  log_info "✅ Lockfile written successfully"
+}
+
+print_config() {
+  log_info "Resolved Configuration:"
+  log_info "======================="
+  echo "MODE: $MODE"
+  echo "TASKX_VERSION: ${TASKX_VERSION:-<not set>}"
+  echo "TASKX_REF: ${TASKX_REF:-<not set>}"
+  echo "TASKX_OWNER: ${TASKX_OWNER:-<not set>}"
+  echo "TASKX_REPO: ${TASKX_REPO:-<not set>}"
+  echo "TASKX_GIT_URL: ${TASKX_GIT_URL:-<not set>}"
+  echo "TASKX_LOCAL_PATH: ${TASKX_LOCAL_PATH:-<not set>}"
+  echo "TASKX_INDEX_URL: ${TASKX_INDEX_URL:-<not set>}"
+  echo "TASKX_EXTRA_INDEX_URL: ${TASKX_EXTRA_INDEX_URL:-<not set>}"
+  echo "TASKX_PKG_TOKEN: ${TASKX_PKG_TOKEN:+***REDACTED***}"
+  echo "TASKX_PIP: $TASKX_PIP"
+  echo "LOCKFILE: $LOCKFILE"
+}
+
+# ============================================================================
+# Mode Selection
+# ============================================================================
+
+select_mode() {
+  if [[ "$MODE" != "auto" ]]; then
+    log_info "Using explicit mode: $MODE"
+    return
+  fi
+  
+  log_info "Auto-detecting install mode..."
+  
+  # Priority 1: GitHub Packages (if token present)
+  if [[ -n "$TASKX_PKG_TOKEN" ]]; then
+    MODE="packages"
+    log_info "Detected GitHub Packages mode (token present)"
+    return
+  fi
+  
+  # Priority 2: Git (if git URL or owner+repo present)
+  if [[ -n "$TASKX_GIT_URL" ]] || [[ -n "$TASKX_OWNER" && -n "$TASKX_REPO" ]]; then
+    MODE="git"
+    log_info "Detected Git mode (git URL or owner/repo present)"
+    return
+  fi
+  
+  # Priority 3: Local (if path present)
+  if [[ -n "$TASKX_LOCAL_PATH" ]]; then
+    MODE="local"
+    log_info "Detected Local mode (path present)"
+    return
+  fi
+  
+  # No mode detected
+  fail "Cannot auto-detect install mode. Please set one of:
+  - TASKX_PKG_TOKEN (for GitHub Packages)
+  - TASKX_OWNER + TASKX_REPO or TASKX_GIT_URL (for Git install)
+  - TASKX_LOCAL_PATH (for local editable install)
+  
+Or explicitly specify --mode packages|git|local"
+}
+
+# ============================================================================
+# Installation Functions
+# ============================================================================
+
+install_packages() {
+  log_info "Installing TaskX from GitHub Packages..."
+  
+  # Validate required vars
+  [[ -z "$TASKX_VERSION" ]] && fail "TASKX_VERSION required for packages mode"
+  [[ -z "$TASKX_OWNER" ]] && fail "TASKX_OWNER required for packages mode"
+  [[ -z "$TASKX_PKG_TOKEN" ]] && fail "TASKX_PKG_TOKEN required for packages mode"
+  
+  # Build index URL (authenticated)
+  if [[ -z "$TASKX_INDEX_URL" ]]; then
+    TASKX_INDEX_URL="https://pip.pkg.github.com/${TASKX_OWNER}/simple"
+  fi
+  
+  # Construct authenticated URL (DO NOT ECHO)
+  local AUTH_INDEX_URL="https://${TASKX_PKG_TOKEN}@${TASKX_INDEX_URL#https://}"
+  
+  # Log redacted URL
+  log_info "Index URL: https://***@${TASKX_INDEX_URL#https://}"
+  log_info "Extra index: $TASKX_EXTRA_INDEX_URL"
+  log_info "Installing: taskx==$TASKX_VERSION"
+  
+  # Install (errors go to stderr automatically)
+  $TASKX_PIP install \
+    --index-url "$AUTH_INDEX_URL" \
+    --extra-index-url "$TASKX_EXTRA_INDEX_URL" \
+    "taskx==$TASKX_VERSION"
+  
+  log_info "✅ Installed taskx==$TASKX_VERSION from GitHub Packages"
+}
+
+install_git() {
+  log_info "Installing TaskX from Git..."
+  
+  # Determine ref
+  local ref=""
+  if [[ -n "$TASKX_REF" ]]; then
+    ref="$TASKX_REF"
+  elif [[ -n "$TASKX_VERSION" ]]; then
+    ref="v${TASKX_VERSION}"
+  else
+    fail "Either TASKX_REF or TASKX_VERSION required for git mode"
+  fi
+  
+  # Build git URL
+  local git_url=""
+  if [[ -n "$TASKX_GIT_URL" ]]; then
+    git_url="$TASKX_GIT_URL"
+  elif [[ -n "$TASKX_OWNER" && -n "$TASKX_REPO" ]]; then
+    git_url="git+ssh://git@github.com/${TASKX_OWNER}/${TASKX_REPO}.git"
+  else
+    fail "Either TASKX_GIT_URL or (TASKX_OWNER + TASKX_REPO) required for git mode"
+  fi
+  
+  log_info "Git URL: $git_url"
+  log_info "Ref: $ref"
+  
+  # Install
+  $TASKX_PIP install "taskx @ ${git_url}@${ref}"
+  
+  log_info "✅ Installed taskx from ${git_url}@${ref}"
+}
+
+install_local() {
+  log_info "Installing TaskX from local path..."
+  
+  [[ -z "$TASKX_LOCAL_PATH" ]] && fail "TASKX_LOCAL_PATH required for local mode"
+  [[ ! -d "$TASKX_LOCAL_PATH" ]] && fail "TASKX_LOCAL_PATH does not exist: $TASKX_LOCAL_PATH"
+  
+  if [[ -z "$TASKX_VERSION" ]]; then
+    log_warn "TASKX_VERSION not set. Local install is not pinned to a specific version."
+  fi
+  
+  log_info "Path: $TASKX_LOCAL_PATH"
+  
+  # Install editable
+  $TASKX_PIP install -e "$TASKX_LOCAL_PATH"
+  
+  log_info "✅ Installed taskx editable from $TASKX_LOCAL_PATH"
+}
+
+# ============================================================================
+# Verification
+# ============================================================================
+
+verify_install() {
+  log_info "Verifying TaskX installation..."
+  
+  # Smoke test: taskx --help
+  log_info "Running: taskx --help"
+  if ! taskx --help &> /dev/null; then
+    fail "taskx --help failed. Installation may be broken."
+  fi
+  
+  # Health check: taskx doctor
+  log_info "Running: taskx doctor --timestamp-mode deterministic"
+  if ! taskx doctor --timestamp-mode deterministic; then
+    fail "taskx doctor failed. Installation is not healthy."
+  fi
+  
+  log_info "✅ TaskX installation verified successfully"
+}
+
+# ============================================================================
+# Main
+# ============================================================================
+
+main() {
+  log_info "TaskX Unified Installer"
+  log_info "========================"
+  
+  # Check prerequisites
+  check_python
+  
+  # Load lockfile (env vars take priority)
+  parse_lockfile "$LOCKFILE"
+  
+  # Print config if requested
+  if [[ "$PRINT_CONFIG" == "true" ]]; then
+    print_config
+  fi
+  
+  # Select mode
+  select_mode
+  
+  # Write lockfile if requested
+  if [[ "$WRITE_LOCK" == "true" ]]; then
+    write_lockfile "$LOCKFILE"
+  fi
+  
+  # Verify-only mode
+  if [[ "$VERIFY_ONLY" == "true" ]]; then
+    log_info "Verify-only mode: skipping installation"
+    verify_install
+    exit 0
+  fi
+  
+  # Install based on mode
+  case "$MODE" in
+    packages)
+      install_packages
+      ;;
+    git)
+      install_git
+      ;;
+    local)
+      install_local
+      ;;
+    *)
+      fail "Invalid mode: $MODE. Must be one of: packages, git, local, auto"
+      ;;
+  esac
+  
+  # Verify installation
+  verify_install
+  
+  log_info "🎉 TaskX installation complete!"
+}
+
+main "$@"

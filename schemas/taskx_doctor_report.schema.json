@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TaskX Doctor Report",
+  "description": "Installation integrity check report for TaskX",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "timestamp_mode",
+    "status",
+    "environment",
+    "taskx",
+    "schemas",
+    "load_test",
+    "repo",
+    "git",
+    "checks"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version for this report format"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of report generation"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"],
+      "description": "Timestamp generation mode used"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed"],
+      "description": "Overall status of installation checks"
+    },
+    "environment": {
+      "type": "object",
+      "required": ["python_version", "platform", "cwd"],
+      "additionalProperties": false,
+      "properties": {
+        "python_version": {
+          "type": "string",
+          "description": "Python version string (e.g., '3.11.5')"
+        },
+        "platform": {
+          "type": "string",
+          "description": "Operating system platform"
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Current working directory at time of check"
+        }
+      }
+    },
+    "taskx": {
+      "type": "object",
+      "required": ["import_ok", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "import_ok": {
+          "type": "boolean",
+          "description": "Whether TaskX module imports successfully"
+        },
+        "version": {
+          "type": ["string", "null"],
+          "description": "TaskX version if available, null otherwise"
+        }
+      }
+    },
+    "schemas": {
+      "type": "object",
+      "required": ["available", "required", "missing"],
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of schemas found in package data"
+        },
+        "required": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of schemas required by TaskX"
+        },
+        "missing": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of required schemas that are missing"
+        }
+      }
+    },
+    "load_test": {
+      "type": "object",
+      "required": ["name", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of schema used for load test"
+        },
+        "ok": {
+          "type": "boolean",
+          "description": "Whether schema loaded and parsed successfully"
+        }
+      }
+    },
+    "repo": {
+      "type": "object",
+      "required": ["repo_root", "project_root", "marker"],
+      "additionalProperties": false,
+      "properties": {
+        "repo_root": {
+          "type": ["string", "null"],
+          "description": "Detected repository root path, null if not found"
+        },
+        "project_root": {
+          "type": ["string", "null"],
+          "description": "Project root path if provided, null otherwise"
+        },
+        "marker": {
+          "type": ["string", "null"],
+          "description": "Marker file/directory used for detection, null if not found"
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": ["git_exe_found", "git_repo_found", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "git_exe_found": {
+          "type": "boolean",
+          "description": "Whether git executable was found in PATH"
+        },
+        "git_repo_found": {
+          "type": "boolean",
+          "description": "Whether .git directory exists in repo_root"
+        },
+        "ok": {
+          "type": "boolean",
+          "description": "Whether git is fully available (exe + repo)"
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "required": ["passed", "failed", "warnings", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of checks that passed"
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of checks that failed"
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of checks with warnings"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "message", "remediation"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for this check"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pass", "fail", "warn"],
+                "description": "Status of this individual check"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable check result message"
+              },
+              "remediation": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of remediation steps if check failed"
+              }
+            }
+          },
+          "description": "Detailed results for each check performed"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatx.io/schemas/run_envelope.schema.json",
+  "title": "Run Envelope",
+  "description": "Schema for task packet execution run envelope",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "run_id",
+    "generated_at",
+    "timestamp_mode",
+    "task_packet",
+    "workspace",
+    "commands",
+    "notes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"]
+    },
+    "task_packet": {
+      "type": "object",
+      "required": ["path", "sha256", "id", "title", "allowlist", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^TP_\\d{4}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["root", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "purpose"],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "required": ["verification"],
+      "additionalProperties": false,
+      "properties": {
+        "verification": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

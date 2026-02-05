@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Allowlist Diff Report",
+  "description": "Schema for allowlist compliance gate output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "run_id",
+    "generated_at",
+    "timestamp_mode",
+    "repo_root",
+    "task_packet",
+    "diff_mode_used",
+    "changed_files",
+    "violations",
+    "hashes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Version of this schema"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "description": "Version of the chatx pipeline"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier from RUN_ENVELOPE"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when this report was generated"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"],
+      "description": "Timestamp generation mode"
+    },
+    "repo_root": {
+      "type": "string",
+      "description": "Absolute path to repository root"
+    },
+    "task_packet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "allowlist"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Task packet identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task packet title"
+        },
+        "allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Allowed file patterns from task packet"
+        }
+      }
+    },
+    "diff_mode_used": {
+      "type": "string",
+      "enum": ["git", "fs"],
+      "description": "Diff detection mode used"
+    },
+    "changed_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "disallowed"],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changed files matching allowlist"
+        },
+        "disallowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changed files NOT matching allowlist"
+        }
+      }
+    },
+    "violations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "items"],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of violations"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "message", "files"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "allowlist_violation",
+                  "missing_verification_evidence",
+                  "tooling_limitation",
+                  "other"
+                ],
+                "description": "Type of violation"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable violation description"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Files related to this violation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diff_hash"],
+      "properties": {
+        "diff_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 of canonical allowed+disallowed lists"
+        }
+      }
+    }
+  }
+}

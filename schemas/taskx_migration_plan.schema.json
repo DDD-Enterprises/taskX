@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chatx.dev/schemas/taskx_migration_plan.schema.json",
+  "title": "TaskX Migration Plan",
+  "description": "Schema for TaskX migration plan describing files and schemas to copy from ChatX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "generated_at",
+    "timestamp_mode",
+    "repo_root",
+    "include_loop",
+    "strict",
+    "files",
+    "schemas",
+    "violations",
+    "hashes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.0$",
+      "description": "Schema version, must be 1.0"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "description": "Pipeline version being migrated"
+    },
+    "generated_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "description": "ISO 8601 UTC timestamp"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"],
+      "description": "Timestamp generation mode"
+    },
+    "repo_root": {
+      "type": "string",
+      "description": "Absolute path to repository root"
+    },
+    "include_loop": {
+      "type": "boolean",
+      "description": "Whether loop module is included in migration"
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Whether strict mode was enabled (fail on missing sources)"
+    },
+    "files": {
+      "type": "array",
+      "description": "List of file mappings",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["src", "dst", "sha256_src", "action"],
+        "properties": {
+          "src": {
+            "type": "string",
+            "description": "Source file path (repo-relative)"
+          },
+          "dst": {
+            "type": "string",
+            "description": "Destination file path (repo-relative)"
+          },
+          "sha256_src": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA256 hash of source file"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["copy", "copy_and_rewrite", "skip"],
+            "description": "Action to perform on this file"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "type": "array",
+      "description": "List of schema mappings",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "src", "dst", "sha256_src"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Schema name without extension"
+          },
+          "src": {
+            "type": "string",
+            "description": "Source schema path (repo-relative)"
+          },
+          "dst": {
+            "type": "string",
+            "description": "Destination schema path (repo-relative)"
+          },
+          "sha256_src": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA256 hash of source schema"
+          }
+        }
+      }
+    },
+    "violations": {
+      "type": "array",
+      "description": "List of migration rule violations",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "message", "file"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["disallowed_import", "missing_source", "missing_schema", "other"],
+            "description": "Violation type"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable violation message"
+          },
+          "file": {
+            "type": "string",
+            "description": "File where violation occurred"
+          }
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "description": "Hash map for plan verification",
+      "additionalProperties": false,
+      "required": ["plan_hash"],
+      "properties": {
+        "plan_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 hash of canonical file list (src:dst:sha)"
+        }
+      }
+    }
+  }
+}

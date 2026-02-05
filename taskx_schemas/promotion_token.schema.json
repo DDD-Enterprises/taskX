@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Promotion Token",
+  "description": "Schema for run promotion completion token",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "run_id",
+    "generated_at",
+    "timestamp_mode",
+    "status",
+    "inputs",
+    "decision",
+    "hashes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Version of this schema"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "description": "Version of the chatx pipeline"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run identifier from RUN_ENVELOPE"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when this token was generated"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"],
+      "description": "Timestamp generation mode"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed"],
+      "description": "Promotion status"
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_dir",
+        "allowlist_diff_path",
+        "run_envelope_path",
+        "run_summary_path"
+      ],
+      "properties": {
+        "run_dir": {
+          "type": "string",
+          "description": "Path to run directory"
+        },
+        "allowlist_diff_path": {
+          "type": "string",
+          "description": "Path to ALLOWLIST_DIFF.json"
+        },
+        "run_envelope_path": {
+          "type": "string",
+          "description": "Path to RUN_ENVELOPE.json"
+        },
+        "run_summary_path": {
+          "type": ["string", "null"],
+          "description": "Path to RUN_SUMMARY.json if present"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reasons", "evidence"],
+      "properties": {
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Reasons for pass or fail decision"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "path"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "allowlist_diff",
+                  "run_envelope",
+                  "run_summary",
+                  "evidence_md"
+                ],
+                "description": "Type of evidence"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path to evidence file"
+              }
+            }
+          },
+          "description": "Evidence files used in decision"
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["token_hash"],
+      "properties": {
+        "token_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 of canonical token JSON excluding this hash"
+        }
+      }
+    }
+  }
+}

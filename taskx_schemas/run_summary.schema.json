@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatx.io/schemas/run_summary.schema.json",
+  "title": "Run Summary",
+  "description": "Schema for task packet execution run summary",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "run_id",
+    "generated_at",
+    "timestamp_mode",
+    "task_packet",
+    "status",
+    "files_present",
+    "claims",
+    "hashes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"]
+    },
+    "task_packet": {
+      "type": "object",
+      "required": ["id", "title", "path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^TP_\\d{4}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "checklist_completed",
+        "verification_commands_listed",
+        "verification_outputs_present",
+        "anomalies"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "checklist_completed": {
+          "type": "boolean"
+        },
+        "verification_commands_listed": {
+          "type": "boolean"
+        },
+        "verification_outputs_present": {
+          "type": "boolean"
+        },
+        "anomalies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files_present": {
+      "type": "object",
+      "required": [
+        "RUNLOG",
+        "EVIDENCE",
+        "CHECKLIST",
+        "PLAN",
+        "COMMANDS",
+        "RUN_ENVELOPE",
+        "TASK_PACKET"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "RUNLOG": { "type": "boolean" },
+        "EVIDENCE": { "type": "boolean" },
+        "CHECKLIST": { "type": "boolean" },
+        "PLAN": { "type": "boolean" },
+        "COMMANDS": { "type": "boolean" },
+        "RUN_ENVELOPE": { "type": "boolean" },
+        "TASK_PACKET": { "type": "boolean" }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["count", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "claim_id",
+              "claim_type",
+              "text",
+              "evidence_source",
+              "confidence"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "claim_id": {
+                "type": "string",
+                "pattern": "^TP_\\d{4}_C\\d{3}$"
+              },
+              "claim_type": {
+                "type": "string",
+                "enum": [
+                  "change_made",
+                  "test_passed",
+                  "test_failed",
+                  "constraint_respected",
+                  "unknown"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 280
+              },
+              "evidence_source": {
+                "type": "string",
+                "enum": ["RUNLOG", "EVIDENCE", "CHECKLIST", "PLAN", "UNKNOWN"]
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "required": ["run_folder_hash", "summary_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "run_folder_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "summary_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

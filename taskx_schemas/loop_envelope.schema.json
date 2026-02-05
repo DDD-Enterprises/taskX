@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Loop Envelope",
+  "description": "Schema for loop orchestration envelope tracking all stages",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "loop_id",
+    "generated_at",
+    "timestamp_mode",
+    "inputs",
+    "stages",
+    "aggregate"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "loop_id": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timestamp_mode": {
+      "type": "string",
+      "enum": ["deterministic", "wallclock"]
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "mode",
+        "max_packets",
+        "seed",
+        "run_task",
+        "run_id",
+        "collect_evidence",
+        "feedback"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["mvp", "hardening", "full"]
+        },
+        "max_packets": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "run_task": {
+          "type": ["string", "null"]
+        },
+        "run_id": {
+          "type": ["string", "null"]
+        },
+        "collect_evidence": {
+          "type": "boolean"
+        },
+        "feedback": {
+          "type": "boolean"
+        }
+      }
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mine_spec",
+        "compile_tasks",
+        "run_task",
+        "collect_evidence",
+        "spec_feedback"
+      ],
+      "properties": {
+        "mine_spec": {
+          "$ref": "#/$defs/stage"
+        },
+        "compile_tasks": {
+          "$ref": "#/$defs/stage"
+        },
+        "run_task": {
+          "$ref": "#/$defs/stage"
+        },
+        "collect_evidence": {
+          "$ref": "#/$defs/stage"
+        },
+        "spec_feedback": {
+          "$ref": "#/$defs/stage"
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["loop_hash"],
+      "properties": {
+        "loop_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "status",
+        "started_at",
+        "ended_at",
+        "out_dir",
+        "inputs",
+        "outputs",
+        "hashes",
+        "error"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["skipped", "ok", "failed"]
+        },
+        "started_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "out_dir": {
+          "type": ["string", "null"]
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hashes": {
+          "type": "object",
+          "properties": {
+            "stage_output_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "error": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

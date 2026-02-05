@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatx.local/schemas/analysis_summary.schema.json",
+  "title": "Analysis Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "run_id",
+    "created_at",
+    "provenance",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "pipeline_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "config_hash", "determinism_class"],
+      "properties": {
+        "stage": { "type": "string" },
+        "config_hash": { "type": "string" },
+        "determinism_class": { "type": "string" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_records",
+        "unique_msg_ids",
+        "speech_act_counts",
+        "emotion_counts",
+        "boundary_signal_counts",
+        "top_coarse_labels",
+        "top_fine_labels_local"
+      ],
+      "properties": {
+        "total_records": { "type": "integer", "minimum": 0 },
+        "unique_msg_ids": { "type": ["integer", "null"], "minimum": 0 },
+        "speech_act_counts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "emotion_counts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "boundary_signal_counts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "top_coarse_labels": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "top_fine_labels_local": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

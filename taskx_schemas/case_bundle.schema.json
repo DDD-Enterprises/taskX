@@ -74,6 +74,35 @@
                     "description": "Path to logs index"
                 }
             }
+        },
+        "files": {
+            "type": "array",
+            "description": "Deterministic file inventory for integrity checks",
+            "items": {
+                "type": "object",
+                "required": [
+                    "path",
+                    "sha256",
+                    "size_bytes",
+                    "category"
+                ],
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "category": {
+                        "type": "string"
+                    }
+                }
+            }
         }
     }
 }

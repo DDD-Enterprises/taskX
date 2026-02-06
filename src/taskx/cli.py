@@ -1,5 +1,6 @@
 """TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
+from enum import Enum
 from pathlib import Path
 
 import typer
@@ -53,6 +54,16 @@ try:
     from taskx.pipeline.bundle.exporter import BundleExporter
 except ImportError:
     BundleExporter = None  # type: ignore
+
+try:
+    from taskx.pipeline.bundle.ingester import ingest_bundle as ingest_bundle_impl
+except ImportError:
+    ingest_bundle_impl = None  # type: ignore
+
+try:
+    from taskx.pipeline.case.auditor import audit_case as audit_case_impl
+except ImportError:
+    audit_case_impl = None  # type: ignore
 
 
 cli = typer.Typer(
@@ -1308,6 +1319,228 @@ def ci_gate_cmd(
 
 
 
+class ProjectPreset(str, Enum):
+    """Supported directive presets for project init."""
+
+    TASKX = "taskx"
+    CHATX = "chatx"
+    BOTH = "both"
+    NONE = "none"
+
+
+class ProjectPack(str, Enum):
+    """Supported directive packs for project toggles."""
+
+    TASKX = "taskx"
+    CHATX = "chatx"
+
+
+class ProjectMode(str, Enum):
+    """Supported master modes."""
+
+    TASKX = "taskx"
+    CHATX = "chatx"
+    BOTH = "both"
+    NONE = "none"
+
+
+project_app = typer.Typer(
+    name="project",
+    help="Project file initialization and directive pack toggles",
+    no_args_is_help=True,
+)
+cli.add_typer(project_app, name="project")
+
+project_mode_app = typer.Typer(
+    name="mode",
+    help="Master mode operations across TaskX/ChatX packs",
+    no_args_is_help=True,
+)
+project_app.add_typer(project_mode_app, name="mode")
+
+
+@project_app.command(name="init")
+def project_init(
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Project directory to initialize/update",
+    ),
+    preset: ProjectPreset = typer.Option(
+        ProjectPreset.TASKX,
+        "--preset",
+        help="Directive pack preset to apply",
+    ),
+) -> None:
+    """Generate or safely update project-facing instruction files."""
+    from taskx.project.init import init_project
+
+    try:
+        result = init_project(out_dir=out, preset=preset.value)
+    except ValueError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] Project init failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]✓ Project initialized[/green] at {result['out_dir']}")
+    console.print(f"[cyan]Preset:[/cyan] {result['preset']}")
+    console.print(f"[cyan]Report:[/cyan] {result['report_path']}")
+
+
+@project_app.command(name="enable")
+def project_enable(
+    pack: ProjectPack = typer.Argument(..., help="Directive pack to enable"),
+    path: Path = typer.Option(
+        ...,
+        "--path",
+        help="Project directory",
+    ),
+) -> None:
+    """Enable a directive pack across managed project files."""
+    from taskx.project.toggles import enable_pack
+
+    try:
+        result = enable_pack(project_dir=path, pack_name=pack.value)
+    except ValueError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] Enable failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]✓ Enabled {result['pack']}[/green] in {result['project_dir']}")
+    console.print(f"[cyan]Report:[/cyan] {result['report_path']}")
+
+
+@project_app.command(name="disable")
+def project_disable(
+    pack: ProjectPack = typer.Argument(..., help="Directive pack to disable"),
+    path: Path = typer.Option(
+        ...,
+        "--path",
+        help="Project directory",
+    ),
+) -> None:
+    """Disable a directive pack across managed project files."""
+    from taskx.project.toggles import disable_pack
+
+    try:
+        result = disable_pack(project_dir=path, pack_name=pack.value)
+    except ValueError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] Disable failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]✓ Disabled {result['pack']}[/green] in {result['project_dir']}")
+    console.print(f"[cyan]Report:[/cyan] {result['report_path']}")
+
+
+@project_app.command(name="status")
+def project_status_cmd(
+    path: Path = typer.Option(
+        ...,
+        "--path",
+        help="Project directory",
+    ),
+) -> None:
+    """Show directive pack status for each managed file."""
+    from taskx.project.toggles import project_status
+
+    result = project_status(project_dir=path)
+    console.print(f"[cyan]Project:[/cyan] {result['project_dir']}")
+    for file_info in result["files"]:
+        file_name = Path(file_info["file"]).name
+        if not file_info["exists"]:
+            console.print(f"[yellow]- {file_name}: missing[/yellow]")
+            continue
+        taskx_state = "enabled" if file_info["packs"]["taskx"] else "disabled"
+        chatx_state = "enabled" if file_info["packs"]["chatx"] else "disabled"
+        console.print(f"- {file_name}: taskx={taskx_state}, chatx={chatx_state}")
+
+
+@project_mode_app.command(name="set")
+def project_mode_set(
+    path: Path = typer.Option(
+        ...,
+        "--path",
+        help="Project directory",
+    ),
+    mode: ProjectMode = typer.Option(
+        ...,
+        "--mode",
+        help="Master mode: taskx, chatx, both, or none",
+    ),
+) -> None:
+    """Set both directive packs in a single idempotent operation."""
+    from taskx.project.mode import set_mode
+
+    try:
+        result = set_mode(project_dir=path, mode=mode.value)
+    except ValueError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] Mode set failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]✓ Applied mode '{result['mode']}'[/green] for {path}")
+    for filename in sorted(result["per_file_status"]):
+        state = result["per_file_status"][filename]
+        console.print(f"- {filename}: taskx={state['taskx']}, chatx={state['chatx']}")
+    console.print(f"[cyan]Files changed:[/cyan] {len(result['changed_files'])}")
+    console.print(f"[cyan]Report:[/cyan] {result['report_path']}")
+
+
+@project_app.command(name="doctor")
+def project_doctor_cmd(
+    path: Path = typer.Option(
+        ...,
+        "--path",
+        help="Project directory",
+    ),
+    fix: bool = typer.Option(
+        False,
+        "--fix",
+        help="Apply deterministic repairs before re-checking",
+    ),
+    mode: ProjectMode | None = typer.Option(
+        None,
+        "--mode",
+        help="Override target mode used by --fix",
+    ),
+) -> None:
+    """Check (and optionally fix) TaskX/ChatX project readiness."""
+    from taskx.project.doctor import (
+        check_project,
+        fix_project,
+        render_doctor_summary,
+        write_doctor_reports,
+    )
+
+    requested_mode = mode.value if mode is not None else None
+
+    try:
+        report = fix_project(path, requested_mode) if fix else check_project(path)
+        report_paths = write_doctor_reports(path, report)
+    except ValueError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] Project doctor failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(render_doctor_summary(report))
+    console.print(f"[cyan]Reports:[/cyan] {report_paths['markdown']}, {report_paths['json']}")
+
+    if report["status"] == "fail":
+        raise typer.Exit(2)
+    raise typer.Exit(0)
+
+
 # Bundle Commands
 
 bundle_app = typer.Typer(
@@ -1320,6 +1553,12 @@ bundle_app = typer.Typer(
 def _require_exporter() -> None:
     if BundleExporter is None:
         console.print("[bold red]Error:[/bold red] BundleExporter not available")
+        raise typer.Exit(1)
+
+
+def _require_ingester() -> None:
+    if ingest_bundle_impl is None:
+        console.print("[bold red]Error:[/bold red] Bundle ingester not available")
         raise typer.Exit(1)
 
 
@@ -1346,7 +1585,77 @@ def bundle_export(
         raise typer.Exit(1)
 
 
+@bundle_app.command(name="ingest")
+def bundle_ingest(
+    zip_path: Path = typer.Option(..., "--zip", help="Path to CASE_*.zip bundle"),
+    out: Path = typer.Option(Path("./out/cases"), "--out", help="Output directory for cases"),
+    timestamp_mode: str = typer.Option(
+        "deterministic",
+        "--timestamp-mode",
+        help="Timestamp mode: deterministic or wallclock",
+    ),
+) -> None:
+    """Ingest a case bundle and generate CASE_INDEX + ingest report."""
+    _require_ingester()
+
+    try:
+        result = ingest_bundle_impl(zip_path=zip_path, output_dir=out, timestamp_mode=timestamp_mode)
+        typer.echo("Case bundle ingestion complete")
+        typer.echo(f"Integrity: {result['integrity_status']}")
+        typer.echo(f"Case dir: {result['case_dir']}")
+        typer.echo(f"CASE_INDEX.json: {result['case_index']}")
+        typer.echo(f"CASE_INGEST_REPORT.md: {result['ingest_report']}")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] Bundle ingest failed: {e}")
+        raise typer.Exit(1)
+
+
 cli.add_typer(bundle_app, name="bundle")
+
+
+case_app = typer.Typer(
+    name="case",
+    help="Case audit commands",
+    no_args_is_help=True,
+)
+
+
+def _require_case_auditor() -> None:
+    if audit_case_impl is None:
+        console.print("[bold red]Error:[/bold red] Case auditor not available")
+        raise typer.Exit(1)
+
+
+@case_app.command(name="audit")
+def case_audit(
+    case_dir: Path = typer.Option(..., "--case", help="Path to ingested case directory"),
+    out: Path | None = typer.Option(
+        None,
+        "--out",
+        help="Output directory for audit artifacts (default: <case>/reports)",
+    ),
+    timestamp_mode: str = typer.Option(
+        "deterministic",
+        "--timestamp-mode",
+        help="Timestamp mode: deterministic or wallclock",
+    ),
+) -> None:
+    """Run deterministic audit on an ingested case directory."""
+    _require_case_auditor()
+    audit_out = out if out else (case_dir / "reports")
+
+    try:
+        result = audit_case_impl(case_dir=case_dir, output_dir=audit_out, timestamp_mode=timestamp_mode)
+        typer.echo("Case audit complete")
+        typer.echo(f"CASE_FINDINGS.json: {result['findings']}")
+        typer.echo(f"CASE_AUDIT_REPORT.md: {result['report']}")
+        typer.echo(f"PACKET_RECOMMENDATIONS.json: {result['recommendations']}")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] Case audit failed: {e}")
+        raise typer.Exit(1)
+
+
+cli.add_typer(case_app, name="case")
 
 
 if __name__ == "__main__":

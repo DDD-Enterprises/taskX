@@ -1,7 +1,15 @@
 """Pytest configuration and fixtures for TaskX tests."""
+import sys
 from pathlib import Path
 
 import pytest
+
+
+def pytest_sessionstart(session):
+    """Ensure tests import the local package under ./src first."""
+    repo_root = Path(__file__).resolve().parents[1]
+    src_path = repo_root / "src"
+    sys.path.insert(0, str(src_path))
 
 
 def pytest_sessionfinish(session, exitstatus):

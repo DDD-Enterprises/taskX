@@ -42,6 +42,10 @@ taskx = "taskx.cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/taskx", "src/taskx_adapters", "taskx_schemas"]
+include = [
+    "src/taskx/assets/templates/*.md",
+    "src/taskx/assets/templates/*.yaml",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [

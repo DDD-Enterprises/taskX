@@ -1,13 +1,11 @@
-
 import hashlib
 import json
-import logging
 import os
 import shutil
 import zipfile
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 from rich.console import Console
@@ -175,29 +173,77 @@ class BundleExporter:
         
         return manifest_entries
 
+    def _sha256_file(self, path: Path) -> str:
+        """Compute SHA256 for a file."""
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def _classify_path(self, rel_path: str) -> str:
+        """Classify a bundled file deterministically by path."""
+        normalized = rel_path.replace("\\", "/")
+        if normalized == "taskx/task_queue.json":
+            return "taskx_task_queue"
+        if normalized.startswith("taskx/packets/") or (
+            normalized.startswith("taskx/runs/") and normalized.endswith("/TASK_PACKET.md")
+        ):
+            return "taskx_packet"
+        if normalized.startswith("taskx/runs/"):
+            return "taskx_run_artifact"
+        if normalized == "repo/REPO_SNAPSHOT.json":
+            return "repo_snapshot"
+        if normalized.startswith("repo/logs/") or normalized == "repo/LOG_INDEX.json":
+            return "repo_log"
+        if normalized.startswith("reports/"):
+            return "report"
+        return "unknown"
+
+    def _collect_file_entries(self, temp_dir: Path) -> List[Dict[str, Any]]:
+        """Collect deterministic file metadata for CASE_MANIFEST.files."""
+        entries: list[dict[str, Any]] = []
+        for path in sorted(p for p in temp_dir.rglob("*") if p.is_file()):
+            rel = path.relative_to(temp_dir).as_posix()
+            if rel == "case/CASE_MANIFEST.json":
+                continue
+            entries.append(
+                {
+                    "path": rel,
+                    "sha256": self._sha256_file(path),
+                    "size_bytes": path.stat().st_size,
+                    "category": self._classify_path(rel),
+                }
+            )
+        return entries
+
     def build_case_manifest(self, temp_dir: Path, case_id: str) -> None:
         """Generate manifest for the entire bundle."""
         case_dir = temp_dir / "case"
         case_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Compute SHA256 of all contents
-        # This is a placeholder for the full hashing logic required by the spec
-        # In a real implementation we would walk temp_dir (excluding manifest itself)
-        
+        files = self._collect_file_entries(temp_dir)
+        manifest_hash_input = "\n".join(
+            f"{entry['path']}|{entry['sha256']}|{entry['size_bytes']}" for entry in files
+        )
+        manifest_hash = hashlib.sha256(manifest_hash_input.encode("utf-8")).hexdigest()
+
         manifest = {
             "schema_version": "1.0",
             "case_id": case_id,
             "generated_at": datetime.now(UTC).isoformat(),
             "bundle_manifest": {
-                "sha256": "placeholder-hash",
+                "sha256": manifest_hash,
                 "source_label": "taskx-export",
-                "created_at": datetime.now(UTC).isoformat()
+                "created_at": datetime.now(UTC).isoformat(),
             },
             "contents": {
-                # Pointers would be populated here
-            }
+                "task_queue": "taskx/task_queue.json",
+                "repo_snapshot": "repo/REPO_SNAPSHOT.json",
+                "logs_index": "repo/LOG_INDEX.json",
+            },
+            "files": files,
         }
-        
+
         with open(case_dir / "CASE_MANIFEST.json", "w") as f:
             json.dump(manifest, f, indent=2)
 

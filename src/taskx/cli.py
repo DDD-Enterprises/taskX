@@ -1,5 +1,8 @@
 """TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
+import json
+import shutil
+import sys
 from enum import Enum
 from pathlib import Path
 
@@ -9,6 +12,27 @@ from rich.console import Console
 from typing import Any
 
 from taskx import __version__
+from taskx.manifest import (
+    append_command_record,
+    check_manifest,
+    finalize_manifest,
+    get_timestamp as get_manifest_timestamp,
+    init_manifest,
+    load_manifest,
+    manifest_exists,
+    save_manifest,
+)
+from taskx.obs.run_artifacts import (
+    COMMIT_RUN_FILENAME,
+    PROMOTION_LEGACY_FILENAME,
+    PROMOTION_TOKEN_FILENAME,
+    VIOLATIONS_FILENAME,
+    get_default_run_root,
+    make_run_id,
+    normalize_timestamp_mode,
+    resolve_run_dir,
+    to_pipeline_timestamp_mode,
+)
 
 
 # Import pipeline modules (from migrated taskx code)
@@ -74,7 +98,47 @@ cli = typer.Typer(
 console = Console()
 
 
-def _check_repo_guard(bypass: bool) -> Path:
+@cli.callback(invoke_without_command=True)
+def _cli_callback(ctx: typer.Context) -> None:
+    """
+    CLI callback that runs on every invocation.
+
+    Checks for import shadowing issues and emits warnings.
+    """
+    # Skip shadowing check for print-runtime-origin command
+    if ctx.invoked_subcommand != "print-runtime-origin":
+        _check_import_shadowing()
+
+
+def _check_import_shadowing() -> None:
+    """
+    Check if taskx is being imported from an unexpected location.
+
+    Emits a warning to stderr if taskx.__file__ is not in site-packages
+    or the expected TaskX repository location.
+    """
+    import sys
+    import taskx
+
+    taskx_file = taskx.__file__ or ""
+
+    # Expected locations:
+    # 1. site-packages/taskx/ (installed package)
+    # 2. /code/taskX/ (editable install from TaskX repo)
+    is_site_packages = "/site-packages/taskx/" in taskx_file
+    is_taskx_repo = "/code/taskX/" in taskx_file
+
+    if not is_site_packages and not is_taskx_repo:
+        console.print(
+            f"[bold yellow]WARNING: taskx is being imported from an unexpected location:[/bold yellow]\n"
+            f"[yellow]  {taskx_file}[/yellow]\n"
+            f"[yellow]This often indicates .pth shadowing or PYTHONPATH issues.[/yellow]\n"
+            f"[yellow]Expected locations: */site-packages/taskx/ or */code/taskX/[/yellow]",
+            file=sys.stderr
+        )
+
+
+def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
     """
     Check TaskX repo guard unless bypassed.
 
@@ -87,17 +151,40 @@ def _check_repo_guard(bypass: bool) -> Path:
     Raises:
         RuntimeError: If guard check fails and not bypassed
     """
-    from taskx.utils.repo import require_taskx_repo_root
+    from taskx.safety.wip_rescue import write_rescue_patch
+    from taskx.utils.repo import detect_repo_root, require_taskx_repo_root
+
+    cwd = Path.cwd()
 
     if bypass:
         console.print(
             "[bold yellow]⚠️  WARNING: Repo guard bypassed![/bold yellow]\n"
             "[yellow]Running stateful command without TaskX repo detection.[/yellow]"
         )
-        return Path.cwd()
+        return cwd
 
-    # Will raise RuntimeError with helpful message if not in TaskX repo
-    return require_taskx_repo_root(Path.cwd())
+    try:
+        # Stateful commands require explicit .taskxroot marker.
+        return require_taskx_repo_root(
+            cwd,
+            allow_pyproject_fallback=False,
+            stateful_command=True,
+        )
+    except RuntimeError as exc:
+        if rescue_patch is None:
+            raise
+
+        try:
+            detected_repo_root = detect_repo_root(cwd).root
+        except RuntimeError:
+            detected_repo_root = cwd
+
+        patch_path = write_rescue_patch(
+            repo_root=detected_repo_root,
+            cwd=cwd,
+            rescue_patch=rescue_patch,
+        )
+        raise RuntimeError(f"{exc}\nRescue patch written to: {patch_path}") from exc
 
 
 def _require_module(module_func: Any, module_name: str) -> None:
@@ -105,6 +192,296 @@ def _require_module(module_func: Any, module_name: str) -> None:
     if module_func is None:
         console.print(f"[bold red]Error:[/bold red] {module_name} module not available in this TaskX build")
         raise typer.Exit(1)
+
+
+def _resolve_stateful_run_dir(
+    run: Path | None,
+    run_root: Path | None,
+    timestamp_mode: str,
+) -> Path:
+    """Resolve target run directory for stateful commands."""
+    selected_run = resolve_run_dir(
+        run=run,
+        run_root=run_root,
+        timestamp_mode=timestamp_mode,
+    )
+    selected_run.parent.mkdir(parents=True, exist_ok=True)
+    return selected_run
+
+
+def _sync_promotion_token_alias(run_dir: Path) -> None:
+    """Write canonical PROMOTION_TOKEN.json alongside legacy PROMOTION.json."""
+    legacy_path = run_dir / PROMOTION_LEGACY_FILENAME
+    if not legacy_path.exists():
+        return
+    canonical_path = run_dir / PROMOTION_TOKEN_FILENAME
+    shutil.copy2(legacy_path, canonical_path)
+
+
+def _current_invocation_command() -> list[str]:
+    """Return current CLI invocation in canonical taskx form."""
+    if len(sys.argv) <= 1:
+        return ["taskx"]
+    return ["taskx", *sys.argv[1:]]
+
+
+def _infer_task_packet_id(run_dir: Path) -> str:
+    """Infer task packet id from RUN_ENVELOPE.json when available."""
+    envelope_path = run_dir / "RUN_ENVELOPE.json"
+    if envelope_path.exists():
+        try:
+            payload = json.loads(envelope_path.read_text(encoding="utf-8"))
+            task_packet = payload.get("task_packet", {})
+            if isinstance(task_packet, dict):
+                task_id = task_packet.get("id")
+                if isinstance(task_id, str) and task_id.strip():
+                    return task_id
+        except (json.JSONDecodeError, OSError):
+            pass
+    return "UNKNOWN"
+
+
+def _artifact_ref_for_run(run_dir: Path, artifact_path: Path) -> str:
+    """Convert artifact paths to run-relative when possible."""
+    resolved_run_dir = run_dir.resolve()
+    resolved_artifact = artifact_path.expanduser().resolve()
+    try:
+        return resolved_artifact.relative_to(resolved_run_dir).as_posix()
+    except ValueError:
+        return str(resolved_artifact)
+
+
+def _ensure_manifest_ready(
+    run_dir: Path,
+    *,
+    create_if_missing: bool,
+    mode: str,
+    timestamp_mode: str,
+) -> bool:
+    """Ensure run manifest exists if already present or explicitly requested."""
+    resolved_run = run_dir.resolve()
+    if manifest_exists(resolved_run):
+        return True
+
+    if not create_if_missing:
+        return False
+
+    if not resolved_run.exists():
+        return False
+
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    init_manifest(
+        run_dir=resolved_run,
+        task_packet_id=_infer_task_packet_id(resolved_run),
+        mode=mode,
+        timestamp_mode=canonical_mode,
+    )
+    return True
+
+
+def _append_manifest_command(
+    *,
+    enabled: bool,
+    run_dir: Path | None,
+    timestamp_mode: str,
+    exit_code: int,
+    started_at: str,
+    stdout_lines: list[str],
+    stderr_lines: list[str],
+    expected_artifacts: list[str] | None = None,
+    notes: str | None = None,
+) -> None:
+    """Write command record into TASK_PACKET_MANIFEST.json when enabled."""
+    if not enabled or run_dir is None:
+        return
+
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    try:
+        append_command_record(
+            run_dir=run_dir,
+            cmd=_current_invocation_command(),
+            cwd=Path.cwd(),
+            exit_code=exit_code,
+            stdout_text="\n".join(stdout_lines).strip(),
+            stderr_text="\n".join(stderr_lines).strip(),
+            timestamp_mode=canonical_mode,
+            expected_artifacts=expected_artifacts or [],
+            notes=notes,
+            started_at=started_at,
+            ended_at=get_manifest_timestamp(canonical_mode),
+        )
+    except Exception as exc:
+        console.print(f"[yellow]Warning:[/yellow] Failed to update task packet manifest: {exc}")
+
+
+manifest_app = typer.Typer(
+    name="manifest",
+    help="Task packet manifest lifecycle and replay checks",
+    no_args_is_help=True,
+)
+cli.add_typer(manifest_app, name="manifest")
+
+
+@manifest_app.command(name="init")
+def manifest_init_cmd(
+    run: Path = typer.Option(
+        ...,
+        "--run",
+        help="Run directory for TASK_PACKET_MANIFEST.json",
+    ),
+    task_packet: str = typer.Option(
+        ...,
+        "--task-packet",
+        help="Task packet identifier",
+    ),
+    mode: str = typer.Option(
+        "ACT",
+        "--mode",
+        help="Execution mode (ACT, PLAN, etc.)",
+    ),
+    timestamp_mode: str = typer.Option(
+        "deterministic",
+        "--timestamp-mode",
+        help="Timestamp mode: deterministic, now, or wallclock",
+    ),
+) -> None:
+    """Initialize TASK_PACKET_MANIFEST.json in a run directory."""
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    created = init_manifest(
+        run_dir=run.resolve(),
+        task_packet_id=task_packet,
+        mode=mode,
+        timestamp_mode=canonical_mode,
+    )
+    console.print("[green]✓ Manifest initialized[/green]")
+    console.print(f"[cyan]Run:[/cyan] {created['run_dir']}")
+    console.print(f"[cyan]Path:[/cyan] {run.resolve() / 'TASK_PACKET_MANIFEST.json'}")
+
+
+@manifest_app.command(name="finalize")
+def manifest_finalize_cmd(
+    run: Path = typer.Option(
+        ...,
+        "--run",
+        help="Run directory containing TASK_PACKET_MANIFEST.json",
+    ),
+    status: str | None = typer.Option(
+        None,
+        "--status",
+        help="Override status: passed or failed",
+    ),
+    artifact_expected: list[str] = typer.Option(
+        [],
+        "--artifact-expected",
+        help="Expected artifact path (repeat option)",
+    ),
+    artifact_found: list[str] = typer.Option(
+        [],
+        "--artifact-found",
+        help="Found artifact path (repeat option)",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional manifest notes",
+    ),
+) -> None:
+    """Finalize manifest artifact lists and run status."""
+    manifest = load_manifest(run.resolve())
+    if manifest is None:
+        console.print(f"[bold red]Error:[/bold red] Manifest not found at {run.resolve() / 'TASK_PACKET_MANIFEST.json'}")
+        raise typer.Exit(1)
+
+    replay = check_manifest(run.resolve())
+    expected = artifact_expected or replay["expected"]
+    found = artifact_found or replay["found"]
+
+    if status is None:
+        status_value = "passed" if not replay["missing"] and not replay["extras"] else "failed"
+    else:
+        if status not in {"passed", "failed"}:
+            console.print("[bold red]Error:[/bold red] --status must be 'passed' or 'failed'")
+            raise typer.Exit(1)
+        status_value = status
+
+    existing_notes = manifest.get("notes")
+    effective_notes = notes if notes is not None else (existing_notes if isinstance(existing_notes, str) else None)
+
+    finalize_manifest(
+        manifest=manifest,
+        artifacts_expected=expected,
+        artifacts_found=found,
+        status=status_value,
+        notes=effective_notes,
+    )
+    save_manifest(manifest, run.resolve())
+    console.print(f"[green]✓ Manifest finalized ({status_value})[/green]")
+
+
+@manifest_app.command(name="check")
+def manifest_check_cmd(
+    run: Path = typer.Option(
+        ...,
+        "--run",
+        help="Run directory containing TASK_PACKET_MANIFEST.json",
+    ),
+) -> None:
+    """Check expected artifacts from manifest against filesystem state."""
+    try:
+        replay = check_manifest(run.resolve())
+    except FileNotFoundError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1)
+
+    manifest = load_manifest(run.resolve())
+    if manifest is not None:
+        existing_notes = manifest.get("notes")
+        finalize_manifest(
+            manifest=manifest,
+            artifacts_expected=replay["expected"],
+            artifacts_found=replay["found"],
+            status="passed" if not replay["missing"] and not replay["extras"] else "failed",
+            notes=existing_notes if isinstance(existing_notes, str) else None,
+        )
+        save_manifest(manifest, run.resolve())
+
+    console.print(f"[cyan]Expected artifacts:[/cyan] {len(replay['expected'])}")
+    console.print(f"[cyan]Found artifacts:[/cyan] {len(replay['found'])}")
+
+    if replay["missing"]:
+        console.print("[red]Missing artifacts:[/red]")
+        for item in replay["missing"]:
+            console.print(f"[red]  - {item}[/red]")
+    if replay["extras"]:
+        console.print("[yellow]Extra artifacts:[/yellow]")
+        for item in replay["extras"]:
+            console.print(f"[yellow]  - {item}[/yellow]")
+
+    if replay["missing"] or replay["extras"]:
+        raise typer.Exit(2)
+
+    console.print("[green]✓ Manifest replay check passed[/green]")
+
+
+@cli.command(name="print-runtime-origin", hidden=True)
+def print_runtime_origin() -> None:
+    """Print runtime import origin diagnostic information.
+
+    Hidden diagnostic command to debug import shadowing issues.
+    Shows where taskx is being imported from and sys.path ordering.
+    """
+    import sys
+    import taskx
+
+    console.print("[bold]TaskX Runtime Origin Diagnostic[/bold]\n")
+    console.print(f"taskx.__file__: {taskx.__file__}")
+    console.print(f"taskx.__version__: {__version__}")
+    console.print(f"sys.executable: {sys.executable}")
+    console.print("\nsys.path (first 10 entries):")
+    for i, path in enumerate(sys.path[:10], 1):
+        console.print(f"  {i}. {path}")
+
+    raise typer.Exit(0)
 
 
 @cli.command()
@@ -131,7 +508,7 @@ def compile_tasks(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
 ) -> None:
     """Compile task packets from spec."""
@@ -178,9 +555,16 @@ def run_task(
         Path("./out/tasks/task_queue.json"),
         help="Path to task queue file",
     ),
-    out: Path = typer.Option(
-        Path("./out/runs"),
-        help="Output directory for run artifacts",
+    run_root: Path | None = typer.Option(
+        None,
+        "--run-root",
+        help="Run root directory (default resolves via --run-root, TASKX_RUN_ROOT, repo root, then cwd)",
+    ),
+    out: Path | None = typer.Option(
+        None,
+        "--out",
+        help="Deprecated alias for --run-root",
+        hidden=True,
     ),
     repo_root: Path | None = typer.Option(
         None,
@@ -192,13 +576,21 @@ def run_task(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
 ) -> None:
     """Execute a task packet (create run workspace)."""
     _require_module(create_run_workspace, "task_runner")
 
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+    effective_run_root = get_default_run_root(cli_run_root=run_root or out)
+    effective_run_root.mkdir(parents=True, exist_ok=True)
+    run_id = make_run_id(prefix="RUN", timestamp_mode=canonical_mode)
+
     console.print(f"[cyan]Preparing run for task: {task_id}[/cyan]")
+    console.print(f"[cyan]Run root:[/cyan] {effective_run_root}")
+    console.print(f"[cyan]Run ID:[/cyan] {run_id}")
 
     # Find task packet
     # Assumes TASK_PACKETS is sibling of task_queue or in ./out/tasks/TASK_PACKETS
@@ -216,14 +608,14 @@ def run_task(
         console.print(f"[bold red]Error:[/bold red] Task packet {task_id} not found in {task_packets_dir}")
         raise typer.Exit(1)
     
-    packet_path = candidates[0]
+    packet_path = candidates[0].resolve()
 
     try:
         result = create_run_workspace(
             task_packet_path=packet_path,
-            output_dir=out,
-            run_id=None,
-            timestamp_mode=timestamp_mode,
+            output_dir=effective_run_root,
+            run_id=run_id,
+            timestamp_mode=pipeline_timestamp_mode,
             pipeline_version=__version__,
         )
         console.print(f"[green]✓ Workpace created at: {result['run_dir']}[/green]")
@@ -257,7 +649,7 @@ def collect_evidence(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
 ) -> None:
     """Collect verification evidence from a task run."""
@@ -281,9 +673,15 @@ def collect_evidence(
 
 @cli.command()
 def gate_allowlist(
-    run: Path = typer.Option(
-        ...,
-        help="Path to run directory",
+    run: Path | None = typer.Option(
+        None,
+        "--run",
+        help="Path to run directory (default <run-root>/<run-id>)",
+    ),
+    run_root: Path | None = typer.Option(
+        None,
+        "--run-root",
+        help="Run root used when --run is omitted",
     ),
     diff_mode: str = typer.Option(
         "auto",
@@ -303,55 +701,103 @@ def gate_allowlist(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
         help="Skip TaskX repo detection (use with caution)",
     ),
+    manifest: bool = typer.Option(
+        False,
+        "--manifest",
+        help="Initialize manifest if missing and append this command record",
+    ),
+    rescue_patch: str | None = typer.Option(
+        None,
+        "--rescue-patch",
+        help="Write a rescue patch on guard failure (path or 'auto')",
+    ),
 ) -> None:
     """Run allowlist compliance gate on a task run."""
     _require_module(run_allowlist_gate, "compliance")
 
-    # Guard check
-    _check_repo_guard(no_repo_guard)
-
-    console.print("[cyan]Running allowlist gate...[/cyan]")
+    selected_run: Path | None = None
+    manifest_enabled = False
+    manifest_started_at = get_manifest_timestamp("deterministic")
+    manifest_stdout: list[str] = []
+    manifest_stderr: list[str] = []
+    manifest_exit_code = 1
 
     try:
+        manifest_started_at = get_manifest_timestamp(normalize_timestamp_mode(timestamp_mode))
+        guarded_repo_root = _check_repo_guard(no_repo_guard, rescue_patch=rescue_patch)
+
         # Resolve repo root
-        effective_repo_root = repo_root or _check_repo_guard(no_repo_guard)
+        selected_run = _resolve_stateful_run_dir(run, run_root, timestamp_mode).resolve()
+        manifest_enabled = _ensure_manifest_ready(
+            selected_run,
+            create_if_missing=manifest,
+            mode="ACT",
+            timestamp_mode=timestamp_mode,
+        )
+        pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+        effective_repo_root = (repo_root or guarded_repo_root).resolve()
+        console.print("[cyan]Running allowlist gate...[/cyan]")
+        console.print(f"[cyan]Run directory:[/cyan] {selected_run}")
 
         result = run_allowlist_gate(
-            run_dir=run,
+            run_dir=selected_run,
             repo_root=effective_repo_root,
-            timestamp_mode=timestamp_mode,
+            timestamp_mode=pipeline_timestamp_mode,
             require_verification_evidence=require_verification_evidence,
             diff_mode=diff_mode,
+            out_dir=selected_run,
         )
 
         if not result.violations:
             console.print("[green]✓ Allowlist gate passed[/green]")
+            manifest_stdout.append("Allowlist gate passed")
             raise typer.Exit(0)
         else:
             console.print(f"[red]✗ Allowlist gate failed ({len(result.violations)} violations)[/red]")
+            manifest_stdout.append(f"Allowlist gate failed ({len(result.violations)} violations)")
             for v in result.violations:
                 console.print(f"[red]  - {v.type}: {v.message}[/red]")
+                manifest_stdout.append(f"{v.type}: {v.message}")
             raise typer.Exit(2)
 
-    except typer.Exit:
+    except typer.Exit as exc:
+        manifest_exit_code = int(exc.exit_code)
         raise
     except Exception as e:
+        manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
         raise typer.Exit(1)
+    finally:
+        _append_manifest_command(
+            enabled=manifest_enabled,
+            run_dir=selected_run,
+            timestamp_mode=timestamp_mode,
+            exit_code=manifest_exit_code,
+            started_at=manifest_started_at,
+            stdout_lines=manifest_stdout,
+            stderr_lines=manifest_stderr,
+            expected_artifacts=["ALLOWLIST_DIFF.json", VIOLATIONS_FILENAME],
+        )
 
 
 @cli.command()
 def promote_run(
-    run: Path = typer.Option(
-        ...,
-        help="Path to run directory",
+    run: Path | None = typer.Option(
+        None,
+        "--run",
+        help="Path to run directory (default <run-root>/<run-id>)",
+    ),
+    run_root: Path | None = typer.Option(
+        None,
+        "--run-root",
+        help="Run root used when --run is omitted",
     ),
     require_run_summary: bool = typer.Option(
         False,
@@ -367,47 +813,99 @@ def promote_run(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
         help="Skip TaskX repo detection (use with caution)",
     ),
+    manifest: bool = typer.Option(
+        False,
+        "--manifest",
+        help="Initialize manifest if missing and append this command record",
+    ),
+    rescue_patch: str | None = typer.Option(
+        None,
+        "--rescue-patch",
+        help="Write a rescue patch on guard failure (path or 'auto')",
+    ),
 ) -> None:
     """Promote a task run by issuing completion token."""
     _require_module(promote_run_impl, "promotion")
 
-    # Guard check
-    _check_repo_guard(no_repo_guard)
-
-    console.print("[cyan]Promoting run...[/cyan]")
+    selected_run: Path | None = None
+    manifest_enabled = False
+    manifest_started_at = get_manifest_timestamp("deterministic")
+    manifest_stdout: list[str] = []
+    manifest_stderr: list[str] = []
+    manifest_exit_code = 1
 
     try:
-        result = promote_run_impl(
-            run_dir=run,
-            require_run_summary=require_run_summary,
+        manifest_started_at = get_manifest_timestamp(normalize_timestamp_mode(timestamp_mode))
+        _check_repo_guard(no_repo_guard, rescue_patch=rescue_patch)
+        selected_run = _resolve_stateful_run_dir(run, run_root, timestamp_mode).resolve()
+        manifest_enabled = _ensure_manifest_ready(
+            selected_run,
+            create_if_missing=manifest,
+            mode="ACT",
             timestamp_mode=timestamp_mode,
         )
+        pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+        console.print("[cyan]Promoting run...[/cyan]")
+        console.print(f"[cyan]Run directory:[/cyan] {selected_run}")
+
+        result = promote_run_impl(
+            run_dir=selected_run,
+            require_run_summary=require_run_summary,
+            timestamp_mode=pipeline_timestamp_mode,
+            out_dir=selected_run,
+        )
+        _sync_promotion_token_alias(selected_run)
 
         if result.status == "passed":
             console.print("[green]✓ Run promoted successfully[/green]")
+            manifest_stdout.append("Run promoted successfully")
             raise typer.Exit(0)
         else:
             console.print("[red]✗ Run promotion failed[/red]")
+            manifest_stdout.append("Run promotion failed")
             raise typer.Exit(2)
-    except typer.Exit:
+    except typer.Exit as exc:
+        manifest_exit_code = int(exc.exit_code)
         raise
     except Exception as e:
+        manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
         raise typer.Exit(1)
+    finally:
+        _append_manifest_command(
+            enabled=manifest_enabled,
+            run_dir=selected_run,
+            timestamp_mode=timestamp_mode,
+            exit_code=manifest_exit_code,
+            started_at=manifest_started_at,
+            stdout_lines=manifest_stdout,
+            stderr_lines=manifest_stderr,
+            expected_artifacts=[
+                PROMOTION_LEGACY_FILENAME,
+                "PROMOTION.md",
+                PROMOTION_TOKEN_FILENAME,
+            ],
+        )
 
 
 @cli.command()
 def commit_run(
-    run: Path = typer.Option(
-        ...,
-        help="Path to run directory",
+    run: Path | None = typer.Option(
+        None,
+        "--run",
+        help="Path to run directory (default <run-root>/<run-id>)",
+    ),
+    run_root: Path | None = typer.Option(
+        None,
+        "--run-root",
+        help="Run root used when --run is omitted",
     ),
     message: str | None = typer.Option(
         None,
@@ -422,12 +920,22 @@ def commit_run(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
         help="Skip TaskX repo detection (use with caution)",
+    ),
+    manifest: bool = typer.Option(
+        False,
+        "--manifest",
+        help="Initialize manifest if missing and append this command record",
+    ),
+    rescue_patch: str | None = typer.Option(
+        None,
+        "--rescue-patch",
+        help="Write a rescue patch on guard failure (path or 'auto')",
     ),
 ) -> None:
     """Create git commit for a task run (allowlist-enforced).
@@ -448,17 +956,32 @@ def commit_run(
     """
     from taskx.git.commit_run import commit_run as commit_run_impl
 
-    # Guard check
-    _check_repo_guard(no_repo_guard)
-
-    console.print("[cyan]Creating commit for run...[/cyan]")
+    selected_run: Path | None = None
+    manifest_enabled = False
+    manifest_started_at = get_manifest_timestamp("deterministic")
+    manifest_stdout: list[str] = []
+    manifest_stderr: list[str] = []
+    manifest_exit_code = 1
 
     try:
+        manifest_started_at = get_manifest_timestamp(normalize_timestamp_mode(timestamp_mode))
+        _check_repo_guard(no_repo_guard, rescue_patch=rescue_patch)
+        selected_run = _resolve_stateful_run_dir(run, run_root, timestamp_mode).resolve()
+        manifest_enabled = _ensure_manifest_ready(
+            selected_run,
+            create_if_missing=manifest,
+            mode="ACT",
+            timestamp_mode=timestamp_mode,
+        )
+        pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+        console.print("[cyan]Creating commit for run...[/cyan]")
+        console.print(f"[cyan]Run directory:[/cyan] {selected_run}")
+
         report = commit_run_impl(
-            run_dir=run,
+            run_dir=selected_run,
             message=message,
             allow_unpromoted=allow_unpromoted,
-            timestamp_mode=timestamp_mode,
+            timestamp_mode=pipeline_timestamp_mode,
         )
 
         if report["status"] == "passed":
@@ -466,19 +989,42 @@ def commit_run(
             console.print(f"[green]  Branch: {report['git']['branch']}[/green]")
             console.print(f"[green]  Commit: {report['git']['head_after']}[/green]")
             console.print(f"[green]  Files staged: {len(report['allowlist']['staged_files'])}[/green]")
-            console.print(f"[green]  Report: {run / 'COMMIT_RUN.json'}[/green]")
+            console.print(f"[green]  Report: {selected_run / COMMIT_RUN_FILENAME}[/green]")
+            manifest_stdout.extend(
+                [
+                    "Commit created successfully",
+                    f"Branch: {report['git']['branch']}",
+                    f"Commit: {report['git']['head_after']}",
+                    f"Files staged: {len(report['allowlist']['staged_files'])}",
+                ]
+            )
             raise typer.Exit(0)
         else:
             console.print("[red]✗ Commit failed[/red]")
+            manifest_stdout.append("Commit failed")
             for error in report.get("errors", []):
                 console.print(f"[red]  • {error}[/red]")
+                manifest_stderr.append(str(error))
             raise typer.Exit(2)
 
-    except typer.Exit:
+    except typer.Exit as exc:
+        manifest_exit_code = int(exc.exit_code)
         raise
     except Exception as e:
+        manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
         raise typer.Exit(1)
+    finally:
+        _append_manifest_command(
+            enabled=manifest_enabled,
+            run_dir=selected_run,
+            timestamp_mode=timestamp_mode,
+            exit_code=manifest_exit_code,
+            started_at=manifest_started_at,
+            stdout_lines=manifest_stdout,
+            stderr_lines=manifest_stderr,
+            expected_artifacts=[COMMIT_RUN_FILENAME],
+        )
 
 
 @cli.command()
@@ -509,7 +1055,7 @@ def spec_feedback(
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
-        help="Timestamp mode: deterministic or wallclock",
+        help="Timestamp mode: deterministic, now, or wallclock",
     ),
 ) -> None:
     """Generate spec feedback from completed runs."""
@@ -691,8 +1237,12 @@ def dopemux_compile(
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
     paths = compute_dopemux_paths(detection.root, out_root_override=out_root)
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+    effective_run_id = run_id or make_run_id(prefix="RUN", timestamp_mode=canonical_mode)
 
     console.print(f"[cyan]Dopemux root:[/cyan] {detection.root} ({detection.marker_used})")
+    console.print(f"[cyan]Run ID:[/cyan] {effective_run_id}")
     console.print(f"[cyan]Task queue output:[/cyan] {paths.task_queue_out}")
 
     # Resolve paths (assumes spec_mine structure)
@@ -774,14 +1324,15 @@ def dopemux_run(
         console.print(f"[bold red]Error:[/bold red] Task packet {task_id} not found in {task_packets_dir}")
         raise typer.Exit(1)
     
-    packet_path = candidates[0]
+    packet_path = candidates[0].resolve()
+    paths.runs_out.mkdir(parents=True, exist_ok=True)
 
     try:
         result = create_run_workspace(
             task_packet_path=packet_path,
             output_dir=paths.runs_out,
-            run_id=run_id,
-            timestamp_mode=timestamp_mode,
+            run_id=effective_run_id,
+            timestamp_mode=pipeline_timestamp_mode,
             pipeline_version=__version__,
         )
         console.print(f"[green]✓ Workspace created at: {result['run_dir']}[/green]")
@@ -1208,16 +1759,17 @@ def doctor_cmd(
 
 @cli.command(name="ci-gate")
 def ci_gate_cmd(
-    out: Path = typer.Option(
-        Path("./out/taskx_ci_gate"),
+    out: Path | None = typer.Option(
+        None,
         "--out",
         "-o",
-        help="Output directory for CI gate reports"
+        help="Deprecated. CI gate reports are written inside the selected run directory.",
+        hidden=True,
     ),
     timestamp_mode: str = typer.Option(
         "deterministic",
         "--timestamp-mode",
-        help="Timestamp mode: deterministic or wallclock"
+        help="Timestamp mode: deterministic, now, or wallclock"
     ),
     require_git: bool = typer.Option(
         False,
@@ -1227,15 +1779,21 @@ def ci_gate_cmd(
     run: Path | None = typer.Option(
         None,
         "--run",
-        help="Specific run directory to validate promotion against"
+        help="Run directory to validate (default <run-root>/<run-id>)",
+    ),
+    run_root: Path | None = typer.Option(
+        None,
+        "--run-root",
+        help="Run root used when --run is omitted",
     ),
     runs_root: Path | None = typer.Option(
         None,
         "--runs-root",
-        help="Runs directory to search for latest run"
+        help="Deprecated alias for --run-root",
+        hidden=True,
     ),
     promotion_filename: str = typer.Option(
-        "PROMOTION.json",
+        PROMOTION_TOKEN_FILENAME,
         "--promotion-filename",
         help="Name of promotion file to validate"
     ),
@@ -1254,6 +1812,16 @@ def ci_gate_cmd(
         "--no-repo-guard",
         help="Skip TaskX repo detection (use with caution)",
     ),
+    manifest: bool = typer.Option(
+        False,
+        "--manifest",
+        help="Initialize manifest if missing and append this command record",
+    ),
+    rescue_patch: str | None = typer.Option(
+        None,
+        "--rescue-patch",
+        help="Write a rescue patch on guard failure (path or 'auto')",
+    ),
 ) -> None:
     """Run CI gate checks (doctor + promotion validation).
 
@@ -1268,17 +1836,43 @@ def ci_gate_cmd(
     """
     from taskx.ci_gate import run_ci_gate
 
-    # Guard check
-    _check_repo_guard(no_repo_guard)
+    selected_run: Path | None = None
+    manifest_enabled = False
+    manifest_started_at = get_manifest_timestamp("deterministic")
+    manifest_stdout: list[str] = []
+    manifest_stderr: list[str] = []
+    manifest_exit_code = 1
 
     try:
-        report = run_ci_gate(
-            out_dir=out,
+        manifest_started_at = get_manifest_timestamp(normalize_timestamp_mode(timestamp_mode))
+        _check_repo_guard(no_repo_guard, rescue_patch=rescue_patch)
+        selected_run = _resolve_stateful_run_dir(run, run_root or runs_root, timestamp_mode).resolve()
+        manifest_enabled = _ensure_manifest_ready(
+            selected_run,
+            create_if_missing=manifest,
+            mode="ACT",
             timestamp_mode=timestamp_mode,
+        )
+        pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+        effective_promotion_filename = promotion_filename
+        canonical_promotion_path = selected_run / PROMOTION_TOKEN_FILENAME
+        legacy_promotion_path = selected_run / PROMOTION_LEGACY_FILENAME
+        if (
+            promotion_filename == PROMOTION_TOKEN_FILENAME
+            and not canonical_promotion_path.exists()
+            and legacy_promotion_path.exists()
+        ):
+            effective_promotion_filename = PROMOTION_LEGACY_FILENAME
+        if out is not None:
+            typer.echo("⚠️  --out is deprecated; writing CI gate reports under the selected run directory.")
+
+        report = run_ci_gate(
+            out_dir=selected_run,
+            timestamp_mode=pipeline_timestamp_mode,
             require_git=require_git,
-            run_dir=run,
-            runs_root=runs_root,
-            promotion_filename=promotion_filename,
+            run_dir=selected_run,
+            runs_root=None,
+            promotion_filename=effective_promotion_filename,
             require_promotion=require_promotion,
             require_promotion_passed=require_promotion_passed
         )
@@ -1287,23 +1881,30 @@ def ci_gate_cmd(
         typer.echo("\nTaskX CI Gate Report")
         typer.echo(f"Status: {report.status.upper()}")
         typer.echo(f"\nDoctor: {report.doctor['status']}")
+        manifest_stdout.append(f"CI gate status: {report.status}")
+        manifest_stdout.append(f"Doctor status: {report.doctor['status']}")
 
         if report.promotion["required"]:
             promo_status = "✅ Validated" if report.promotion["validated"] else "❌ Failed"
             typer.echo(f"Promotion: {promo_status}")
+            manifest_stdout.append(f"Promotion validated: {report.promotion['validated']}")
             if report.promotion["run_dir"]:
                 typer.echo(f"  Run: {report.promotion['run_dir']}")
         else:
             typer.echo("Promotion: Not required")
+            manifest_stdout.append("Promotion validation skipped")
 
         typer.echo("\nChecks:")
         typer.echo(f"  Passed: {report.checks['passed']}")
         typer.echo(f"  Failed: {report.checks['failed']}")
         typer.echo(f"  Warnings: {report.checks['warnings']}")
+        manifest_stdout.append(
+            f"Checks passed={report.checks['passed']} failed={report.checks['failed']} warnings={report.checks['warnings']}"
+        )
 
         typer.echo("\nReports written to:")
-        typer.echo(f"  {out / 'CI_GATE_REPORT.json'}")
-        typer.echo(f"  {out / 'CI_GATE_REPORT.md'}")
+        typer.echo(f"  {selected_run / 'CI_GATE_REPORT.json'}")
+        typer.echo(f"  {selected_run / 'CI_GATE_REPORT.md'}")
 
         # Exit with appropriate code
         if report.status == "failed":
@@ -1313,9 +1914,32 @@ def ci_gate_cmd(
             typer.echo("\n✅ CI gate passed.")
             raise typer.Exit(code=0)
 
+    except typer.Exit as exc:
+        manifest_exit_code = int(exc.exit_code)
+        raise
     except Exception as e:
+        manifest_stderr.append(str(e))
         typer.echo(f"❌ CI gate run failed: {e}", err=True)
         raise typer.Exit(code=1)
+    finally:
+        ci_gate_artifacts = []
+        if selected_run is not None:
+            ci_gate_artifacts = [
+                _artifact_ref_for_run(selected_run, selected_run / "CI_GATE_REPORT.json"),
+                _artifact_ref_for_run(selected_run, selected_run / "CI_GATE_REPORT.md"),
+                _artifact_ref_for_run(selected_run, selected_run / "doctor" / "DOCTOR_REPORT.json"),
+                _artifact_ref_for_run(selected_run, selected_run / "doctor" / "DOCTOR_REPORT.md"),
+            ]
+        _append_manifest_command(
+            enabled=manifest_enabled,
+            run_dir=selected_run,
+            timestamp_mode=timestamp_mode,
+            exit_code=manifest_exit_code,
+            started_at=manifest_started_at,
+            stdout_lines=manifest_stdout,
+            stderr_lines=manifest_stderr,
+            expected_artifacts=ci_gate_artifacts,
+        )
 
 
 

@@ -92,6 +92,16 @@ Visit the [Releases Page](https://github.com/OWNER/REPO/releases) to confirm:
 
 ## ⚠️ Troubleshooting
 
+### Lint Baseline Policy
+
+Until the repo-wide Ruff baseline is cleaned up, TaskX packet work should run lint as a changed-path gate:
+
+```bash
+ruff check <changed paths>
+```
+
+Running Ruff across the entire repository can report unrelated pre-existing issues and should be treated as informational until baseline cleanup is complete.
+
 ### Local Script Fails
 - **Dir not clean?** Commit or stash your changes.
 - **Tests failed?** Fix the bugs first!

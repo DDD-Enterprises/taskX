@@ -61,6 +61,20 @@ graph LR
 
 ---
 
+## Deterministic Task Execution
+
+TaskX uses isolated git worktrees and commit plans to ensure:
+
+- linear `main` history
+- one packet = one commit stack
+- deterministic rebases and fast-forward merges
+- zero accidental commits on `main`
+
+See `docs/WORKTREES_COMMIT_SEQUENCING.md` for details.
+If a packet includes a `COMMIT PLAN`, execute it with `taskx commit-sequence`; manual commits can break determinism guarantees. See `docs/TASK_PACKET_FORMAT.md`.
+
+---
+
 ## 🚀 Quick Start
 
 Get up and running faster than you can say "idempotency."

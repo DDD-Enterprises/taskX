@@ -76,8 +76,10 @@ except ImportError:
 
 try:
     from taskx.pipeline.bundle.exporter import BundleExporter
+    from taskx.pipeline.bundle.ingester import BundleIngester
 except ImportError:
     BundleExporter = None  # type: ignore
+    BundleIngester = None  # type: ignore
 
 try:
     from taskx.pipeline.bundle.ingester import ingest_bundle as ingest_bundle_impl
@@ -2177,6 +2179,12 @@ bundle_app = typer.Typer(
 def _require_exporter() -> None:
     if BundleExporter is None:
         console.print("[bold red]Error:[/bold red] BundleExporter not available")
+        raise typer.Exit(1)
+
+
+def _require_ingester() -> None:
+    if BundleIngester is None:
+        console.print("[bold red]Error:[/bold red] BundleIngester not available")
         raise typer.Exit(1)
 
 

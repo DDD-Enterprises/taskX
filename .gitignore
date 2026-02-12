@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Coverage
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Local outputs
+out/

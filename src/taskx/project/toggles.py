@@ -75,7 +75,7 @@ def project_status(project_dir: Path) -> dict[str, Any]:
                 {
                     "file": str(file_path),
                     "exists": False,
-                    "packs": {pack: False for pack in PACK_ORDER},
+                    "packs": dict.fromkeys(PACK_ORDER, False),
                 }
             )
             continue

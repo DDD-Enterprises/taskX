@@ -7,7 +7,7 @@ import tempfile
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 DETERMINISTIC_TIMESTAMP = "1970-01-01T00:00:00Z"
 REQUIRED_RUN_FILES = [
@@ -111,7 +111,7 @@ def _aggregate_anomalies(run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
         }
         for text, run_ids in anomaly_map.items()
     ]
-    top.sort(key=lambda item: (-item["count"], item["text"]))
+    top.sort(key=lambda item: (-cast("int", item["count"]), cast("str", item["text"])))
 
     return {
         "total_unique": len(top),
@@ -121,7 +121,7 @@ def _aggregate_anomalies(run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _aggregate_claims(run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate claims by type and recurring textual signatures."""
-    counts = {claim_type: 0 for claim_type in CLAIM_TYPES}
+    counts = dict.fromkeys(CLAIM_TYPES, 0)
     failed_map: dict[str, set[str]] = {}
     unknown_map: dict[str, set[str]] = {}
 
@@ -164,7 +164,7 @@ def _aggregate_claims(run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
         for text, run_ids in failed_map.items()
         if len(run_ids) >= 1
     ]
-    top_failed.sort(key=lambda item: (-item["count"], item["text"]))
+    top_failed.sort(key=lambda item: (-cast("int", item["count"]), cast("str", item["text"])))
 
     repeated_unknown = [
         {
@@ -175,7 +175,7 @@ def _aggregate_claims(run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
         for text, run_ids in unknown_map.items()
         if len(run_ids) > 1
     ]
-    repeated_unknown.sort(key=lambda item: (-item["count"], item["text"]))
+    repeated_unknown.sort(key=lambda item: (-cast("int", item["count"]), cast("str", item["text"])))
 
     return {
         "claim_counts_by_type": counts,
@@ -247,7 +247,7 @@ def _extract_path_strings(data: Any) -> list[str]:
 def _compute_drift_indicators(case_dir: Path, run_dirs: list[Path], run_summaries: list[dict[str, Any]]) -> dict[str, Any]:
     """Compute drift and consistency indicators across runs."""
     missing_by_run: list[dict[str, Any]] = []
-    missing_counts = Counter()
+    missing_counts: Counter[str] = Counter()
 
     for run_dir in run_dirs:
         missing = [name for name in REQUIRED_RUN_FILES if not (run_dir / name).exists()]
@@ -664,7 +664,7 @@ def audit_case(
         output_dir,
         case_dir=case_dir,
         case_id=case_id,
-        generated_at=findings["generated_at"],
+        generated_at=str(findings["generated_at"]),
         findings=findings,
     )
 

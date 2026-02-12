@@ -173,7 +173,7 @@ def _detect_changed_files_git(repo_root: Path) -> set[str]:
 
         return changed
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Git command failed: {e}")
+        raise RuntimeError(f"Git command failed: {e}") from e
 
 
 def _detect_changed_files_fs(repo_root: Path, envelope: dict) -> set[str]:
@@ -227,6 +227,7 @@ def _classify_files(
     Returns:
         (allowed_files, disallowed_files)
     """
+    _ = repo_root
     allowed = []
     disallowed = []
 

@@ -295,10 +295,10 @@ def detect_repo_scope(
         # Verify project root is within workspace root
         try:
             project_root.relative_to(workspace_root)
-        except ValueError:
+        except ValueError as exc:
             raise RuntimeError(
                 f"Project root {project_root} is not within workspace root {workspace_root}"
-            )
+            ) from exc
 
         project_marker = "override"
         project_type = _infer_project_type_from_config(project_root, config)

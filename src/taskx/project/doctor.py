@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from taskx.project.common import (
     DISABLED_TEXT,
@@ -16,6 +15,9 @@ from taskx.project.common import (
     read_template_text,
 )
 from taskx.project.mode import MODE_TO_PACK_ENABLED, VALID_MODES, normalize_mode, set_mode
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 SUPERVISOR_PROMPT_FILENAME = "SUPERVISOR_PRIMING_PROMPT.txt"
 

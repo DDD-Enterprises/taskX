@@ -5,22 +5,23 @@ import shutil
 import sys
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
-
-from typing import Any
 
 from taskx import __version__
 from taskx.manifest import (
     append_command_record,
     check_manifest,
     finalize_manifest,
-    get_timestamp as get_manifest_timestamp,
     init_manifest,
     load_manifest,
     manifest_exists,
     save_manifest,
+)
+from taskx.manifest import (
+    get_timestamp as get_manifest_timestamp,
 )
 from taskx.obs.run_artifacts import (
     COMMIT_RUN_FILENAME,
@@ -33,7 +34,6 @@ from taskx.obs.run_artifacts import (
     resolve_run_dir,
     to_pipeline_timestamp_mode,
 )
-
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -76,10 +76,8 @@ except ImportError:
 
 try:
     from taskx.pipeline.bundle.exporter import BundleExporter
-    from taskx.pipeline.bundle.ingester import BundleIngester
 except ImportError:
     BundleExporter = None  # type: ignore
-    BundleIngester = None  # type: ignore
 
 try:
     from taskx.pipeline.bundle.ingester import ingest_bundle as ingest_bundle_impl
@@ -100,6 +98,10 @@ cli = typer.Typer(
 console = Console()
 
 
+def _use_compat_options(*_values: object) -> None:
+    """Mark backward-compatible CLI options as intentionally accepted."""
+
+
 class DirtyPolicy(str, Enum):
     """Dirty working tree handling policy for deterministic commands."""
 
@@ -113,13 +115,30 @@ class FinishMode(str, Enum):
     REBASE_FF = "rebase-ff"
 
 
+def _version_option_callback(value: bool) -> None:
+    """Handle eager --version option."""
+    if value:
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
 @cli.callback(invoke_without_command=True)
-def _cli_callback(ctx: typer.Context) -> None:
+def _cli_callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show TaskX version and exit.",
+        is_eager=True,
+        callback=_version_option_callback,
+    ),
+) -> None:
     """
     CLI callback that runs on every invocation.
 
     Checks for import shadowing issues and emits warnings.
     """
+    _ = version
     # Skip shadowing check for print-runtime-origin command
     if ctx.invoked_subcommand != "print-runtime-origin":
         _check_import_shadowing()
@@ -132,7 +151,6 @@ def _check_import_shadowing() -> None:
     Emits a warning to stderr if taskx.__file__ is not in site-packages
     or the expected TaskX repository location.
     """
-    import sys
     import taskx
 
     taskx_file = taskx.__file__ or ""
@@ -144,12 +162,12 @@ def _check_import_shadowing() -> None:
     is_taskx_repo = "/code/taskX/" in taskx_file
 
     if not is_site_packages and not is_taskx_repo:
-        console.print(
+        typer.echo(
             f"[bold yellow]WARNING: taskx is being imported from an unexpected location:[/bold yellow]\n"
             f"[yellow]  {taskx_file}[/yellow]\n"
             f"[yellow]This often indicates .pth shadowing or PYTHONPATH issues.[/yellow]\n"
             f"[yellow]Expected locations: */site-packages/taskx/ or */code/taskX/[/yellow]",
-            file=sys.stderr
+            err=True,
         )
 
 
@@ -446,7 +464,7 @@ def manifest_check_cmd(
         replay = check_manifest(run.resolve())
     except FileNotFoundError as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
 
     manifest = load_manifest(run.resolve())
     if manifest is not None:
@@ -486,6 +504,7 @@ def print_runtime_origin() -> None:
     Shows where taskx is being imported from and sys.path ordering.
     """
     import sys
+
     import taskx
 
     console.print("[bold]TaskX Runtime Origin Diagnostic[/bold]\n")
@@ -528,6 +547,7 @@ def compile_tasks(
 ) -> None:
     """Compile task packets from spec."""
     _require_module(compile_task_queue, "task_compiler")
+    _use_compat_options(project_root)
 
     console.print("[cyan]Compiling task packets...[/cyan]")
 
@@ -557,7 +577,7 @@ def compile_tasks(
         console.print("[green]✓ Task compilation complete[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @cli.command()
@@ -596,6 +616,7 @@ def run_task(
 ) -> None:
     """Execute a task packet (create run workspace)."""
     _require_module(create_run_workspace, "task_runner")
+    _use_compat_options(repo_root, project_root)
 
     canonical_mode = normalize_timestamp_mode(timestamp_mode)
     pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
@@ -622,7 +643,7 @@ def run_task(
     if not candidates:
         console.print(f"[bold red]Error:[/bold red] Task packet {task_id} not found in {task_packets_dir}")
         raise typer.Exit(1)
-    
+
     packet_path = candidates[0].resolve()
 
     try:
@@ -634,10 +655,10 @@ def run_task(
             pipeline_version=__version__,
         )
         console.print(f"[green]✓ Workpace created at: {result['run_dir']}[/green]")
-        console.print(f"[cyan]To implement:[/cyan] Follow instructions in PLAN.md")
+        console.print("[cyan]To implement:[/cyan] Follow instructions in PLAN.md")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @cli.command()
@@ -669,6 +690,7 @@ def collect_evidence(
 ) -> None:
     """Collect verification evidence from a task run."""
     _require_module(collect_evidence_impl, "evidence")
+    _use_compat_options(repo_root, project_root)
 
     console.print("[cyan]Collecting evidence...[/cyan]")
 
@@ -683,7 +705,7 @@ def collect_evidence(
         console.print("[green]✓ Evidence collection complete[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @cli.command()
@@ -736,6 +758,7 @@ def gate_allowlist(
 ) -> None:
     """Run allowlist compliance gate on a task run."""
     _require_module(run_allowlist_gate, "compliance")
+    _use_compat_options(project_root)
 
     selected_run: Path | None = None
     manifest_enabled = False
@@ -788,7 +811,7 @@ def gate_allowlist(
     except Exception as e:
         manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     finally:
         _append_manifest_command(
             enabled=manifest_enabled,
@@ -848,6 +871,7 @@ def promote_run(
 ) -> None:
     """Promote a task run by issuing completion token."""
     _require_module(promote_run_impl, "promotion")
+    _use_compat_options(repo_root, project_root)
 
     selected_run: Path | None = None
     manifest_enabled = False
@@ -892,7 +916,7 @@ def promote_run(
     except Exception as e:
         manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     finally:
         _append_manifest_command(
             enabled=manifest_enabled,
@@ -1028,7 +1052,7 @@ def commit_run(
     except Exception as e:
         manifest_stderr.append(str(e))
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     finally:
         _append_manifest_command(
             enabled=manifest_enabled,
@@ -1075,6 +1099,7 @@ def spec_feedback(
 ) -> None:
     """Generate spec feedback from completed runs."""
     _require_module(generate_spec_feedback, "spec_feedback")
+    _use_compat_options(repo_root, project_root)
 
     console.print("[cyan]Generating spec feedback...[/cyan]")
 
@@ -1093,7 +1118,7 @@ def spec_feedback(
         console.print("[green]✓ Spec feedback generated[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @cli.command()
@@ -1144,6 +1169,7 @@ def loop(
     ),
 ) -> None:
     """Run complete task packet lifecycle loop."""
+    _use_compat_options(project_root)
     if not LOOP_AVAILABLE:
         console.print("[bold red]Error:[/bold red] loop module not installed in this TaskX build")
         raise typer.Exit(1)
@@ -1181,7 +1207,7 @@ def loop(
         console.print("[green]✓ Loop execution complete[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 # ============================================================================
@@ -1417,13 +1443,13 @@ def dopemux_compile(
     """Compile task packets with Dopemux path conventions."""
     _require_dopemux()
     _require_module(compile_task_queue, "task_compiler")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
     paths = compute_dopemux_paths(detection.root, out_root_override=out_root)
     canonical_mode = normalize_timestamp_mode(timestamp_mode)
-    pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
-    effective_run_id = run_id or make_run_id(prefix="RUN", timestamp_mode=canonical_mode)
+    effective_run_id = make_run_id(prefix="RUN", timestamp_mode=canonical_mode)
 
     console.print(f"[cyan]Dopemux root:[/cyan] {detection.root} ({detection.marker_used})")
     console.print(f"[cyan]Run ID:[/cyan] {effective_run_id}")
@@ -1457,7 +1483,7 @@ def dopemux_compile(
         console.print(f"[green]✓ Task packets compiled to {paths.task_queue_out}[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="run")
@@ -1490,13 +1516,17 @@ def dopemux_run(
     """Execute a task packet (create run workspace)."""
     _require_dopemux()
     _require_module(create_run_workspace, "task_runner")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
     paths = compute_dopemux_paths(detection.root, out_root_override=out_root)
+    canonical_mode = normalize_timestamp_mode(timestamp_mode)
+    pipeline_timestamp_mode = to_pipeline_timestamp_mode(timestamp_mode)
+    effective_run_id = run_id or make_run_id(prefix="RUN", timestamp_mode=canonical_mode)
 
     console.print(f"[cyan]Dopemux root:[/cyan] {detection.root} ({detection.marker_used})")
-    
+
     # Find packet
     task_packets_dir = paths.task_queue_out / "TASK_PACKETS"
     if not task_packets_dir.exists():
@@ -1507,7 +1537,7 @@ def dopemux_run(
     if not candidates:
         console.print(f"[bold red]Error:[/bold red] Task packet {task_id} not found in {task_packets_dir}")
         raise typer.Exit(1)
-    
+
     packet_path = candidates[0].resolve()
     paths.runs_out.mkdir(parents=True, exist_ok=True)
 
@@ -1522,7 +1552,7 @@ def dopemux_run(
         console.print(f"[green]✓ Workspace created at: {result['run_dir']}[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="collect")
@@ -1559,6 +1589,7 @@ def dopemux_collect(
     """Collect evidence with Dopemux path conventions."""
     _require_dopemux()
     _require_module(collect_evidence_impl, "evidence")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
@@ -1581,7 +1612,7 @@ def dopemux_collect(
         console.print("[green]✓ Evidence collected[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="gate")
@@ -1618,6 +1649,7 @@ def dopemux_gate(
     """Run allowlist gate with Dopemux path conventions."""
     _require_dopemux()
     _require_module(run_allowlist_gate, "compliance")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
@@ -1650,7 +1682,7 @@ def dopemux_gate(
         raise
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="promote")
@@ -1683,6 +1715,7 @@ def dopemux_promote(
     """Promote a run with Dopemux path conventions."""
     _require_dopemux()
     _require_module(promote_run_impl, "promotion")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
@@ -1711,7 +1744,7 @@ def dopemux_promote(
         raise
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="feedback")
@@ -1740,6 +1773,7 @@ def dopemux_feedback(
     """Generate spec feedback with Dopemux path conventions."""
     _require_dopemux()
     _require_module(generate_spec_feedback, "spec_feedback")
+    _use_compat_options(project_root)
 
     # Detect Dopemux root and compute paths
     detection = detect_dopemux_root(override=dopemux_root)
@@ -1772,7 +1806,7 @@ def dopemux_feedback(
         console.print("[green]✓ Spec feedback generated[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @dopemux_app.command(name="loop")
@@ -1824,6 +1858,7 @@ def dopemux_loop(
 ) -> None:
     """Run complete lifecycle loop with Dopemux path conventions."""
     _require_dopemux()
+    _use_compat_options(project_root)
 
     if not LOOP_AVAILABLE:
         console.print("[bold red]Error:[/bold red] loop module not installed in this TaskX build")
@@ -1862,7 +1897,7 @@ def dopemux_loop(
         console.print("[green]✓ Loop execution complete[/green]")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @cli.command(name="doctor")
@@ -1938,7 +1973,7 @@ def doctor_cmd(
         raise
     except Exception as e:
         typer.echo(f"❌ Doctor run failed: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 @cli.command(name="ci-gate")
@@ -2104,7 +2139,7 @@ def ci_gate_cmd(
     except Exception as e:
         manifest_stderr.append(str(e))
         typer.echo(f"❌ CI gate run failed: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
     finally:
         ci_gate_artifacts = []
         if selected_run is not None:
@@ -2358,24 +2393,6 @@ bundle_app = typer.Typer(
 )
 
 
-def _require_exporter() -> None:
-    if BundleExporter is None:
-        console.print("[bold red]Error:[/bold red] BundleExporter not available")
-        raise typer.Exit(1)
-
-
-def _require_ingester() -> None:
-    if BundleIngester is None:
-        console.print("[bold red]Error:[/bold red] BundleIngester not available")
-        raise typer.Exit(1)
-
-
-def _require_ingester() -> None:
-    if ingest_bundle_impl is None:
-        console.print("[bold red]Error:[/bold red] Bundle ingester not available")
-        raise typer.Exit(1)
-
-
 @bundle_app.command(name="export")
 def bundle_export(
     last: int = typer.Option(10, help="Number of recent runs/packets to include"),
@@ -2384,7 +2401,7 @@ def bundle_export(
     config: Path | None = typer.Option(None, help="Path to bundle config yaml"),
 ) -> None:
     """Export a deterministic case bundle."""
-    _require_exporter()
+    _require_module(BundleExporter, "bundle_exporter")
 
     console.print(f"[cyan]Exporting last {last} items...[/cyan]")
 
@@ -2396,7 +2413,7 @@ def bundle_export(
 
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] Bundle export failed: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @bundle_app.command(name="ingest")
@@ -2410,7 +2427,7 @@ def bundle_ingest(
     ),
 ) -> None:
     """Ingest a case bundle and generate CASE_INDEX + ingest report."""
-    _require_ingester()
+    _require_module(ingest_bundle_impl, "bundle_ingester")
 
     try:
         result = ingest_bundle_impl(zip_path=zip_path, output_dir=out, timestamp_mode=timestamp_mode)
@@ -2421,7 +2438,7 @@ def bundle_ingest(
         typer.echo(f"CASE_INGEST_REPORT.md: {result['ingest_report']}")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] Bundle ingest failed: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 cli.add_typer(bundle_app, name="bundle")
@@ -2432,12 +2449,6 @@ case_app = typer.Typer(
     help="Case audit commands",
     no_args_is_help=True,
 )
-
-
-def _require_case_auditor() -> None:
-    if audit_case_impl is None:
-        console.print("[bold red]Error:[/bold red] Case auditor not available")
-        raise typer.Exit(1)
 
 
 @case_app.command(name="audit")
@@ -2455,7 +2466,7 @@ def case_audit(
     ),
 ) -> None:
     """Run deterministic audit on an ingested case directory."""
-    _require_case_auditor()
+    _require_module(audit_case_impl, "case_auditor")
     audit_out = out if out else (case_dir / "reports")
 
     try:
@@ -2466,7 +2477,7 @@ def case_audit(
         typer.echo(f"PACKET_RECOMMENDATIONS.json: {result['recommendations']}")
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] Case audit failed: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 cli.add_typer(case_app, name="case")

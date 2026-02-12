@@ -11,11 +11,11 @@ from typing import Any
 # Use importlib.resources for Python 3.11+
 try:
     from importlib.resources import files
-except ImportError:
+except ImportError as exc:
     raise RuntimeError(
         "TaskX requires Python 3.11+ for importlib.resources. "
         "Please upgrade Python."
-    )
+    ) from exc
 
 
 @dataclass(frozen=True)

@@ -206,6 +206,7 @@ def _check_schema_load() -> CheckItem:
 
 def _check_repo_detection(repo_root: Path | None, project_root: Path | None) -> CheckItem:
     """Check D: Repo scope detection (optional)."""
+    _ = project_root
     # This is optional - we just report what we detect
     detected_repo = None
     marker = None

@@ -68,7 +68,7 @@ main() {
 
     # Run doctor from /tmp (portable check)
     log_info "Running doctor from /tmp (portable mode)..."
-    (cd /tmp && taskx doctor --timestamp-mode deterministic --require-git=false) || {
+    (cd /tmp && taskx doctor --timestamp-mode deterministic) || {
         log_error "Doctor check failed"
         exit 1
     }

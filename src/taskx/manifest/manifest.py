@@ -7,7 +7,10 @@ import re
 import shlex
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 Manifest = dict[str, Any]
 
@@ -343,10 +346,7 @@ def _normalize_artifact(run_dir: Path, artifact: str) -> str:
         return artifact_text
 
     artifact_path = Path(artifact_text)
-    if artifact_path.is_absolute():
-        resolved = artifact_path
-    else:
-        resolved = (run_dir / artifact_path).resolve()
+    resolved = artifact_path if artifact_path.is_absolute() else (run_dir / artifact_path).resolve()
 
     try:
         return resolved.relative_to(run_dir).as_posix()

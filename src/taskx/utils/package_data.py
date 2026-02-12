@@ -68,7 +68,7 @@ def get_schema_path(schema_name: str) -> Path | None:
     Returns:
         None (schemas are accessed via package data, not filesystem)
     """
+    _ = schema_name
     # In package-only mode, we don't provide filesystem paths
     # Schemas are accessed via importlib.resources
     return None
-

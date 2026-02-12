@@ -3,7 +3,6 @@
 from typing import Any
 
 try:
-    import jsonschema
     from jsonschema.validators import Draft202012Validator
     JSONSCHEMA_AVAILABLE = True
 except ImportError:

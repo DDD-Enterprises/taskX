@@ -4,17 +4,14 @@ import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from rich.console import Console
 
 from taskx import __version__
-
-
 from taskx.pipeline.evidence.collector import collect_evidence
 from taskx.pipeline.loop.types import LoopInputs, StageResult
 from taskx.pipeline.spec_feedback.feedback import generate_feedback
 
 try:
-    from taskx.spec_mining.miner import mine_spec
+    from taskx.spec_mining.miner import mine_spec  # type: ignore[import-untyped]
 except ImportError:
     mine_spec = None  # type: ignore[assignment]
 from taskx.pipeline.task_compiler.compiler import compile_task_queue
@@ -174,6 +171,7 @@ def _run_compile_tasks(
     mine_result: StageResult,
 ) -> StageResult:
     """Run A6 task compilation stage."""
+    _ = mine_result
     if stop:
         return _skipped_stage()
 
@@ -258,6 +256,7 @@ def _run_task_workspace(
     compile_result: StageResult,
 ) -> StageResult:
     """Run A7 task workspace generation stage (optional)."""
+    _ = compile_result
     if not inputs.run_task or stop:
         return _skipped_stage()
 
@@ -283,7 +282,7 @@ def _run_task_workspace(
             raise FileNotFoundError(f"Task packet not found for {inputs.run_task}")
 
         # Parse task packet
-        task_info = parse_task_packet(packet_file)
+        parse_task_packet(packet_file)
 
         # Call A7 runner
         create_run_workspace(
@@ -422,6 +421,7 @@ def _run_spec_feedback(
     runs_path: Path | None,
 ) -> StageResult:
     """Run A9 spec feedback stage (optional)."""
+    _ = compile_result
     if not inputs.feedback or stop:
         return _skipped_stage()
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from taskx.schemas.message import CanonicalMessage
+    from taskx.schemas.message import CanonicalMessage  # type: ignore[import-untyped]
 except ImportError:
     CanonicalMessage = None  # type: ignore[assignment, misc]
 from taskx.schemas.validator import validate_data

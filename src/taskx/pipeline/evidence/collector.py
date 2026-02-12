@@ -294,7 +294,7 @@ def _analyze_status(file_contents: dict[str, str]) -> RunStatus:
     verification_commands_listed = False
     if file_contents.get("COMMANDS"):
         # Has content beyond shebang/set -e
-        lines = [l.strip() for l in file_contents["COMMANDS"].split("\n") if l.strip()]
+        lines = [line.strip() for line in file_contents["COMMANDS"].split("\n") if line.strip()]
         verification_commands_listed = len(lines) > 2  # More than just shebang + set -e
 
     # Check if verification outputs are present

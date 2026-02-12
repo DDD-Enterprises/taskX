@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
 import subprocess
 import tempfile
+from datetime import UTC, datetime
+from pathlib import Path
 
 
 def _resolve_rescue_patch_path(cwd: Path, rescue_patch: str) -> Path:
     """Resolve explicit path or 'auto' destination for rescue patch output."""
     if rescue_patch == "auto":
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         return cwd / "out" / "taskx_rescue" / timestamp / "rescue.patch"
 
     candidate = Path(rescue_patch).expanduser()

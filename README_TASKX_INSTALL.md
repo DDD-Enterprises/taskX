@@ -50,6 +50,20 @@ Reports are written to:
 
 If `.envrc` exists but `direnv` is missing, `taskx doctor` emits a warning (non-failing).
 
+### Dev Note: Multiple TaskX Installs
+
+If `taskx` on `PATH` points to a different install than this checkout, run commands from this repo with:
+
+```bash
+PYTHONPATH=src python -m taskx ...
+```
+
+Or install editable in your active environment:
+
+```bash
+pip install -e .
+```
+
 ### Hard Repo Marker Requirement
 
 Stateful TaskX commands now fail closed unless the current repository has a `.taskxroot` file at its root.

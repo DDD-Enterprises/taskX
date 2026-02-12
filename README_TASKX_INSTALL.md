@@ -30,6 +30,26 @@ python -c "import taskx; print(taskx.__version__)"
 taskx doctor --timestamp-mode deterministic
 ```
 
+### Repo Shell Wiring (`project shell`)
+
+TaskX can bootstrap repo-local shell wiring so `taskx` resolves deterministically inside a repository:
+
+```bash
+taskx project shell init --repo-root .
+taskx project shell status --repo-root .
+```
+
+`init` creates (without overwriting existing files):
+- `.envrc` with `export PATH="$(pwd)/scripts:$PATH"`
+- `scripts/taskx` shim
+- `scripts/taskx-local` launcher
+
+Reports are written to:
+- `out/taskx_project_shell/PROJECT_SHELL_REPORT.json`
+- `out/taskx_project_shell/PROJECT_SHELL_REPORT.md`
+
+If `.envrc` exists but `direnv` is missing, `taskx doctor` emits a warning (non-failing).
+
 ### Hard Repo Marker Requirement
 
 Stateful TaskX commands now fail closed unless the current repository has a `.taskxroot` file at its root.

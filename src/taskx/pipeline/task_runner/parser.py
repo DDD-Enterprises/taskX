@@ -6,7 +6,10 @@ import hashlib
 import re
 from typing import TYPE_CHECKING
 
-from taskx.pipeline.task_runner.types import TaskPacketInfo
+from taskx.pipeline.task_runner.types import (
+    ProjectIdentity,
+    TaskPacketInfo,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,7 +25,11 @@ REQUIRED_SECTIONS = [
 ]
 
 
-def parse_task_packet(packet_path: Path) -> TaskPacketInfo:
+def parse_task_packet(
+    packet_path: Path,
+    *,
+    packet_required_header: bool = False,
+) -> TaskPacketInfo:
     """Parse a task packet markdown file.
 
     Args:
@@ -56,6 +63,11 @@ def parse_task_packet(packet_path: Path) -> TaskPacketInfo:
 
     # Parse sections
     sections = _parse_sections(content)
+    project_identity = _extract_project_identity(sections.get("PROJECT IDENTITY"))
+    _assert_project_identity_header(
+        project_identity=project_identity,
+        packet_required_header=packet_required_header,
+    )
 
     # Validate required sections
     missing = [sec for sec in REQUIRED_SECTIONS if sec not in sections]
@@ -90,7 +102,24 @@ def parse_task_packet(packet_path: Path) -> TaskPacketInfo:
         sources=sources,
         verification_commands=verification,
         sections=sections,
+        project_identity=project_identity,
     )
+
+
+def parse_packet_project_identity(
+    packet_path: Path,
+    *,
+    packet_required_header: bool = False,
+) -> ProjectIdentity | None:
+    """Parse PROJECT IDENTITY section without validating full packet structure."""
+    content = packet_path.read_text(encoding="utf-8")
+    sections = _parse_sections(content)
+    project_identity = _extract_project_identity(sections.get("PROJECT IDENTITY"))
+    _assert_project_identity_header(
+        project_identity=project_identity,
+        packet_required_header=packet_required_header,
+    )
+    return project_identity
 
 
 def _parse_sections(content: str) -> dict[str, str]:
@@ -208,3 +237,50 @@ def _extract_sources(section_content: str) -> list[str]:
                 sources.append(item)
 
     return sources
+
+
+def _extract_project_identity(section_content: str | None) -> ProjectIdentity | None:
+    """Parse optional PROJECT IDENTITY section key/value pairs."""
+    if section_content is None:
+        return None
+
+    parsed: dict[str, str] = {}
+    for raw_line in section_content.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("-") or line.startswith("*"):
+            line = re.sub(r"^[-*]\s+", "", line).strip()
+        if ":" not in line:
+            continue
+
+        key, value = line.split(":", 1)
+        key_norm = key.strip().lower().replace(" ", "_")
+        value_norm = value.strip()
+        if value_norm:
+            parsed[key_norm] = value_norm
+
+    project_id = parsed.get("project_id", "").strip()
+    if not project_id:
+        return None
+
+    intended_repo = parsed.get("intended_repo")
+    if intended_repo is not None:
+        intended_repo = intended_repo.strip() or None
+
+    return ProjectIdentity(
+        project_id=project_id,
+        intended_repo=intended_repo,
+    )
+
+
+def _assert_project_identity_header(
+    *,
+    project_identity: ProjectIdentity | None,
+    packet_required_header: bool,
+) -> None:
+    if packet_required_header and project_identity is None:
+        raise ValueError(
+            "ERROR: Task Packet missing required PROJECT IDENTITY header.\n"
+            "Refusing to run."
+        )

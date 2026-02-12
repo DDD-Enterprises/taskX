@@ -51,3 +51,7 @@ Stop and ask if:
 - You’d need to invent requirements, data, or “best guesses.”
 - Verification gates can’t be run or would be bypassed.
 - Instructions conflict (task packet vs repo constraints): STOP and surface the conflict.
+
+<!-- TASKX:AUTOGEN:START -->
+<!-- (managed by taskx docs refresh-llm) -->
+<!-- TASKX:AUTOGEN:END -->

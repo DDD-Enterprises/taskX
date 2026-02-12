@@ -146,3 +146,7 @@ C) CHANGES
 D) COMMANDS RUN + RESULTS
 E) CONPORT LOGGING
 F) NEXT ACTION or CHECKPOINT STOP
+
+<!-- TASKX:AUTOGEN:START -->
+<!-- (managed by taskx docs refresh-llm) -->
+<!-- TASKX:AUTOGEN:END -->

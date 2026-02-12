@@ -12,8 +12,10 @@ from taskx.utils.repo import find_taskx_repo_root
 CanonicalTimestampMode = Literal["deterministic", "now"]
 
 TASKX_RUN_ROOT_ENV = "TASKX_RUN_ROOT"
+PROJECT_IDENTITY_PATH = ".taskx/project.json"
 
 RUN_ENVELOPE_FILENAME = "RUN_ENVELOPE.json"
+RUN_IDENTITY_FILENAME = "RUN_IDENTITY.json"
 EVIDENCE_FILENAME = "EVIDENCE.md"
 ALLOWLIST_DIFF_FILENAME = "ALLOWLIST_DIFF.json"
 VIOLATIONS_FILENAME = "VIOLATIONS.md"
@@ -88,4 +90,3 @@ def resolve_run_dir(
     root = get_default_run_root(cli_run_root=run_root)
     canonical_mode = normalize_timestamp_mode(timestamp_mode)
     return (root / make_run_id(prefix=prefix, timestamp_mode=canonical_mode)).resolve()
-

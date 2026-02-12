@@ -6,6 +6,14 @@ from dataclasses import dataclass
 
 
 @dataclass
+class ProjectIdentity:
+    """Task packet project identity declaration."""
+
+    project_id: str
+    intended_repo: str | None = None
+
+
+@dataclass
 class TaskPacketInfo:
     """Parsed task packet information."""
 
@@ -17,6 +25,7 @@ class TaskPacketInfo:
     sources: list[str]
     verification_commands: list[str]
     sections: dict[str, str]
+    project_identity: ProjectIdentity | None = None
 
 
 @dataclass

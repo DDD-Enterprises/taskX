@@ -187,6 +187,60 @@ def _default_branch(run_dir: Path) -> str:
     return f"tp/{_sanitize_token(run_dir.name)}"
 
 
+def _load_packet_identity_tokens(run_dir: Path) -> tuple[str | None, str | None]:
+    """Best-effort extraction of packet_id and project_id from TASK_PACKET.md."""
+    task_packet_path = run_dir / "TASK_PACKET.md"
+    if not task_packet_path.exists():
+        return None, None
+
+    try:
+        content = task_packet_path.read_text(encoding="utf-8")
+    except OSError:
+        return None, None
+
+    packet_id: str | None = None
+    first_line = content.splitlines()[0] if content.splitlines() else ""
+    first_line_match = re.match(r"^#\s+TASK_PACKET\s+(TP_\d{4})\b", first_line)
+    if first_line_match is not None:
+        packet_id = first_line_match.group(1)
+
+    project_id: str | None = None
+    section_match = re.search(
+        r"^##\s+PROJECT IDENTITY\s*$\n(.*?)(?=^##\s+|\Z)",
+        content,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if section_match is not None:
+        for raw_line in section_match.group(1).splitlines():
+            line = raw_line.strip()
+            if line.startswith("-") or line.startswith("*"):
+                line = re.sub(r"^[-*]\s+", "", line).strip()
+            if ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            if key.strip().lower() == "project_id":
+                candidate = value.strip()
+                if candidate:
+                    project_id = candidate
+                break
+
+    return packet_id, project_id
+
+
+def _identity_default_branch(run_dir: Path) -> str:
+    """Infer canonical project-bound branch name when packet identity is available."""
+    packet_id, project_id = _load_packet_identity_tokens(run_dir)
+    if not project_id:
+        return _default_branch(run_dir)
+
+    run_slug = _sanitize_token(run_dir.name)
+    project_slug = _sanitize_token(project_id)
+    if packet_id:
+        packet_slug = _sanitize_token(packet_id)
+        return f"tp/{project_slug}/{packet_slug}-{run_slug}"
+    return f"tp/{project_slug}/{run_slug}"
+
+
 def _default_worktree_path(repo_root: Path, branch: str) -> Path:
     """Infer default worktree path."""
     folder = branch.replace("/", "_").replace("-", "_")
@@ -342,7 +396,7 @@ def start_worktree(
         location="repo_root",
     )
 
-    selected_branch = branch.strip() if branch else _default_branch(run_dir)
+    selected_branch = branch.strip() if branch else _identity_default_branch(run_dir)
     branch_check = _run_git(
         ["show-ref", "--verify", "--quiet", f"refs/heads/{selected_branch}"],
         cwd=repo_root,

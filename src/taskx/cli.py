@@ -1,7 +1,10 @@
 """TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
 import json
+import re
+import shlex
 import shutil
+import subprocess
 import sys
 from enum import Enum
 from pathlib import Path
@@ -240,6 +243,174 @@ def _resolve_stateful_run_dir(
     )
     selected_run.parent.mkdir(parents=True, exist_ok=True)
     return selected_run
+
+
+def _git_output(repo_root: Path, *args: str) -> str | None:
+    """Best-effort git output helper."""
+    try:
+        out = subprocess.check_output(
+            ["git", "-C", str(repo_root), *args],
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return None
+    text = out.decode("utf-8", errors="replace").strip()
+    return text or None
+
+
+def _try_git_repo_root(cwd: Path) -> Path | None:
+    """Resolve git root for current invocation, if available."""
+    root = _git_output(cwd, "rev-parse", "--show-toplevel")
+    if root is None:
+        return None
+    return Path(root).resolve()
+
+
+def _load_repo_identity_for_command(cwd: Path) -> tuple[Path | None, Any | None]:
+    """Load repo identity when configured for this repository."""
+    from taskx.guard.identity import load_repo_identity
+
+    repo_root = _try_git_repo_root(cwd)
+    if repo_root is None:
+        return None, None
+
+    try:
+        repo_identity = load_repo_identity(repo_root)
+    except RuntimeError as exc:
+        if str(exc).startswith("Repo identity file not found:"):
+            return repo_root, None
+        raise
+
+    return repo_root, repo_identity
+
+
+def _load_packet_identity_for_run(run_dir: Path, repo_identity: Any) -> Any | None:
+    """Load packet identity declaration from run packet when available."""
+    from taskx.pipeline.task_runner.parser import parse_packet_project_identity
+
+    packet_path = run_dir / "TASK_PACKET.md"
+    if not packet_path.exists():
+        return None
+    try:
+        return parse_packet_project_identity(
+            packet_path,
+            packet_required_header=bool(repo_identity.packet_required_header),
+        )
+    except ValueError as exc:
+        raise RuntimeError(str(exc)) from exc
+
+
+def _sanitize_branch_token(value: str) -> str:
+    """Normalize text into deterministic branch-token format."""
+    token = re.sub(r"[^A-Za-z0-9]+", "-", value.strip()).strip("-").lower()
+    return token or "run"
+
+
+def _packet_id_from_run_packet(run_dir: Path) -> str | None:
+    """Extract packet identifier from run TASK_PACKET.md first H1."""
+    packet_path = run_dir / "TASK_PACKET.md"
+    if not packet_path.exists():
+        return None
+
+    try:
+        first_line = packet_path.read_text(encoding="utf-8").splitlines()[0]
+    except (OSError, IndexError):
+        return None
+
+    match = re.match(r"^#\s+TASK_PACKET\s+(TP_\d{4})\b", first_line)
+    if match is None:
+        return None
+    return match.group(1)
+
+
+def _default_identity_branch(run_dir: Path, project_id: str) -> str:
+    """Build canonical project-bound branch name for worktree start."""
+    packet_id = _packet_id_from_run_packet(run_dir)
+    run_slug = _sanitize_branch_token(run_dir.name)
+    if packet_id is None:
+        return f"tp/{project_id}/{run_slug}"
+    packet_slug = _sanitize_branch_token(packet_id)
+    return f"tp/{project_id}/{packet_slug}-{run_slug}"
+
+
+def _enforce_run_identity_guards(
+    *,
+    run_dir: Path,
+    require_branch: bool,
+    quiet: bool,
+) -> tuple[Path | None, Any | None]:
+    """Apply packet/run/branch identity checks when repo identity is configured."""
+    from taskx.guard.banner import (
+        get_banner_context,
+        print_identity_banner,
+    )
+    from taskx.guard.identity import (
+        assert_repo_branch_identity,
+        assert_repo_packet_identity,
+        ensure_run_identity,
+        origin_hint_warning,
+        run_identity_origin_warning,
+    )
+
+    repo_root, repo_identity = _load_repo_identity_for_command(Path.cwd())
+    if repo_root is None or repo_identity is None:
+        return repo_root, repo_identity
+
+    run_dir_resolved = run_dir.expanduser().resolve()
+    packet_identity = _load_packet_identity_for_run(run_dir_resolved, repo_identity)
+    assert_repo_packet_identity(repo_identity, packet_identity)
+
+    run_identity = ensure_run_identity(run_dir_resolved, repo_identity, repo_root)
+    run_warning = run_identity_origin_warning(repo_identity, run_identity)
+
+    if require_branch:
+        branch_name = _git_output(repo_root, "rev-parse", "--abbrev-ref", "HEAD")
+        if branch_name is not None:
+            assert_repo_branch_identity(repo_identity, branch_name)
+
+    banner_context = get_banner_context(
+        repo_root,
+        repo_identity.project_id,
+        repo_identity.project_slug,
+        repo_identity.repo_remote_hint,
+        run_dir_resolved,
+    )
+    banner_warning = origin_hint_warning(
+        repo_identity.repo_remote_hint,
+        banner_context.origin_url,
+    )
+    print_identity_banner(banner_context, quiet=quiet)
+
+    if not quiet and run_warning is not None and run_warning != banner_warning:
+        typer.echo(run_warning, err=True)
+
+    return repo_root, repo_identity
+
+
+def _print_identity_banner_without_run(*, quiet: bool) -> None:
+    """Print identity banner for commands that are not run-bound."""
+    from taskx.guard.banner import (
+        get_banner_context,
+        print_identity_banner,
+    )
+    from taskx.guard.identity import assert_repo_branch_identity
+
+    repo_root, repo_identity = _load_repo_identity_for_command(Path.cwd())
+    if repo_root is None or repo_identity is None:
+        return
+
+    branch_name = _git_output(repo_root, "rev-parse", "--abbrev-ref", "HEAD")
+    if branch_name is not None:
+        assert_repo_branch_identity(repo_identity, branch_name)
+
+    banner_context = get_banner_context(
+        repo_root,
+        repo_identity.project_id,
+        repo_identity.project_slug,
+        repo_identity.repo_remote_hint,
+        None,
+    )
+    print_identity_banner(banner_context, quiet=quiet)
 
 
 def _sync_promotion_token_alias(run_dir: Path) -> None:
@@ -1254,6 +1425,11 @@ def wt_start(
         "--dirty-policy",
         help="Dirty state policy: refuse or stash",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress identity banner output",
+    ),
 ) -> None:
     """Create an isolated worktree + task branch for a Task Packet run.
     All packet commits must occur inside this worktree.
@@ -1262,9 +1438,18 @@ def wt_start(
     from taskx.git.worktree_ops import start_worktree
 
     try:
+        _repo_root, repo_identity = _enforce_run_identity_guards(
+            run_dir=run,
+            require_branch=True,
+            quiet=quiet,
+        )
+        selected_branch = branch
+        if selected_branch is None and repo_identity is not None:
+            selected_branch = _default_identity_branch(run.expanduser().resolve(), repo_identity.project_id)
+
         result = start_worktree(
             run_dir=run,
-            branch=branch,
+            branch=selected_branch,
             base=base,
             remote=remote,
             worktree_path=worktree_path,
@@ -1301,6 +1486,11 @@ def commit_sequence_cmd(
         "--dirty-policy",
         help="Dirty state policy: refuse or stash",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress identity banner output",
+    ),
 ) -> None:
     """Execute the COMMIT PLAN defined in the Task Packet.
     Creates one commit per step, staging only allowlisted changed files.
@@ -1310,6 +1500,11 @@ def commit_sequence_cmd(
     from taskx.git.worktree_ops import commit_sequence
 
     try:
+        _enforce_run_identity_guards(
+            run_dir=run,
+            require_branch=True,
+            quiet=quiet,
+        )
         report = commit_sequence(
             run_dir=run,
             allow_unpromoted=allow_unpromoted,
@@ -1350,6 +1545,11 @@ def finish_cmd(
         "--dirty-policy",
         help="Dirty state policy: refuse or stash",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress identity banner output",
+    ),
 ) -> None:
     """Finalize a Task Packet run.
     Rebases task branch onto origin/main, fast-forwards main,
@@ -1358,6 +1558,11 @@ def finish_cmd(
     from taskx.git.worktree_ops import finish_run
 
     try:
+        _enforce_run_identity_guards(
+            run_dir=run,
+            require_branch=True,
+            quiet=quiet,
+        )
         report = finish_run(
             run_dir=run,
             mode=mode.value,
@@ -1377,6 +1582,88 @@ def finish_cmd(
     console.print(f"[cyan]main after merge:[/cyan] {report['main_after_merge']}")
     console.print(f"[cyan]remote after push:[/cyan] {report['remote_after_push']}")
     console.print(f"[cyan]Artifact:[/cyan] {run.resolve() / 'FINISH.json'}")
+
+
+# ============================================================================
+# Docs Commands
+# ============================================================================
+
+docs_app = typer.Typer(
+    name="docs",
+    help="Documentation maintenance commands",
+    no_args_is_help=True,
+)
+cli.add_typer(docs_app, name="docs")
+
+
+@docs_app.command(name="refresh-llm")
+def docs_refresh_llm(
+    tool_cmd: str = typer.Option(
+        ...,
+        "--tool-cmd",
+        help="Quoted command that reads prompt stdin and prints markdown to stdout",
+    ),
+    user_profile: str = typer.Option(
+        ...,
+        "--user-profile",
+        help="User profile/context supplied to the LLM prompt",
+    ),
+    run: Path | None = typer.Option(
+        None,
+        "--run",
+        help="Optional run directory used for packet/run identity checks",
+    ),
+    apply: bool = typer.Option(
+        True,
+        "--apply/--dry-run",
+        help="Apply updates to files (or preview generation only)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress identity banner output",
+    ),
+) -> None:
+    """Refresh marker-scoped AUTOGEN sections in CLAUDE.md and AGENTS.md."""
+    from taskx.docs.llm_refresh import refresh_llm_docs
+
+    try:
+        repo_root, _repo_identity = _load_repo_identity_for_command(Path.cwd())
+        if run is not None:
+            _enforce_run_identity_guards(
+                run_dir=run,
+                require_branch=True,
+                quiet=quiet,
+            )
+        else:
+            _print_identity_banner_without_run(quiet=quiet)
+
+        parsed_tool_cmd = shlex.split(tool_cmd)
+        if not parsed_tool_cmd:
+            raise RuntimeError("ERROR: --tool-cmd must not be empty.")
+
+        result = refresh_llm_docs(
+            repo_root=repo_root or Path.cwd(),
+            tool_cmd=parsed_tool_cmd,
+            user_profile=user_profile,
+            apply=apply,
+        )
+    except RuntimeError as exc:
+        console.print(str(exc))
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    if apply:
+        console.print("[green]✓ LLM docs refresh applied[/green]")
+    else:
+        console.print("[green]✓ LLM docs refresh dry-run complete[/green]")
+    console.print(f"[cyan]Files:[/cyan] {', '.join(result['files'])}")
+    if not apply:
+        preview = result.get("generated_content", "")
+        if isinstance(preview, str):
+            console.print(f"[cyan]Generated markdown chars:[/cyan] {len(preview)}")
 
 
 # ============================================================================

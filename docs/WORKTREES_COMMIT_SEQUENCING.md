@@ -2,6 +2,11 @@
 
 ## CLI UX (Final Wording)
 
+TaskX prints an identity banner to stderr at command start:
+`[taskx] project=… repo=… branch=… run=…`
+Use it as a quick wrong-repo tripwire before you execute worktree actions.
+Banner uses ANSI color on TTY. Set `NO_COLOR=1` to disable.
+
 ### `taskx wt start`
 
 ```bash

@@ -278,6 +278,45 @@ def _check_git_availability(repo_root: Path | None, require_git: bool) -> CheckI
         )
 
 
+def _check_direnv_warning(repo_root: Path | None) -> CheckItem:
+    """Check F: warn when .envrc exists but direnv is unavailable."""
+    if repo_root is None:
+        return CheckItem(
+            id="direnv_envrc",
+            status="pass",
+            message="No repository root detected for .envrc/direnv check",
+            remediation=[],
+        )
+
+    envrc_path = repo_root / ".envrc"
+    if not envrc_path.exists():
+        return CheckItem(
+            id="direnv_envrc",
+            status="pass",
+            message="No .envrc found in repository root",
+            remediation=[],
+        )
+
+    if shutil.which("direnv") is None:
+        return CheckItem(
+            id="direnv_envrc",
+            status="warn",
+            message="Repository has .envrc but direnv is not installed",
+            remediation=[
+                "Install direnv (macOS): brew install direnv",
+                'Enable shell hook (zsh): eval "$(direnv hook zsh)"',
+                "Run direnv allow from the repository root",
+            ],
+        )
+
+    return CheckItem(
+        id="direnv_envrc",
+        status="pass",
+        message="Repository .envrc detected and direnv is installed",
+        remediation=[],
+    )
+
+
 def run_doctor(
     out_dir: Path,
     timestamp_mode: str = "deterministic",
@@ -403,6 +442,10 @@ def run_doctor(
         "git_repo_found": git_repo,
         "ok": git_exe and git_repo
     }
+
+    effective_repo_root = Path(detected_repo) if detected_repo else None
+    check_f = _check_direnv_warning(effective_repo_root)
+    checks.append(check_f)
 
     # Summarize checks
     passed = sum(1 for c in checks if c.status == "pass")

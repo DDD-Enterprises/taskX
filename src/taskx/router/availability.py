@@ -65,7 +65,7 @@ AVAILABILITY_CONFIG_TEMPLATE: dict[str, Any] = {
         "require_explain": True,
         "stop_on_ambiguity": True,
         "max_cost_tier": "high",
-        "escalation_ladder": ["gpt-5.1-mini", "sonnet-4.55", "gpt-5.3-codex"],
+        "escalation_ladder": ["gpt-5.1-mini", "haiku-4.5", "sonnet-4.55", "gpt-5.3-codex"],
         "max_escalations": 2,
         "min_total_score": 50,
     },
@@ -165,7 +165,10 @@ def _normalize_policy(policy_raw: dict[str, Any]) -> RoutePolicy:
     if max_cost_tier not in COST_TIERS:
         raise AvailabilityError(f"policy.max_cost_tier must be one of {COST_TIERS}, got `{max_cost_tier}`")
 
-    ladder = _normalize_string_list(policy_raw.get("escalation_ladder", []), "policy.escalation_ladder")
+    ladder = _normalize_string_list_preserve_order(
+        policy_raw.get("escalation_ladder", []),
+        "policy.escalation_ladder",
+    )
     max_escalations = int(policy_raw.get("max_escalations", 2))
     min_total_score = int(policy_raw.get("min_total_score", 50))
 
@@ -196,3 +199,23 @@ def _normalize_string_list(value: Any, field_name: str) -> list[str]:
         normalized.append(item.strip())
 
     return sorted({item for item in normalized if item})
+
+
+def _normalize_string_list_preserve_order(value: Any, field_name: str) -> list[str]:
+    """Normalize list of strings while preserving declaration order."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise AvailabilityError(f"{field_name} must be a list of strings")
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        if not isinstance(item, str):
+            raise AvailabilityError(f"{field_name} must be a list of strings")
+        cleaned = item.strip()
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            normalized.append(cleaned)
+
+    return normalized

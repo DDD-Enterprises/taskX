@@ -37,6 +37,7 @@ from taskx.obs.run_artifacts import (
     resolve_run_dir,
     to_pipeline_timestamp_mode,
 )
+from taskx.pr import PrOpenRefusal, run_pr_open
 from taskx.router import (
     build_route_plan,
     ensure_default_availability,
@@ -1866,6 +1867,104 @@ def route_explain(
     console.print(explanation)
     if plan.status == "refused":
         raise typer.Exit(2)
+
+
+# ============================================================================
+# PR Commands
+# ============================================================================
+
+pr_app = typer.Typer(
+    name="pr",
+    help="Assisted pull request flow commands",
+    no_args_is_help=True,
+)
+cli.add_typer(pr_app, name="pr")
+
+
+@pr_app.command(name="open")
+def pr_open(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    title: str = typer.Option(
+        ...,
+        "--title",
+        help="Pull request title",
+    ),
+    body_file: Path = typer.Option(
+        ...,
+        "--body-file",
+        help="Pull request body markdown file",
+    ),
+    base: str = typer.Option(
+        "main",
+        "--base",
+        help="Base branch name",
+    ),
+    remote: str = typer.Option(
+        "origin",
+        "--remote",
+        help="Remote name for push and URL derivation",
+    ),
+    draft: bool = typer.Option(
+        False,
+        "--draft/--no-draft",
+        help="Create draft PR when using gh",
+    ),
+    restore_branch: bool = typer.Option(
+        True,
+        "--restore-branch/--no-restore-branch",
+        help="Restore original branch/HEAD after flow (success or failure)",
+    ),
+    allow_dirty: bool = typer.Option(
+        False,
+        "--allow-dirty",
+        help="Allow dirty working tree (default refuses)",
+    ),
+    allow_detached: bool = typer.Option(
+        False,
+        "--allow-detached",
+        help="Allow detached HEAD (default refuses)",
+    ),
+    allow_base_branch: bool = typer.Option(
+        False,
+        "--allow-base-branch",
+        help="Allow running from base branch (default refuses)",
+    ),
+) -> None:
+    """Open PR in assisted mode with restore rails and deterministic reports."""
+    resolved_repo = repo_root.resolve()
+    resolved_body = body_file if body_file.is_absolute() else (resolved_repo / body_file)
+    resolved_body = resolved_body.resolve()
+
+    try:
+        report = run_pr_open(
+            repo_root=resolved_repo,
+            title=title,
+            body_file=resolved_body,
+            base=base,
+            remote=remote,
+            draft=draft,
+            restore_branch=restore_branch,
+            allow_dirty=allow_dirty,
+            allow_detached=allow_detached,
+            allow_base_branch=allow_base_branch,
+        )
+    except PrOpenRefusal as exc:
+        console.print(f"[yellow]{exc}[/yellow]")
+        raise typer.Exit(2) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    report_dir = resolved_repo / "out" / "taskx_pr"
+    console.print("[green]✓ PR open flow complete[/green]")
+    console.print(f"[cyan]Status:[/cyan] {report['status']}")
+    console.print(f"[cyan]PR URL:[/cyan] {report['pr_url']}")
+    console.print(f"[cyan]Report JSON:[/cyan] {report_dir / 'PR_OPEN_REPORT.json'}")
+    console.print(f"[cyan]Report MD:[/cyan] {report_dir / 'PR_OPEN_REPORT.md'}")
 
 
 # ============================================================================

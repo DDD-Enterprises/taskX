@@ -1760,7 +1760,8 @@ def route_plan(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
 
-    resolved_out = out.resolve()
+    resolved_out = out if out.is_absolute() else (repo_root / out)
+    resolved_out = resolved_out.resolve()
     resolved_out.parent.mkdir(parents=True, exist_ok=True)
     plan_md_path = resolved_out.parent / "ROUTE_PLAN.md"
 
@@ -1822,7 +1823,8 @@ def route_handoff(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
 
-    resolved_out = out.resolve()
+    resolved_out = out if out.is_absolute() else (repo_root / out)
+    resolved_out = resolved_out.resolve()
     resolved_out.parent.mkdir(parents=True, exist_ok=True)
     resolved_out.write_text(render_handoff_markdown(plan_obj), encoding="utf-8")
     console.print("[green]✓ Route handoff written[/green]")

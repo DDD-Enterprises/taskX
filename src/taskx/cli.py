@@ -1625,10 +1625,10 @@ def docs_refresh_llm(
     ),
 ) -> None:
     """Refresh marker-scoped AUTOGEN sections from deterministic command surface."""
-    from taskx.docs.refresh_llm import MarkerStructureError, refresh_llm_docs
+    from taskx.docs.refresh_llm import MarkerStructureError, run_refresh_llm
 
     try:
-        result = refresh_llm_docs(
+        result = run_refresh_llm(
             repo_root=repo_root.resolve(),
             cli_app=cli,
             check=check,
@@ -1644,17 +1644,18 @@ def docs_refresh_llm(
         raise typer.Exit(1) from exc
 
     console.print("[green]✓ LLM docs refresh complete[/green]")
-    console.print(f"[cyan]created:[/cyan] {len(result.created)}")
-    console.print(f"[cyan]modified:[/cyan] {len(result.modified)}")
-    console.print(f"[cyan]unchanged:[/cyan] {len(result.unchanged)}")
-    console.print(f"[cyan]refused:[/cyan] {len(result.refused)}")
-    console.print(f"[cyan]command_surface_hash:[/cyan] {result.command_surface_hash}")
+    console.print(f"[cyan]status:[/cyan] {result['status']}")
+    console.print(f"[cyan]created:[/cyan] {len(result['created'])}")
+    console.print(f"[cyan]modified:[/cyan] {len(result['modified'])}")
+    console.print(f"[cyan]unchanged:[/cyan] {len(result['unchanged'])}")
+    console.print(f"[cyan]refused:[/cyan] {len(result['refused'])}")
+    console.print(f"[cyan]command_surface_hash:[/cyan] {result['command_surface_hash']}")
 
-    if result.refused:
+    if result["status"] == "refused":
         console.print("[yellow]Invalid AUTOGEN marker structure[/yellow]")
         raise typer.Exit(2)
 
-    if check and (result.created or result.modified):
+    if check and result["status"] == "drift":
         raise typer.Exit(1)
 
 

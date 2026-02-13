@@ -2,7 +2,6 @@
 
 import json
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -1614,56 +1613,29 @@ cli.add_typer(docs_app, name="docs")
 
 @docs_app.command(name="refresh-llm")
 def docs_refresh_llm(
-    tool_cmd: str = typer.Option(
-        ...,
-        "--tool-cmd",
-        help="Quoted command that reads prompt stdin and prints markdown to stdout",
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root directory",
     ),
-    user_profile: str = typer.Option(
-        ...,
-        "--user-profile",
-        help="User profile/context supplied to the LLM prompt",
-    ),
-    run: Path | None = typer.Option(
-        None,
-        "--run",
-        help="Optional run directory used for packet/run identity checks",
-    ),
-    apply: bool = typer.Option(
-        True,
-        "--apply/--dry-run",
-        help="Apply updates to files (or preview generation only)",
-    ),
-    quiet: bool = typer.Option(
+    check: bool = typer.Option(
         False,
-        "--quiet",
-        help="Suppress identity banner output",
+        "--check",
+        help="Check for drift without modifying files (exit 1 on drift)",
     ),
 ) -> None:
-    """Refresh marker-scoped AUTOGEN sections in CLAUDE.md and AGENTS.md."""
-    from taskx.docs.llm_refresh import refresh_llm_docs
+    """Refresh marker-scoped AUTOGEN sections from deterministic command surface."""
+    from taskx.docs.refresh_llm import MarkerStructureError, refresh_llm_docs
 
     try:
-        repo_root, _repo_identity = _load_repo_identity_for_command(Path.cwd())
-        if run is not None:
-            _enforce_run_identity_guards(
-                run_dir=run,
-                require_branch=True,
-                quiet=quiet,
-            )
-        else:
-            _print_identity_banner_without_run(quiet=quiet)
-
-        parsed_tool_cmd = shlex.split(tool_cmd)
-        if not parsed_tool_cmd:
-            raise RuntimeError("ERROR: --tool-cmd must not be empty.")
-
         result = refresh_llm_docs(
-            repo_root=repo_root or Path.cwd(),
-            tool_cmd=parsed_tool_cmd,
-            user_profile=user_profile,
-            apply=apply,
+            repo_root=repo_root.resolve(),
+            cli_app=cli,
+            check=check,
         )
+    except MarkerStructureError as exc:
+        console.print(f"[yellow]{exc}[/yellow]")
+        raise typer.Exit(2) from exc
     except RuntimeError as exc:
         console.print(str(exc))
         raise typer.Exit(1) from exc
@@ -1671,15 +1643,19 @@ def docs_refresh_llm(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
 
-    if apply:
-        console.print("[green]✓ LLM docs refresh applied[/green]")
-    else:
-        console.print("[green]✓ LLM docs refresh dry-run complete[/green]")
-    console.print(f"[cyan]Files:[/cyan] {', '.join(result['files'])}")
-    if not apply:
-        preview = result.get("generated_content", "")
-        if isinstance(preview, str):
-            console.print(f"[cyan]Generated markdown chars:[/cyan] {len(preview)}")
+    console.print("[green]✓ LLM docs refresh complete[/green]")
+    console.print(f"[cyan]created:[/cyan] {len(result.created)}")
+    console.print(f"[cyan]modified:[/cyan] {len(result.modified)}")
+    console.print(f"[cyan]unchanged:[/cyan] {len(result.unchanged)}")
+    console.print(f"[cyan]refused:[/cyan] {len(result.refused)}")
+    console.print(f"[cyan]command_surface_hash:[/cyan] {result.command_surface_hash}")
+
+    if result.refused:
+        console.print("[yellow]Invalid AUTOGEN marker structure[/yellow]")
+        raise typer.Exit(2)
+
+    if check and (result.created or result.modified):
+        raise typer.Exit(1)
 
 
 # ============================================================================

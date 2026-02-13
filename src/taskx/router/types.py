@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 DEFAULT_STEPS: tuple[str, ...] = (
     "compile-tasks",
@@ -101,6 +102,31 @@ class PlannedStep:
     candidates_top3: tuple[TopCandidate, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class RefusalReason:
+    reason_code: str | None
+    message: str
+    detail: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.reason_code is not None and not self.reason_code:
+            raise ValueError("reason_code must be provided when not None")
+        if not self.message:
+            raise ValueError("message must be provided")
+
+    def to_dict(self) -> dict[str, str | None]:
+        data: dict[str, str | None] = {
+            "reason_code": self.reason_code,
+            "message": self.message,
+        }
+        if self.detail is not None:
+            data["detail"] = self.detail
+        return data
+
+    def __str__(self) -> str:
+        return self.message
+
+
 @dataclass(frozen=True)
 class RoutePlan:
     """Full deterministic route plan."""
@@ -111,4 +137,4 @@ class RoutePlan:
     availability_path: Path
     policy: RoutePolicy
     steps: tuple[PlannedStep, ...]
-    refusal_reasons: tuple[str, ...]
+    refusal_reasons: tuple[RefusalReason, ...]

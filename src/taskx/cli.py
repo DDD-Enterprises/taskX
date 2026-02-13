@@ -2,7 +2,6 @@
 
 import json
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -37,6 +36,22 @@ from taskx.obs.run_artifacts import (
     resolve_run_dir,
     to_pipeline_timestamp_mode,
 )
+from taskx.pr import PrOpenRefusal, run_pr_open
+from taskx.router import (
+    build_route_plan,
+    ensure_default_availability,
+    render_handoff_markdown,
+    render_route_plan_markdown,
+    route_plan_from_dict,
+    route_plan_to_dict,
+)
+from taskx.router import (
+    explain_step as explain_route_step,
+)
+from taskx.router import (
+    parse_steps as parse_route_steps,
+)
+from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -1598,56 +1613,29 @@ cli.add_typer(docs_app, name="docs")
 
 @docs_app.command(name="refresh-llm")
 def docs_refresh_llm(
-    tool_cmd: str = typer.Option(
-        ...,
-        "--tool-cmd",
-        help="Quoted command that reads prompt stdin and prints markdown to stdout",
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root directory",
     ),
-    user_profile: str = typer.Option(
-        ...,
-        "--user-profile",
-        help="User profile/context supplied to the LLM prompt",
-    ),
-    run: Path | None = typer.Option(
-        None,
-        "--run",
-        help="Optional run directory used for packet/run identity checks",
-    ),
-    apply: bool = typer.Option(
-        True,
-        "--apply/--dry-run",
-        help="Apply updates to files (or preview generation only)",
-    ),
-    quiet: bool = typer.Option(
+    check: bool = typer.Option(
         False,
-        "--quiet",
-        help="Suppress identity banner output",
+        "--check",
+        help="Check for drift without modifying files (exit 1 on drift)",
     ),
 ) -> None:
-    """Refresh marker-scoped AUTOGEN sections in CLAUDE.md and AGENTS.md."""
-    from taskx.docs.llm_refresh import refresh_llm_docs
+    """Refresh marker-scoped AUTOGEN sections from deterministic command surface."""
+    from taskx.docs.refresh_llm import MarkerStructureError, run_refresh_llm
 
     try:
-        repo_root, _repo_identity = _load_repo_identity_for_command(Path.cwd())
-        if run is not None:
-            _enforce_run_identity_guards(
-                run_dir=run,
-                require_branch=True,
-                quiet=quiet,
-            )
-        else:
-            _print_identity_banner_without_run(quiet=quiet)
-
-        parsed_tool_cmd = shlex.split(tool_cmd)
-        if not parsed_tool_cmd:
-            raise RuntimeError("ERROR: --tool-cmd must not be empty.")
-
-        result = refresh_llm_docs(
-            repo_root=repo_root or Path.cwd(),
-            tool_cmd=parsed_tool_cmd,
-            user_profile=user_profile,
-            apply=apply,
+        result = run_refresh_llm(
+            repo_root=repo_root.resolve(),
+            cli_app=cli,
+            check=check,
         )
+    except MarkerStructureError as exc:
+        console.print(f"[yellow]{exc}[/yellow]")
+        raise typer.Exit(2) from exc
     except RuntimeError as exc:
         console.print(str(exc))
         raise typer.Exit(1) from exc
@@ -1655,15 +1643,305 @@ def docs_refresh_llm(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
 
-    if apply:
-        console.print("[green]✓ LLM docs refresh applied[/green]")
-    else:
-        console.print("[green]✓ LLM docs refresh dry-run complete[/green]")
-    console.print(f"[cyan]Files:[/cyan] {', '.join(result['files'])}")
-    if not apply:
-        preview = result.get("generated_content", "")
-        if isinstance(preview, str):
-            console.print(f"[cyan]Generated markdown chars:[/cyan] {len(preview)}")
+    console.print("[green]✓ LLM docs refresh complete[/green]")
+    console.print(f"[cyan]status:[/cyan] {result['status']}")
+    console.print(f"[cyan]created:[/cyan] {len(result['created'])}")
+    console.print(f"[cyan]modified:[/cyan] {len(result['modified'])}")
+    console.print(f"[cyan]unchanged:[/cyan] {len(result['unchanged'])}")
+    console.print(f"[cyan]refused:[/cyan] {len(result['refused'])}")
+    console.print(f"[cyan]command_surface_hash:[/cyan] {result['command_surface_hash']}")
+
+    if result["status"] == "refused":
+        console.print("[yellow]Invalid AUTOGEN marker structure[/yellow]")
+        raise typer.Exit(2)
+
+    if check and result["status"] == "drift":
+        raise typer.Exit(1)
+
+
+# ============================================================================
+# Route Commands
+# ============================================================================
+
+route_app = typer.Typer(
+    name="route",
+    help="Assisted deterministic routing commands",
+    no_args_is_help=True,
+)
+cli.add_typer(route_app, name="route")
+
+
+@route_app.command(name="init")
+def route_init(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing availability.yaml",
+    ),
+) -> None:
+    """Create repo-local route availability declaration."""
+    try:
+        created = ensure_default_availability(repo_root, force=force)
+    except FileExistsError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        console.print("[yellow]Use --force to overwrite.[/yellow]")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print("[green]✓ Route availability initialized[/green]")
+    console.print(f"[cyan]Path:[/cyan] {created}")
+
+
+@route_app.command(name="plan")
+def route_plan(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    steps: list[str] = typer.Option(
+        [],
+        "--steps",
+        help="Planned steps (repeatable and/or comma-separated)",
+    ),
+    out: Path = typer.Option(
+        DEFAULT_PLAN_RELATIVE_PATH,
+        "--out",
+        help="Output path for ROUTE_PLAN.json",
+    ),
+    explain: bool = typer.Option(
+        True,
+        "--explain/--no-explain",
+        help="Include step reasons in markdown report",
+    ),
+) -> None:
+    """Build deterministic route plan artifacts from packet + availability."""
+    try:
+        plan = build_route_plan(
+            repo_root=repo_root,
+            packet_path=packet,
+            steps=parse_route_steps(steps),
+        )
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    resolved_out = out if out.is_absolute() else (repo_root / out)
+    resolved_out = resolved_out.resolve()
+    resolved_out.parent.mkdir(parents=True, exist_ok=True)
+    plan_md_path = resolved_out.parent / "ROUTE_PLAN.md"
+
+    plan_payload = route_plan_to_dict(plan)
+    resolved_out.write_text(json.dumps(plan_payload, indent=2, sort_keys=True), encoding="utf-8")
+    markdown = render_route_plan_markdown(plan)
+    _ = explain
+    plan_md_path.write_text(markdown, encoding="utf-8")
+
+    console.print("[green]✓ Route plan written[/green]")
+    console.print(f"[cyan]JSON:[/cyan] {resolved_out}")
+    console.print(f"[cyan]Markdown:[/cyan] {plan_md_path}")
+
+    if plan.status == "refused":
+        if plan.refusal_reasons:
+            console.print("[yellow]Route refused:[/yellow]")
+            for reason in plan.refusal_reasons:
+                console.print(f"[yellow]  - {reason}[/yellow]")
+        raise typer.Exit(2)
+
+
+@route_app.command(name="handoff")
+def route_handoff(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    plan: Path | None = typer.Option(
+        None,
+        "--plan",
+        help="Existing ROUTE_PLAN.json path (optional)",
+    ),
+    out: Path = typer.Option(
+        Path("out/taskx_route/HANDOFF.md"),
+        "--out",
+        help="Output path for HANDOFF.md",
+    ),
+) -> None:
+    """Generate deterministic handoff markdown (assisted only)."""
+    try:
+        if plan is None:
+            plan_obj = build_route_plan(
+                repo_root=repo_root,
+                packet_path=packet,
+                steps=parse_route_steps(None),
+            )
+        else:
+            payload = json.loads(plan.resolve().read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                raise RuntimeError(f"Plan payload must be an object: {plan}")
+            plan_obj = route_plan_from_dict(payload)
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    resolved_out = out if out.is_absolute() else (repo_root / out)
+    resolved_out = resolved_out.resolve()
+    resolved_out.parent.mkdir(parents=True, exist_ok=True)
+    resolved_out.write_text(render_handoff_markdown(plan_obj), encoding="utf-8")
+    console.print("[green]✓ Route handoff written[/green]")
+    console.print(f"[cyan]Path:[/cyan] {resolved_out}")
+
+    if plan_obj.status == "refused":
+        raise typer.Exit(2)
+
+
+@route_app.command(name="explain")
+def route_explain(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    step: str = typer.Option(
+        ...,
+        "--step",
+        help="Step name to explain",
+    ),
+) -> None:
+    """Explain deterministic route scoring for a single step."""
+    try:
+        plan = build_route_plan(repo_root=repo_root, packet_path=packet, steps=parse_route_steps(None))
+        explanation = explain_route_step(plan, step)
+    except KeyError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(explanation)
+    if plan.status == "refused":
+        raise typer.Exit(2)
+
+
+# ============================================================================
+# PR Commands
+# ============================================================================
+
+pr_app = typer.Typer(
+    name="pr",
+    help="Assisted pull request flow commands",
+    no_args_is_help=True,
+)
+cli.add_typer(pr_app, name="pr")
+
+
+@pr_app.command(name="open")
+def pr_open(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    title: str = typer.Option(
+        ...,
+        "--title",
+        help="Pull request title",
+    ),
+    body_file: Path = typer.Option(
+        ...,
+        "--body-file",
+        help="Pull request body markdown file",
+    ),
+    base: str = typer.Option(
+        "main",
+        "--base",
+        help="Base branch name",
+    ),
+    remote: str = typer.Option(
+        "origin",
+        "--remote",
+        help="Remote name for push and URL derivation",
+    ),
+    draft: bool = typer.Option(
+        False,
+        "--draft/--no-draft",
+        help="Create draft PR when using gh",
+    ),
+    restore_branch: bool = typer.Option(
+        True,
+        "--restore-branch/--no-restore-branch",
+        help="Restore original branch/HEAD after flow (success or failure)",
+    ),
+    allow_dirty: bool = typer.Option(
+        False,
+        "--allow-dirty",
+        help="Allow dirty working tree (default refuses)",
+    ),
+    allow_detached: bool = typer.Option(
+        False,
+        "--allow-detached",
+        help="Allow detached HEAD (default refuses)",
+    ),
+    allow_base_branch: bool = typer.Option(
+        False,
+        "--allow-base-branch",
+        help="Allow running from base branch (default refuses)",
+    ),
+) -> None:
+    """Open PR in assisted mode with restore rails and deterministic reports."""
+    resolved_repo = repo_root.resolve()
+    resolved_body = body_file if body_file.is_absolute() else (resolved_repo / body_file)
+    resolved_body = resolved_body.resolve()
+
+    try:
+        report = run_pr_open(
+            repo_root=resolved_repo,
+            title=title,
+            body_file=resolved_body,
+            base=base,
+            remote=remote,
+            draft=draft,
+            restore_branch=restore_branch,
+            allow_dirty=allow_dirty,
+            allow_detached=allow_detached,
+            allow_base_branch=allow_base_branch,
+        )
+    except PrOpenRefusal as exc:
+        console.print(f"[yellow]{exc}[/yellow]")
+        raise typer.Exit(2) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    report_dir = resolved_repo / "out" / "taskx_pr"
+    console.print("[green]✓ PR open flow complete[/green]")
+    console.print(f"[cyan]Status:[/cyan] {report['status']}")
+    console.print(f"[cyan]PR URL:[/cyan] {report['pr_url']}")
+    console.print(f"[cyan]Report JSON:[/cyan] {report_dir / 'PR_OPEN_REPORT.json'}")
+    console.print(f"[cyan]Report MD:[/cyan] {report_dir / 'PR_OPEN_REPORT.md'}")
 
 
 # ============================================================================

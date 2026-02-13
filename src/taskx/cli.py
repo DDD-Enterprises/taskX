@@ -37,6 +37,21 @@ from taskx.obs.run_artifacts import (
     resolve_run_dir,
     to_pipeline_timestamp_mode,
 )
+from taskx.router import (
+    build_route_plan,
+    ensure_default_availability,
+    render_handoff_markdown,
+    render_route_plan_markdown,
+    route_plan_from_dict,
+    route_plan_to_dict,
+)
+from taskx.router import (
+    explain_step as explain_route_step,
+)
+from taskx.router import (
+    parse_steps as parse_route_steps,
+)
+from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -1664,6 +1679,191 @@ def docs_refresh_llm(
         preview = result.get("generated_content", "")
         if isinstance(preview, str):
             console.print(f"[cyan]Generated markdown chars:[/cyan] {len(preview)}")
+
+
+# ============================================================================
+# Route Commands
+# ============================================================================
+
+route_app = typer.Typer(
+    name="route",
+    help="Assisted deterministic routing commands",
+    no_args_is_help=True,
+)
+cli.add_typer(route_app, name="route")
+
+
+@route_app.command(name="init")
+def route_init(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing availability.yaml",
+    ),
+) -> None:
+    """Create repo-local route availability declaration."""
+    try:
+        created = ensure_default_availability(repo_root, force=force)
+    except FileExistsError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        console.print("[yellow]Use --force to overwrite.[/yellow]")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print("[green]✓ Route availability initialized[/green]")
+    console.print(f"[cyan]Path:[/cyan] {created}")
+
+
+@route_app.command(name="plan")
+def route_plan(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    steps: list[str] = typer.Option(
+        [],
+        "--steps",
+        help="Planned steps (repeatable and/or comma-separated)",
+    ),
+    out: Path = typer.Option(
+        DEFAULT_PLAN_RELATIVE_PATH,
+        "--out",
+        help="Output path for ROUTE_PLAN.json",
+    ),
+    explain: bool = typer.Option(
+        True,
+        "--explain/--no-explain",
+        help="Include step reasons in markdown report",
+    ),
+) -> None:
+    """Build deterministic route plan artifacts from packet + availability."""
+    try:
+        plan = build_route_plan(
+            repo_root=repo_root,
+            packet_path=packet,
+            steps=parse_route_steps(steps),
+        )
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    resolved_out = out.resolve()
+    resolved_out.parent.mkdir(parents=True, exist_ok=True)
+    plan_md_path = resolved_out.parent / "ROUTE_PLAN.md"
+
+    plan_payload = route_plan_to_dict(plan)
+    resolved_out.write_text(json.dumps(plan_payload, indent=2, sort_keys=True), encoding="utf-8")
+    markdown = render_route_plan_markdown(plan)
+    _ = explain
+    plan_md_path.write_text(markdown, encoding="utf-8")
+
+    console.print("[green]✓ Route plan written[/green]")
+    console.print(f"[cyan]JSON:[/cyan] {resolved_out}")
+    console.print(f"[cyan]Markdown:[/cyan] {plan_md_path}")
+
+    if plan.status == "refused":
+        if plan.refusal_reasons:
+            console.print("[yellow]Route refused:[/yellow]")
+            for reason in plan.refusal_reasons:
+                console.print(f"[yellow]  - {reason}[/yellow]")
+        raise typer.Exit(2)
+
+
+@route_app.command(name="handoff")
+def route_handoff(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    plan: Path | None = typer.Option(
+        None,
+        "--plan",
+        help="Existing ROUTE_PLAN.json path (optional)",
+    ),
+    out: Path = typer.Option(
+        Path("out/taskx_route/HANDOFF.md"),
+        "--out",
+        help="Output path for HANDOFF.md",
+    ),
+) -> None:
+    """Generate deterministic handoff markdown (assisted only)."""
+    try:
+        if plan is None:
+            plan_obj = build_route_plan(
+                repo_root=repo_root,
+                packet_path=packet,
+                steps=parse_route_steps(None),
+            )
+        else:
+            payload = json.loads(plan.resolve().read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                raise RuntimeError(f"Plan payload must be an object: {plan}")
+            plan_obj = route_plan_from_dict(payload)
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    resolved_out = out.resolve()
+    resolved_out.parent.mkdir(parents=True, exist_ok=True)
+    resolved_out.write_text(render_handoff_markdown(plan_obj), encoding="utf-8")
+    console.print("[green]✓ Route handoff written[/green]")
+    console.print(f"[cyan]Path:[/cyan] {resolved_out}")
+
+    if plan_obj.status == "refused":
+        raise typer.Exit(2)
+
+
+@route_app.command(name="explain")
+def route_explain(
+    repo_root: Path = typer.Option(
+        Path("."),
+        "--repo-root",
+        help="Repository root path",
+    ),
+    packet: Path = typer.Option(
+        ...,
+        "--packet",
+        help="Task Packet markdown path",
+    ),
+    step: str = typer.Option(
+        ...,
+        "--step",
+        help="Step name to explain",
+    ),
+) -> None:
+    """Explain deterministic route scoring for a single step."""
+    try:
+        plan = build_route_plan(repo_root=repo_root, packet_path=packet, steps=parse_route_steps(None))
+        explanation = explain_route_step(plan, step)
+    except KeyError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(explanation)
+    if plan.status == "refused":
+        raise typer.Exit(2)
 
 
 # ============================================================================

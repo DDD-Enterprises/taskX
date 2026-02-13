@@ -11,7 +11,13 @@ from taskx.router.availability import (
     load_availability,
 )
 from taskx.router.scoring import score_step_candidates, score_to_confidence
-from taskx.router.types import DEFAULT_STEPS, PlannedStep, RoutePlan, TopCandidate
+from taskx.router.types import (
+    DEFAULT_STEPS,
+    PlannedStep,
+    RefusalReason,
+    RoutePlan,
+    TopCandidate,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -36,6 +36,7 @@ from taskx.obs.run_artifacts import (
     resolve_run_dir,
     to_pipeline_timestamp_mode,
 )
+from taskx.orchestrator import orchestrate as orchestrate_packet
 from taskx.pr import PrOpenRefusal, run_pr_open
 from taskx.router import (
     build_route_plan,
@@ -1804,12 +1805,10 @@ def route_handoff(
     resolved_out = out if out.is_absolute() else (repo_root / out)
     resolved_out = resolved_out.resolve()
     resolved_out.parent.mkdir(parents=True, exist_ok=True)
-    resolved_out.write_text(render_handoff_markdown(plan_obj), encoding="utf-8")
-    console.print("[green]✓ Route handoff written[/green]")
-    console.print(f"[cyan]Path:[/cyan] {resolved_out}")
-
-    if plan_obj.status == "refused":
-        raise typer.Exit(2)
+    handoff_markdown = render_handoff_markdown(plan_obj)
+    resolved_out.write_text(handoff_markdown, encoding="utf-8")
+    typer.echo(handoff_markdown)
+    typer.echo(f"Path: {resolved_out}")
 
 
 @route_app.command(name="explain")
@@ -1819,10 +1818,15 @@ def route_explain(
         "--repo-root",
         help="Repository root path",
     ),
-    packet: Path = typer.Option(
-        ...,
+    packet: Path | None = typer.Option(
+        None,
         "--packet",
-        help="Task Packet markdown path",
+        help="Task Packet markdown path (required when --plan is not provided)",
+    ),
+    plan: Path | None = typer.Option(
+        None,
+        "--plan",
+        help="Existing ROUTE_PLAN.json path (optional)",
     ),
     step: str = typer.Option(
         ...,
@@ -1832,8 +1836,17 @@ def route_explain(
 ) -> None:
     """Explain deterministic route scoring for a single step."""
     try:
-        plan = build_route_plan(repo_root=repo_root, packet_path=packet, steps=parse_route_steps(None))
-        explanation = explain_route_step(plan, step)
+        if plan is not None:
+            payload = json.loads(plan.resolve().read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                raise RuntimeError(f"Plan payload must be an object: {plan}")
+            planned = route_plan_from_dict(payload)
+        else:
+            if packet is None:
+                raise RuntimeError("Either --packet or --plan is required")
+            planned = build_route_plan(repo_root=repo_root, packet_path=packet, steps=parse_route_steps(None))
+
+        explanation = explain_route_step(planned, step)
     except KeyError as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
@@ -1842,8 +1855,38 @@ def route_explain(
         raise typer.Exit(1) from exc
 
     console.print(explanation)
-    if plan.status == "refused":
+
+
+@cli.command(name="orchestrate")
+def orchestrate(
+    packet: Path = typer.Argument(
+        ...,
+        help="Path to packet JSON",
+    ),
+) -> None:
+    """Run TaskX orchestrator v0 for a packet."""
+    outcome = orchestrate_packet(str(packet))
+    status = str(outcome.get("status", "error"))
+    run_dir = str(outcome.get("run_dir", ""))
+
+    if status == "needs_handoff":
+        handoff_stdout = str(outcome.get("stdout_text", "")).strip()
+        if handoff_stdout:
+            typer.echo(handoff_stdout)
+        typer.echo(f"REFUSED run_dir={run_dir} reason=Manual handoff required")
         raise typer.Exit(2)
+
+    if status == "ok":
+        typer.echo(f"OK run_dir={run_dir}")
+        raise typer.Exit(0)
+
+    if status == "refused":
+        reason = str(outcome.get("reason", "refused"))
+        typer.echo(f"REFUSED run_dir={run_dir} reason={reason}")
+        raise typer.Exit(2)
+
+    typer.echo(f"ERROR run_dir={run_dir}")
+    raise typer.Exit(1)
 
 
 # ============================================================================

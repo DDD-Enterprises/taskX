@@ -72,8 +72,19 @@ AVAILABILITY_CONFIG_TEMPLATE: dict[str, Any] = {
 }
 
 
+AVAILABILITY_REASON_MISSING = "AVAILABILITY_MISSING"
+AVAILABILITY_REASON_PARSE_ERROR = "AVAILABILITY_PARSE_ERROR"
+AVAILABILITY_REASON_SCHEMA_INVALID = "AVAILABILITY_SCHEMA_INVALID"
+
+
 class AvailabilityError(ValueError):
     """Availability configuration validation error."""
+
+    reason_code: str
+
+    def __init__(self, message: str, reason_code: str = AVAILABILITY_REASON_SCHEMA_INVALID) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
 
 
 def availability_path_for_repo(repo_root: Path) -> Path:
@@ -98,15 +109,22 @@ def load_availability(repo_root: Path) -> AvailabilityConfig:
     path = availability_path_for_repo(repo_root)
     if not path.exists():
         raise AvailabilityError(
-            f"Missing availability config at {path}. Run `taskx route init --repo-root {repo_root}` first."
+            f"Missing availability config at {path}. Run `taskx route init --repo-root {repo_root}` first.",
+            AVAILABILITY_REASON_MISSING,
         )
 
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
-        raise AvailabilityError(f"availability.yaml parse error: {exc}") from exc
+        raise AvailabilityError(
+            f"availability.yaml parse error: {exc}",
+            AVAILABILITY_REASON_PARSE_ERROR,
+        ) from exc
     if not isinstance(raw, dict):
-        raise AvailabilityError("availability.yaml parse error: expected mapping at top level")
+        raise AvailabilityError(
+            "availability.yaml parse error: expected mapping at top level",
+            AVAILABILITY_REASON_PARSE_ERROR,
+        )
 
     models_raw = raw.get("models")
     runners_raw = raw.get("runners")

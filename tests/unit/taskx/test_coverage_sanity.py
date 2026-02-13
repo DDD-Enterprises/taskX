@@ -5,6 +5,7 @@ These tests are minimal but exercise actual code paths to prevent "no data colle
 from pathlib import Path
 
 import pytest
+from taskx import __version__
 
 
 class TestTaskXImport:
@@ -16,7 +17,7 @@ class TestTaskXImport:
 
         assert taskx is not None
         assert hasattr(taskx, "__version__")
-        assert taskx.__version__ == "0.1.0"
+        assert taskx.__version__ == __version__
 
     def test_doctor_module_imports(self):
         """Doctor module imports successfully."""
@@ -57,7 +58,7 @@ class TestDoctorNonCLI:
 
         result = _check_taskx_import()
         assert result.status == "pass"
-        assert "0.1.0" in result.message
+        assert __version__ in result.message
 
     def test_check_schema_registry(self):
         """Internal schema registry check works."""

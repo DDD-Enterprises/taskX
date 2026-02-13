@@ -79,6 +79,7 @@ Branch restore contract:
   - taskx manifest check
   - taskx manifest finalize
   - taskx manifest init
+- taskx orchestrate
 - taskx pr
   - taskx pr open
 - taskx project

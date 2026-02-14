@@ -1,3 +1,4 @@
+<!-- TASKX:BEGIN operator_system v=1 platform=chatgpt model=gpt-5.2-thinking hash=7fd85f3de3a271198bb5a7eaf9b87be44a14ab02c68342d76b837dec1e455782 -->
 # OPERATOR SYSTEM PROMPT
 # Project: taskX
 # Platform: chatgpt
@@ -105,3 +106,4 @@ Specifics for chatgpt
 - Follow all instructions provided in this prompt.
 - Use TaskX CLI for all task management.
 - Ensure all outputs conform to the project spec.
+<!-- TASKX:END operator_system -->

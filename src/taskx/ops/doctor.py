@@ -6,7 +6,7 @@ from taskx.ops.conflicts import check_conflicts
 def extract_operator_blocks(text: str) -> list[str]:
     """
     Extract operator system blocks using a deterministic line-based scanner.
-    
+
     Algorithm:
     1. Convert newlines: lines = text.splitlines()
     2. Iterate i=0..len(lines)-1
@@ -70,12 +70,12 @@ def run_doctor(repo_root: Path) -> dict:
         "files": [],
         "conflicts": []
     }
-    
+
     ops_dir = repo_root / "ops"
     templates_dir = ops_dir / "templates"
     profile_path = ops_dir / "operator_profile.yaml"
     compiled_path = ops_dir / "OUT_OPERATOR_SYSTEM_PROMPT.md"
-    
+
     # Determine compiled_hash
     if compiled_path.exists():
         report["compiled_hash"] = calculate_hash(compiled_path.read_text())
@@ -86,7 +86,7 @@ def run_doctor(repo_root: Path) -> dict:
             report["compiled_hash"] = calculate_hash(compiled_prompt)
         except Exception:
             pass
-    
+
     candidates = [
         ".claude/CLAUDE.md",
         "CLAUDE.md",
@@ -96,7 +96,7 @@ def run_doctor(repo_root: Path) -> dict:
         "README_AI.md",
         "docs/llm/TASKX_OPERATOR_SYSTEM.md"
     ]
-    
+
     for rel_path in candidates:
         path = repo_root / rel_path
         file_info = {
@@ -104,14 +104,14 @@ def run_doctor(repo_root: Path) -> dict:
             "status": "MISSING",
             "file_hash": None
         }
-        
+
         if not path.exists():
             report["files"].append(file_info)
             continue
-            
+
         text = path.read_text()
         blocks = extract_operator_blocks(text)
-        
+
         if not blocks:
             file_info["status"] = "NO_BLOCK"
         elif len(blocks) > 1:
@@ -120,14 +120,14 @@ def run_doctor(repo_root: Path) -> dict:
             # Exactly one block.
             inner_content = blocks[0]
             file_info["file_hash"] = calculate_hash(inner_content)
-            
+
             if report["compiled_hash"] != "UNKNOWN" and file_info["file_hash"] == report["compiled_hash"]:
                 file_info["status"] = "BLOCK_OK"
             else:
                 file_info["status"] = "BLOCK_STALE"
-        
+
         report["files"].append(file_info)
-        
+
         conflicts = check_conflicts(path)
         for c in conflicts:
             report["conflicts"].append({
@@ -136,5 +136,5 @@ def run_doctor(repo_root: Path) -> dict:
                 "line": c.line,
                 "recommendation": c.recommendation
             })
-            
+
     return report

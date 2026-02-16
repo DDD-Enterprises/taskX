@@ -17,9 +17,8 @@ jobs:
     #   github.event.pull_request.user.login == 'external-contributor' ||
     #   github.event.pull_request.user.login == 'new-developer' ||
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
-
-    # Skip if no API key is present
+    
+    # Skip if no API key is present or if PR is from a Bot
     if: ${{ github.event.pull_request.user.type != 'Bot' && secrets.ANTHROPIC_API_KEY != '' }}
     
     runs-on: ubuntu-latest

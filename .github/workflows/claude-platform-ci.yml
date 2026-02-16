@@ -53,7 +53,12 @@ jobs:
         else
           echo "available=false" >> $GITHUB_OUTPUT  
           echo "❌ Context7 MCP server is unavailable"
-          exit 1
+          if [ "$CONTEXT7_MANDATORY" = "true" ]; then
+            exit 1
+          else
+            echo "⚠️ Skipping failure due to CONTEXT7_MANDATORY=false"
+            exit 0
+          fi
         fi
 
     - name: Validate agent architecture

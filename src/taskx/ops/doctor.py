@@ -1,7 +1,9 @@
 from pathlib import Path
 
-from taskx.ops.compile import compile_prompt, load_profile, calculate_hash
 from taskx.ops.conflicts import check_conflicts
+from taskx.ops.export import calculate_hash, load_profile
+from taskx.ops.export import export_prompt as compile_prompt
+
 
 def extract_operator_blocks(text: str) -> list[str]:
     """
@@ -64,17 +66,27 @@ def get_canonical_target(repo_root: Path) -> Path:
     return repo_root / "docs/llm/TASKX_OPERATOR_SYSTEM.md"
 
 def run_doctor(repo_root: Path) -> dict:
-    report = {
+    report: dict = {
         "compiled_hash": "UNKNOWN",
         "canonical_target": str(get_canonical_target(repo_root).relative_to(repo_root)),
+        "config_locations": {},
         "files": [],
-        "conflicts": []
+        "conflicts": [],
     }
 
     ops_dir = repo_root / "ops"
     templates_dir = ops_dir / "templates"
     profile_path = ops_dir / "operator_profile.yaml"
     compiled_path = ops_dir / "OUT_OPERATOR_SYSTEM_PROMPT.md"
+
+    # Config location reporting
+    report["config_locations"] = {
+        "repo_root": str(repo_root),
+        "ops_dir": str(ops_dir),
+        "profile": str(profile_path) if profile_path.exists() else None,
+        "templates_dir": str(templates_dir) if templates_dir.exists() else None,
+        "compiled_prompt": str(compiled_path) if compiled_path.exists() else None,
+    }
 
     # Determine compiled_hash
     if compiled_path.exists():

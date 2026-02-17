@@ -1,13 +1,20 @@
 import difflib
+import subprocess
 from pathlib import Path
 
 import typer
 import yaml
 from rich.console import Console
 
+from taskx import __version__
 from taskx.ops.blocks import inject_block
-from taskx.ops.compile import calculate_hash, compile_prompt, load_profile
 from taskx.ops.discover import discover_instruction_file, get_sidecar_path
+from taskx.ops.export import (
+    calculate_hash,
+    export_prompt,
+    load_profile,
+    write_if_changed,
+)
 from taskx.utils.repo import detect_repo_root
 
 app = typer.Typer(help="Manage operator system instructions.")
@@ -19,26 +26,52 @@ def get_repo_root() -> Path:
     except RuntimeError:
         return Path.cwd()
 
+def get_git_hash() -> str:
+    try:
+        out = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
+        return out.decode().strip()
+    except Exception:
+        return "UNKNOWN"
+
+def run_export_flow(
+    export_path: Path | None = None,
+    platform: str | None = None,
+    model: str | None = None,
+) -> bool:
+    """Helper to run the export logic used by multiple commands."""
+    root = get_repo_root()
+    profile_path = root / "ops" / "operator_profile.yaml"
+    profile = load_profile(profile_path)
+    templates_dir = root / "ops" / "templates"
+
+    git_hash = get_git_hash()
+
+    compiled = export_prompt(
+        profile,
+        templates_dir,
+        platform_override=platform,
+        model_override=model,
+        taskx_version=__version__,
+        git_hash=git_hash
+    )
+
+    final_path = export_path or (root / "ops" / "EXPORTED_OPERATOR_PROMPT.md")
+    changed = write_if_changed(final_path, compiled)
+
+    console.print(f"Export: wrote {final_path} (changed={changed})")
+    return changed
+
 @app.command()
 def init(
     platform: str = typer.Option("chatgpt", "--platform"),
-    model: str = typer.Option("gpt-5.2-thinking", "--model")
+    model: str = typer.Option("gpt-5.2-thinking", "--model"),
+    no_export: bool = typer.Option(False, "--no-export"),
+    export_path: Path | None = typer.Option(None, "--export-path"),
 ):
-    """Initialize operator profile and templates."""
-    from taskx import __version__
-    import subprocess
-
+    """Initialize TaskX operator configuration. Exports unified prompt by default."""
     root = get_repo_root()
     ops_dir = root / "ops"
     ops_dir.mkdir(exist_ok=True)
-
-    # Try to get git head for pin
-    pin_value = "UNKNOWN"
-    try:
-        out = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
-        pin_value = out.decode().strip()
-    except Exception:
-        pass
 
     profile_path = ops_dir / "operator_profile.yaml"
     if not profile_path.exists():
@@ -50,7 +83,7 @@ def init(
             },
             "taskx": {
                 "pin_type": "git_commit",
-                "pin_value": pin_value,
+                "pin_value": get_git_hash(),
                 "cli_min_version": __version__
             },
             "platform": {
@@ -157,6 +190,7 @@ When forced to choose:
 - Explicit contracts over implicit behavior.
 """
 
+    # Seed canonical templates if missing
     for t, content in [("base_supervisor.md", base_supervisor_text), ("lab_boundary.md", lab_boundary_text)]:
         p = templates_dir / t
         if not p.exists():
@@ -166,24 +200,22 @@ When forced to choose:
     if not overlay_p.exists():
         overlay_p.write_text(f"# {platform} Overlay\nSpecifics for {platform}\n")
 
+    if not no_export:
+        try:
+            run_export_flow(export_path=export_path, platform=platform, model=model)
+        except Exception:
+            raise typer.Exit(1) from None
+
     console.print("[green]Initialization complete.[/green]")
 
 @app.command()
-def compile(
-    out: Path | None = typer.Option(None, "--out"),
+def export(
+    export_path: Path | None = typer.Option(None, "--export-path"),
     platform: str | None = typer.Option(None, "--platform"),
     model: str | None = typer.Option(None, "--model")
 ):
-    """Compile the operator system prompt."""
-    root = get_repo_root()
-    profile = load_profile(root / "ops" / "operator_profile.yaml")
-    templates_dir = root / "ops" / "templates"
-
-    compiled = compile_prompt(profile, templates_dir, platform, model)
-
-    out_path = out or (root / "ops" / "OUT_OPERATOR_SYSTEM_PROMPT.md")
-    out_path.write_text(compiled)
-    console.print(f"[green]Compiled prompt written to {out_path}[/green]")
+    """Export a unified operator system prompt from TaskX templates and profile configuration. Does not affect packet execution behavior."""
+    run_export_flow(export_path=export_path, platform=platform, model=model)
 
 @app.command()
 def preview(
@@ -193,7 +225,7 @@ def preview(
     root = get_repo_root()
     profile = load_profile(root / "ops" / "operator_profile.yaml")
     templates_dir = root / "ops" / "templates"
-    compiled = compile_prompt(profile, templates_dir)
+    compiled = export_prompt(profile, templates_dir, taskx_version=__version__, git_hash=get_git_hash())
     content_hash = calculate_hash(compiled)
     platform = profile.get("platform", {}).get("target", "chatgpt")
     model = profile.get("platform", {}).get("model", "UNKNOWN")
@@ -221,8 +253,6 @@ def apply(
     model: str | None = typer.Option(None, "--model")
 ):
     """Apply compiled prompt to instruction files."""
-    from taskx.ops.compile import load_profile, calculate_hash, compile_prompt
-    from taskx.ops.blocks import inject_block
     from taskx.ops.doctor import get_canonical_target
 
     root = get_repo_root()
@@ -230,15 +260,16 @@ def apply(
 
     templates_dir = root / "ops" / "templates"
 
-    # We must have content to apply. Prefer compiled file, but compile on the fly if missing.
-    compiled_path = root / "ops" / "OUT_OPERATOR_SYSTEM_PROMPT.md"
-    if compiled_path.exists():
-        content = compiled_path.read_text()
+    # We must have content to apply. Prefer exported file, but export on the fly (in-memory) if missing.
+    # Must NOT write export file.
+    export_file_path = root / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    if export_file_path.exists():
+        content = export_file_path.read_text()
     else:
         try:
-            content = compile_prompt(profile, templates_dir, platform, model)
+            content = export_prompt(profile, templates_dir, platform, model, taskx_version=__version__, git_hash=get_git_hash())
         except Exception as e:
-            console.print(f"[red]Could not compile prompt: {e}[/red]")
+            console.print(f"[red]Could not generate prompt: {e}[/red]")
             raise typer.Exit(1) from e
 
     content_hash = calculate_hash(content)
@@ -254,10 +285,7 @@ def apply(
         from taskx.ops.discover import get_sidecar_path
         target_file = get_sidecar_path(root)
 
-    if target_file.exists():
-        old_text = target_file.read_text()
-    else:
-        old_text = ""
+    old_text = target_file.read_text() if target_file.exists() else ""
 
     new_text = inject_block(old_text, content, p, m, content_hash)
 
@@ -290,18 +318,19 @@ def manual(
 ):
     """Run manual merge mode."""
     from taskx.ops.manual import run_manual_mode
-    from taskx.ops.compile import compile_prompt, load_profile
 
     root = get_repo_root()
     profile = load_profile(root / "ops" / "operator_profile.yaml")
-    compiled = compile_prompt(profile, root / "ops" / "templates")
+    compiled = export_prompt(profile, root / "ops" / "templates", taskx_version=__version__, git_hash=get_git_hash())
     run_manual_mode(compiled, platform or "chatgpt", model or "UNKNOWN")
 
 @app.command()
 def doctor(
-    json: bool = typer.Option(False, "--json")
+    json: bool = typer.Option(False, "--json"),
+    no_export: bool = typer.Option(False, "--no-export"),
+    export_path: Path | None = typer.Option(None, "--export-path"),
 ):
-    """Scan instruction files for issues and conflicts."""
+    """Diagnose configuration drift and conflicts. Exports unified prompt by default."""
     from taskx.ops.doctor import run_doctor
     root = get_repo_root()
     report = run_doctor(root)
@@ -314,6 +343,13 @@ def doctor(
         print(f"canonical_target={report['canonical_target']}")
         print()
 
+        config_locs = report.get("config_locations", {})
+        if config_locs:
+            print("Config locations:")
+            for key, val in config_locs.items():
+                print(f"  {key}={val or 'NOT_FOUND'}")
+            print()
+
         for f in report["files"]:
             print(f"{f['path']}: {f['status']}")
             if f["status"] in ["BLOCK_OK", "BLOCK_STALE"]:
@@ -325,3 +361,27 @@ def doctor(
             for c in report["conflicts"]:
                 print(f"- {c['file']}:{c['line']}: {c['phrase']}")
                 print(f"  Rec: {c['recommendation']}")
+
+    # Export runs EVEN IF doctor status = FAIL
+    # Logic note: report['files'] status determines FAIL if any FAIL-worthy status is present.
+    # Current doctor doesn't explicitly return a "PASS/FAIL" summary status, but we'll assume it's based on file statuses.
+
+    status_failed = any(f["status"] in ["BLOCK_STALE", "BLOCK_DUPLICATE", "NO_BLOCK"] for f in report["files"])
+
+    if not no_export:
+        run_export_flow(export_path=export_path)
+
+    if status_failed:
+        raise typer.Exit(2)
+
+@app.command()
+def diff():
+    """Compare local configuration against last export."""
+    # Placeholder for diff command if needed, though not explicitly requested in behavioral spec beyond listing it.
+    pass
+
+@app.command()
+def handoff():
+    """Execute handoff sequence."""
+    pass
+

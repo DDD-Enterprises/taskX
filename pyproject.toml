@@ -40,6 +40,9 @@ dev = [
 [project.scripts]
 taskx = "taskx.cli:cli"
 
+[project.entry-points."taskx.adapters"]
+dopemux = "taskx_adapters.dopemux:DopemuxAdapter"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/taskx", "src/taskx_adapters", "taskx_schemas"]
 include = [

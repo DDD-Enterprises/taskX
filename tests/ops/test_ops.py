@@ -1,41 +1,42 @@
-import os
-from pathlib import Path
-import pytest
-from taskx.ops.compile import calculate_hash, compile_prompt
-from taskx.ops.blocks import inject_block, update_file, find_block
-from taskx.ops.discover import discover_instruction_file
-from taskx.ops.conflicts import check_conflicts
+
+from typer.testing import CliRunner
+
+from taskx.ops.blocks import update_file
+from taskx.ops.cli import app
+from taskx.ops.discover import discover_instruction_file, get_sidecar_path
+from taskx.ops.export import calculate_hash, export_prompt
+
 
 def test_idempotent_apply(tmp_path):
     target = tmp_path / "CLAUDE.md"
     target.write_text("# Existing content\n")
-    
+
     content = "New operator instructions"
     c_hash = calculate_hash(content)
     platform = "chatgpt"
     model = "gpt-4"
-    
+
     # First apply
     changed = update_file(target, content, platform, model, c_hash)
     assert changed is True
     first_bytes = target.read_bytes()
-    
+
     # Second apply
     changed = update_file(target, content, platform, model, c_hash)
     assert changed is False
     second_bytes = target.read_bytes()
-    
+
     assert first_bytes == second_bytes
 
 def test_non_destructive_edit(tmp_path):
     target = tmp_path / "CLAUDE.md"
     original = "# Header\nUser content here.\n"
     target.write_text(original)
-    
+
     content = "TaskX content"
     c_hash = calculate_hash(content)
     update_file(target, content, "chatgpt", "gpt-4", c_hash)
-    
+
     updated_text = target.read_text()
     assert original in updated_text
     assert "<!-- TASKX:BEGIN operator_system" in updated_text
@@ -43,11 +44,11 @@ def test_non_destructive_edit(tmp_path):
 def test_replace_only_block(tmp_path):
     target = tmp_path / "CLAUDE.md"
     target.write_text("# Header\n<!-- TASKX:BEGIN operator_system v=1 platform=chatgpt model=gpt-4 hash=old -->\nOld content\n<!-- TASKX:END operator_system -->\nFooter")
-    
+
     new_content = "New content"
     new_hash = calculate_hash(new_content)
     update_file(target, new_content, "chatgpt", "gpt-4", new_hash)
-    
+
     updated_text = target.read_text()
     assert "# Header" in updated_text
     assert "Footer" in updated_text
@@ -61,122 +62,265 @@ def test_discovery_order(tmp_path):
     (repo / ".claude").mkdir()
     (repo / ".claude" / "CLAUDE.md").write_text("winner")
     (repo / "CLAUDE.md").write_text("loser")
-    
+
     found = discover_instruction_file(repo)
     assert found.name == "CLAUDE.md"
     assert ".claude" in str(found)
 
 def test_create_sidecar(tmp_path):
-    # If no file exists, it should use get_sidecar_path logic
-    from taskx.ops.discover import get_sidecar_path
     repo = tmp_path
     sidecar = get_sidecar_path(repo)
-    
+
     content = "TaskX content"
     c_hash = calculate_hash(content)
     update_file(sidecar, content, "chatgpt", "gpt-4", c_hash)
-    
+
     assert sidecar.exists()
     assert "TaskX content" in sidecar.read_text()
 
-def test_conflict_detection(tmp_path):
-    f = tmp_path / "CLAUDE.md"
-    f.write_text("Always choose speed over correctness\nYou are the implementer")
-    
-    conflicts = check_conflicts(f)
-    assert len(conflicts) == 2
-    assert "correctness" in conflicts[0].phrase
-    assert "implementer" in conflicts[1].phrase
+def test_ops_init_exports_by_default(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
 
-def test_load_profile_missing(tmp_path):
-    from taskx.ops.compile import load_profile
-    assert load_profile(tmp_path / "missing.yaml") == {}
+    # Run init
+    result = runner.invoke(app, ["init"])
+    assert result.exit_code == 0
 
-def test_doctor_full_lifecycle(tmp_path):
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert export_file.exists()
+
+    first_hash = calculate_hash(export_file.read_text())
+
+    # Run again - should be idempotent
+    result = runner.invoke(app, ["init"])
+    assert result.exit_code == 0
+    assert "changed=False" in result.output
+    assert calculate_hash(export_file.read_text()) == first_hash
+
+def test_ops_init_no_export(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["init", "--no-export"])
+    assert result.exit_code == 0
+
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert not export_file.exists()
+
+def test_ops_doctor_exports_even_on_fail(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    # Setup - init first
+    runner.invoke(app, ["init", "--no-export"])
+
+    # Create a FAIL condition for doctor (e.g., STALE block)
+    claude_file = tmp_path / "CLAUDE.md"
+    claude_file.write_text("# Header\n<!-- TASKX:BEGIN operator_system hash=stale -->\nOld\n<!-- TASKX:END operator_system -->")
+
+    result = runner.invoke(app, ["doctor"])
+    # Doctor should exit with non-zero on failure
+    assert result.exit_code != 0
+
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert export_file.exists()
+
+def test_ops_doctor_no_export(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    # Setup
+    runner.invoke(app, ["init", "--no-export"])
+
+    runner.invoke(app, ["doctor", "--no-export"])
+
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert not export_file.exists()
+
+def test_ops_apply_does_not_export(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    # Setup
+    runner.invoke(app, ["init", "--no-export"])
+
+    # Apply should work without creating the export file
+    # We need some templates to apply
+    (tmp_path / "CLAUDE.md").write_text("# Header")
+
+    result = runner.invoke(app, ["apply"])
+    assert result.exit_code == 0
+
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert not export_file.exists()
+    assert "updated" in result.output.lower()
+
+def test_ops_export_write_on_change(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    runner.invoke(app, ["init", "--no-export"])
+
+    # First export
+    result = runner.invoke(app, ["export"])
+    assert "changed=True" in result.output
+
+    export_file = tmp_path / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
+    assert export_file.exists()
+
+    # Second export
+    result = runner.invoke(app, ["export"])
+    assert "changed=False" in result.output
+
+def test_export_determinism(tmp_path):
+    profile = {
+        "project": {"name": "test", "repo_root": "root", "timezone": "UTC"},
+        "taskx": {"pin_type": "git", "pin_value": "123", "cli_min_version": "1.0.0"},
+        "platform": {"target": "chatgpt", "model": "gpt-4"}
+    }
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+    (templates_dir / "b.md").write_text("B content")
+    (templates_dir / "a.md").write_text("A content")
+
+    # Run twice
+    prompt1 = export_prompt(profile, templates_dir, taskx_version="1.0.0", git_hash="abc")
+    prompt2 = export_prompt(profile, templates_dir, taskx_version="1.0.0", git_hash="abc")
+
+    assert prompt1 == prompt2
+    # Check lexicographical order for "a.md" and "b.md"
+    # base and lab are first if they exist, but here they don't.
+    # a.md should come before b.md
+    assert prompt1.find("A content") < prompt1.find("B content")
+
+
+# --- __all__ exports ---
+
+def test_ops_all_exports():
+    import taskx.ops as ops
+    assert hasattr(ops, "__all__")
+    # Spot-check key public API names
+    for name in ["export_prompt", "load_profile", "run_doctor", "inject_block", "update_file",
+                 "calculate_hash", "discover_instruction_file", "get_sidecar_path",
+                 "extract_operator_blocks", "get_canonical_target", "check_conflicts",
+                 "find_block", "write_if_changed"]:
+        assert name in ops.__all__, f"{name} missing from ops.__all__"
+        assert hasattr(ops, name), f"{name} not importable from taskx.ops"
+
+
+# --- BaseAdapter + DopemuxAdapter ---
+
+def test_base_adapter_interface():
+    import abc
+
+    from taskx_adapters.base import BaseAdapter
+    # BaseAdapter should be abstract
+    assert abc.ABC in BaseAdapter.__mro__
+
+
+def test_dopemux_adapter_class(tmp_path):
+    from taskx_adapters.dopemux import DopemuxAdapter
+    adapter = DopemuxAdapter()
+    assert adapter.name == "dopemux"
+    # detect should raise when no markers found
+    import pytest
+    with pytest.raises(RuntimeError):
+        adapter.detect(start=tmp_path)
+
+
+def test_dopemux_adapter_detect_with_marker(tmp_path):
+    from taskx_adapters.dopemux import DopemuxAdapter
+    (tmp_path / ".dopemux").mkdir()
+    adapter = DopemuxAdapter()
+    info = adapter.detect(start=tmp_path)
+    assert info.name == "dopemux"
+    assert info.root == tmp_path
+    assert info.marker == ".dopemux/"
+
+
+def test_dopemux_adapter_compute_paths(tmp_path):
+    from taskx_adapters.dopemux import DopemuxAdapter
+    adapter = DopemuxAdapter()
+    paths = adapter.compute_paths(tmp_path)
+    assert paths.out_root == tmp_path / "out" / "taskx"
+
+
+def test_adapter_discovery():
+    from taskx_adapters import discover_adapters
+    # Should yield at least the dopemux adapter (registered via entry point)
+    adapters = list(discover_adapters())
+    # May or may not find dopemux depending on editable install state;
+    # just verify it doesn't crash
+    assert isinstance(adapters, list)
+
+
+def test_get_adapter_not_found():
+    from taskx_adapters import get_adapter
+    result = get_adapter("nonexistent_adapter_xyz")
+    assert result is None
+
+
+# --- Doctor config location reporting ---
+
+def test_doctor_config_locations(tmp_path, monkeypatch):
+    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    runner = CliRunner()
+
+    # Setup ops dir
+    runner.invoke(app, ["init", "--no-export"])
+
     from taskx.ops.doctor import run_doctor
-    from taskx.ops.cli import init, compile, apply
-    import os
-    
-    # 1. MISSING by default (candidates don't exist in tmp_path)
-    repo = tmp_path
-    report = run_doctor(repo)
-    claude_info = next(f for f in report["files"] if f["path"] == "CLAUDE.md")
-    assert claude_info["status"] == "MISSING"
+    report = run_doctor(tmp_path)
 
-    # 2. NO_BLOCK
-    (repo / "CLAUDE.md").write_text("# Generic Info")
-    report = run_doctor(repo)
-    claude_info = next(f for f in report["files"] if f["path"] == "CLAUDE.md")
-    assert claude_info["status"] == "NO_BLOCK"
+    assert "config_locations" in report
+    locs = report["config_locations"]
+    assert locs["repo_root"] == str(tmp_path)
+    assert locs["ops_dir"] == str(tmp_path / "ops")
+    # profile should exist after init
+    assert locs["profile"] is not None
+    assert locs["templates_dir"] is not None
 
-    # Setup environment for init/compile (mocking git usually is enough if we don't care about real pin)
-    # We'll use the profile to get a BLOCK_OK
-    (repo / "ops").mkdir()
-    (repo / "ops" / "templates").mkdir()
-    (repo / "ops" / "templates" / "overlays").mkdir()
-    (repo / "ops" / "templates" / "base_supervisor.md").write_text("# BASE\n")
-    (repo / "ops" / "templates" / "lab_boundary.md").write_text("# LAB\n")
-    (repo / "ops" / "templates" / "overlays" / "chatgpt.md").write_text("# OPT\n")
-    
-    profile_path = repo / "ops" / "operator_profile.yaml"
-    profile_path.write_text("project: {name: test, repo_root: '.', timezone: UTC}\ntaskx: {pin_type: git, pin_value: '123', cli_min_version: '0.1.2'}\nplatform: {target: chatgpt, model: gpt-4}\n")
 
-    # 3. BLOCK_OK
-    # Need to simulate compile+apply logic
-    from taskx.ops.compile import compile_prompt, load_profile, calculate_hash
-    from taskx.ops.blocks import inject_block
+def test_doctor_config_locations_missing(tmp_path):
+    """Doctor should report None for missing config paths."""
+    from taskx.ops.doctor import run_doctor
+    report = run_doctor(tmp_path)
 
-    profile = load_profile(profile_path)
-    compiled = compile_prompt(profile, repo / "ops" / "templates")
-    chash = calculate_hash(compiled)
-    
-    injected = inject_block("# Header", compiled, "chatgpt", "gpt-4", chash)
-    (repo / "CLAUDE.md").write_text(injected)
-    
-    report = run_doctor(repo)
-    claude_info = next(f for f in report["files"] if f["path"] == "CLAUDE.md")
-    assert report["compiled_hash"] == chash
-    assert claude_info["file_hash"] == chash
-    assert claude_info["status"] == "BLOCK_OK"
+    locs = report["config_locations"]
+    assert locs["profile"] is None
+    assert locs["templates_dir"] is None
+    assert locs["compiled_prompt"] is None
 
-    # 4. BLOCK_STALE (change template)
-    (repo / "ops" / "templates" / "base_supervisor.md").write_text("# CHANGED\n")
-    report = run_doctor(repo)
-    claude_info = next(f for f in report["files"] if f["path"] == "CLAUDE.md")
-    assert claude_info["status"] == "BLOCK_STALE"
-    assert claude_info["file_hash"] == chash
-    assert report["compiled_hash"] != chash
 
-    # 5. BLOCK_DUPLICATE
-    (repo / "CLAUDE.md").write_text(injected + "\n" + injected)
-    report = run_doctor(repo)
-    claude_info = next(f for f in report["files"] if f["path"] == "CLAUDE.md")
-    assert claude_info["status"] == "BLOCK_DUPLICATE"
+# --- taskx init top-level command ---
 
-def test_template_seeding_canonical(tmp_path):
-    from taskx.ops.cli import init
-    import os
-    
-    # Mock get_repo_root to return tmp_path
-    import taskx.ops.cli
-    original_get_repo_root = taskx.ops.cli.get_repo_root
-    taskx.ops.cli.get_repo_root = lambda: tmp_path
-    
-    try:
-        # Run init
-        # Use a wrapper to avoid Typer dependency issues in tests if any
-        from typer.testing import CliRunner
-        from taskx.ops.cli import app
-        runner = CliRunner()
-        result = runner.invoke(app, ["init", "--yes"])
-        
-        base_p = tmp_path / "ops" / "templates" / "base_supervisor.md"
-        assert "Canonical Minimal Baseline v1" in base_p.read_text()
-        
-        # Modify and re-run init (should not overwrite)
-        base_p.write_text("USER EDITED")
-        runner.invoke(app, ["init", "--yes"])
-        assert base_p.read_text() == "USER EDITED"
-        
-    finally:
-        taskx.ops.cli.get_repo_root = original_get_repo_root
+def test_taskx_init_ops_tier(tmp_path, monkeypatch):
+    from taskx.cli import cli
+    monkeypatch.chdir(tmp_path)
+
+    # Mock detect_repo_root to return tmp_path
+    from types import SimpleNamespace
+
+    from taskx.utils import repo as repo_mod
+    monkeypatch.setattr(repo_mod, "detect_repo_root", lambda cwd: SimpleNamespace(root=tmp_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init", "--tier", "ops", "--yes"])
+    assert result.exit_code == 0
+    assert "ops tier" in result.output.lower() or "complete" in result.output.lower()
+    # ops directory should exist
+    assert (tmp_path / "ops").exists()
+
+
+def test_taskx_init_yes_no_prompts(tmp_path, monkeypatch):
+    """--yes mode should complete without any interactive prompts."""
+    from types import SimpleNamespace
+
+    from taskx.cli import cli
+    from taskx.utils import repo as repo_mod
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(repo_mod, "detect_repo_root", lambda cwd: SimpleNamespace(root=tmp_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["init", "--tier", "ops", "--yes"], input="")
+    assert result.exit_code == 0

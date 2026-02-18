@@ -106,7 +106,7 @@ def test_malformed_markers_refuse(tmp_path: Path) -> None:
     rc = tmp_path / "rc"
     rc.write_text(f"{MARKER_BEGIN}\nexport TASKX_NEON=\"1\"\n", encoding="utf-8")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exc_info:
         persist_rc_file(
             path=rc,
             neon="1",
@@ -115,6 +115,8 @@ def test_malformed_markers_refuse(tmp_path: Path) -> None:
             remove=False,
             dry_run=True,
         )
+    
+    assert "end marker missing" in str(exc_info.value)
 
 
 def test_cli_rejects_invalid_theme(tmp_path: Path) -> None:

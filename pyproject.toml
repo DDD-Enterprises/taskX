@@ -27,7 +27,7 @@ dependencies = [
     "typer>=0.9.0",
     "rich>=13.0.0",
     "jsonschema>=4.0.0",
-    "pyyaml>=6.0.3",
+    "pyyaml>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +42,9 @@ dev = [
 
 [project.scripts]
 taskx = "taskx.cli:cli"
+
+[project.entry-points."taskx.adapters"]
+dopemux = "taskx_adapters.dopemux:DopemuxAdapter"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/taskx", "src/taskx_adapters", "taskx_schemas"]

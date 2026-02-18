@@ -1,6 +1,7 @@
 """TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -324,6 +325,116 @@ def neon_status() -> None:
     else:
         for s in lines:
             print(s)
+
+
+@neon_app.command("persist")
+def neon_persist(
+    shell: str = typer.Option(
+        "auto",
+        "--shell",
+        help="Target shell rc format: zsh, bash, or auto (infer from $SHELL).",
+    ),
+    path: Path | None = typer.Option(
+        None,
+        "--path",
+        help="Override rc file path (otherwise derived from --shell).",
+    ),
+    remove: bool = typer.Option(
+        False,
+        "--remove",
+        help="Remove the managed TASKX NEON block.",
+    ),
+    dry_run: bool = typer.Option(
+        True,
+        "--dry-run",
+        help="Print a unified diff and do not write.",
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help="Write changes to disk (creates timestamped backup).",
+    ),
+    theme: str | None = typer.Option(
+        None,
+        "--theme",
+        help="Theme override (default: TASKX_THEME or mintwave).",
+    ),
+    neon: int | None = typer.Option(
+        None,
+        "--neon",
+        help="Override TASKX_NEON (0 or 1).",
+    ),
+    strict: int | None = typer.Option(
+        None,
+        "--strict",
+        help="Override TASKX_STRICT (0 or 1).",
+    ),
+) -> None:
+    """Persist neon env exports into a shell rc file (idempotent markers)."""
+    if yes and dry_run:
+        raise typer.Exit(2)
+
+    if path is None:
+        resolved_shell = shell
+        if resolved_shell == "auto":
+            shell_env = os.environ.get("SHELL", "")
+            if shell_env.endswith("zsh"):
+                resolved_shell = "zsh"
+            elif shell_env.endswith("bash"):
+                resolved_shell = "bash"
+            else:
+                if neon_enabled():
+                    neon_console.print("[bold red]Refused:[/bold red] unable to infer shell from $SHELL.")
+                    neon_console.print("Provide --shell zsh|bash or --path /path/to/rcfile")
+                else:
+                    print("Refused: unable to infer shell from $SHELL. Provide --shell zsh|bash or --path.")
+                raise typer.Exit(2)
+
+        if resolved_shell == "zsh":
+            path = Path.home() / ".zshrc"
+        elif resolved_shell == "bash":
+            path = Path.home() / ".bashrc"
+        else:
+            raise typer.Exit(2)
+
+    desired_neon = str(neon) if neon is not None else os.getenv("TASKX_NEON", "1")
+    desired_strict = str(strict) if strict is not None else os.getenv("TASKX_STRICT", "0")
+    desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
+
+    if desired_neon not in ("0", "1") or desired_strict not in ("0", "1"):
+        raise typer.Exit(2)
+
+    from taskx.neon_persist import persist_rc_file
+
+    result = persist_rc_file(
+        path=path,
+        neon=desired_neon,
+        theme=desired_theme,
+        strict=desired_strict,
+        remove=remove,
+        dry_run=not yes,
+    )
+
+    if neon_enabled():
+        neon_console.print(f"[bold]Target:[/bold] {result.path}")
+        neon_console.print("[dim]Mode: dry-run[/dim]" if not yes else "[dim]Mode: write[/dim]")
+    else:
+        print(f"Target: {result.path}")
+        print("Mode: dry-run" if not yes else "Mode: write")
+
+    if result.diff:
+        print(result.diff, end="" if result.diff.endswith("\n") else "\n")
+    else:
+        if neon_enabled():
+            neon_console.print("[green]No changes.[/green]")
+        else:
+            print("No changes.")
+
+    if result.backup_path is not None:
+        if neon_enabled():
+            neon_console.print(f"[cyan]Backup:[/cyan] {result.backup_path}")
+        else:
+            print(f"Backup: {result.backup_path}")
 
 
 def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:

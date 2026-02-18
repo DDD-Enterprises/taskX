@@ -18,7 +18,11 @@ Older versions are not maintained.
 
 Please do not open public issues for security reports.
 
-Send a private report with:
+**How to report:**
+
+Use [GitHub Security Advisories](https://github.com/hu3mann/taskX/security/advisories/new) to submit a private report.
+
+**Include in your report:**
 
 - TaskX version
 - OS and Python version

@@ -53,6 +53,7 @@ from taskx.router import (
     parse_steps as parse_route_steps,
 )
 from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
+from taskx.ui import render_banner, should_show_banner
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -144,6 +145,8 @@ class FinishMode(str, Enum):
 def _version_option_callback(value: bool) -> None:
     """Handle eager --version option."""
     if value:
+        if should_show_banner(sys.argv):
+            render_banner()
         typer.echo(__version__)
         raise typer.Exit()
 
@@ -165,6 +168,8 @@ def _cli_callback(
     Checks for import shadowing issues and emits warnings.
     """
     _ = version
+    if should_show_banner(sys.argv):
+        render_banner()
     # Skip shadowing check for print-runtime-origin command
     if ctx.invoked_subcommand != "print-runtime-origin":
         _check_import_shadowing()

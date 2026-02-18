@@ -18,8 +18,8 @@
 - Explanation:
 
 ## Artifact Impact 🧾
-- Expected impact: NONE (required)
-- Explanation:
+- Expected impact: NONE / SCHEMA_CHANGE / NEW_ARTIFACT (default: NONE; non-NONE requires strong justification and contract review)
+- Explanation: (for non-NONE, include justification and contract review details)
 
 ## Tests 🧪
 - [ ] `uv run pytest` passed

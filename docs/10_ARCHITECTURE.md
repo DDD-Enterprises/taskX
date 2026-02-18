@@ -198,6 +198,18 @@ Artifacts are evidence.
 
 If artifacts are incomplete or inconsistent, the run is invalid.
 
+### 8.1 Artifact Writer Contract
+
+Artifact writing is forensic, not decorative.
+
+- Canonicalize output.
+- Preserve stable key ordering and structure.
+- Write artifacts before process exit.
+- Fail loudly if write guarantees are not met.
+
+Artifacts are not logs.
+Artifacts are evidence.
+
 ---
 
 ## 9. Determinism Is Non-Negotiable

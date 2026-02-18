@@ -279,6 +279,10 @@ def persist_neon_rc_file(
     backup_path = path.with_name(f"{path.name}.taskx.bak")
     try:
         _atomic_write(backup_path, old)
+    except OSError as exc:
+        raise OSError(f"Failed to write backup rc file {backup_path}: {exc}") from exc
+
+    try:
         _atomic_write(path, new)
     except OSError as exc:
         raise OSError(f"Failed to write rc file {path}: {exc}") from exc

@@ -37,8 +37,8 @@ def test_doctor_statuses_flash(tmp_path):
         (templates_dir / "lab_boundary.md").write_text("# LAB\n")
         (templates_dir / "overlays" / "chatgpt.md").write_text("# OPT\n")
         
-        runner.invoke(taskx.ops.cli.app, ["export"])
-        compiled_path = ops_dir / "EXPORTED_OPERATOR_PROMPT.md"
+        compiled_path = ops_dir / "OUT_OPERATOR_SYSTEM_PROMPT.md"
+        runner.invoke(taskx.ops.cli.app, ["compile", "--out-path", str(compiled_path)])
         assert compiled_path.exists()
         compiled_content = compiled_path.read_text()
         compiled_hash = calculate_hash(compiled_content)

@@ -131,10 +131,11 @@ Expected outputs:
 - Worktrees and commit sequencing (maintainers): `docs/20_WORKTREES_COMMIT_SEQUENCING.md`
 - Case bundles (maintainers): `docs/21_CASE_BUNDLES.md`
 - Release (maintainers): `docs/90_RELEASE.md`
+- Security policy: `SECURITY.md`
+- Contributing guide: `CONTRIBUTING.md`
 
 ## Kernel vs ecosystem
 
 TaskX (kernel) validates packets, plans deterministically, executes one path (or emits a manual handoff), and writes canonical artifacts.
 
 Everything else (scheduling, orchestration, memory, UX) belongs in the ecosystem above the kernel.
-

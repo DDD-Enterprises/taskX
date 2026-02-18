@@ -395,6 +395,16 @@ def neon_persist(
         elif resolved_shell == "bash":
             path = Path.home() / ".bashrc"
         else:
+            if neon_enabled():
+                neon_console.print(
+                    f"[bold red]Refused:[/bold red] unsupported shell '{resolved_shell}'."
+                )
+                neon_console.print("Provide --shell zsh|bash or --path /path/to/rcfile")
+            else:
+                print(
+                    f"Refused: unsupported shell '{resolved_shell}'. "
+                    "Provide --shell zsh|bash or --path /path/to/rcfile."
+                )
             raise typer.Exit(2)
 
     desired_neon = str(neon) if neon is not None else os.getenv("TASKX_NEON", "1")

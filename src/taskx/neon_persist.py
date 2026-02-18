@@ -27,6 +27,15 @@ def apply_managed_block(contents: str, *, block: str, remove: bool) -> tuple[str
     begin_idx = contents.find(MARKER_BEGIN)
     end_idx = contents.find(MARKER_END)
 
+    # Reject files that contain multiple managed blocks, as behavior would be ambiguous.
+    if begin_idx != -1:
+        next_begin_idx = contents.find(MARKER_BEGIN, begin_idx + len(MARKER_BEGIN))
+        if next_begin_idx != -1:
+            raise ValueError("Multiple TASKX NEON begin markers found.")
+    if end_idx != -1:
+        next_end_idx = contents.find(MARKER_END, end_idx + len(MARKER_END))
+        if next_end_idx != -1:
+            raise ValueError("Multiple TASKX NEON end markers found.")
     if begin_idx == -1 and end_idx == -1:
         if remove:
             return contents, False

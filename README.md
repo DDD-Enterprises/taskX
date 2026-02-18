@@ -136,9 +136,63 @@ Extended references:
 - Task packet format: `docs/13_TASK_PACKET_FORMAT.md`
 - Worktrees and commit sequencing (maintainers): `docs/20_WORKTREES_COMMIT_SEQUENCING.md`
 - Case bundles (maintainers): `docs/21_CASE_BUNDLES.md`
+- Release (maintainers): `docs/90_RELEASE.md`
+- Security policy: `SECURITY.md`
+- Contributing guide: `CONTRIBUTING.md`
 
 ## Kernel vs ecosystem
 
 TaskX (kernel) validates packets, plans deterministically, executes one path (or emits a manual handoff), and writes canonical artifacts.
 
 Everything else (scheduling, orchestration, memory, UX) belongs in the ecosystem above the kernel.
+
+## Badge wall
+
+- Deterministic: VERBATIM_REQUIRED
+- Implicit Retries: VERBATIM_REQUIRED
+- Silent Fallbacks: VERBATIM_REQUIRED
+- Cross-Run State: VERBATIM_REQUIRED
+- Multi-Runner: VERBATIM_REQUIRED
+- Ghost Behavior: VERBATIM_REQUIRED
+
+## Kernel Manifesto
+
+VERBATIM_REQUIRED
+
+## Anti-Features
+
+TaskX will never:
+- retry silently
+- fallback to a different runner
+- execute multiple paths
+- persist state across runs
+- perform undeclared network calls
+- "do what you meant"
+- reorder declared steps
+- mutate your repository implicitly
+
+If you want flexibility, build it above the kernel.
+
+## Kernel FAQ
+
+VERBATIM_REQUIRED
+
+## Determinism Stress Test
+
+Given identical:
+- packet
+- declared environment inputs
+- TaskX version
+
+You must observe identical:
+- route plans
+- artifacts
+- exit codes
+- hashes
+
+If any of those change without a version bump:
+the contract has been violated.
+
+## Why TaskX Is Hot
+
+VERBATIM_REQUIRED

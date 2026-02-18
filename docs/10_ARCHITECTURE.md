@@ -6,6 +6,27 @@ Tone: Deterministic. Unapologetic.
 
 ---
 
+## Kernel Code of Honor ⚙️🖤
+
+- TaskX does not whisper sweet nothings.
+- TaskX speaks in invariants.
+
+We pledge:
+- 💋 To refuse rather than fake it.
+- 🧠 To plan before we act.
+- 🧾 To leave artifacts after every encounter.
+- 🚫 To never perform behind your back.
+- ⚡ To choose one path and commit.
+
+No hidden retries.
+No secret fallbacks.
+No quiet second chances.
+
+If TaskX says "no," it means it.
+And that's hotter than guessing.
+
+---
+
 ## 1. What TaskX Is
 
 TaskX is a deterministic execution kernel.
@@ -177,6 +198,15 @@ Artifacts are evidence.
 
 If artifacts are incomplete or inconsistent, the run is invalid.
 
+### 8.1 Artifact Writer Contract
+
+Artifact writing is forensic, not decorative.
+
+- Canonicalize output.
+- Preserve stable key ordering and structure.
+- Write artifacts before process exit.
+- Fail loudly if write guarantees are not met.
+
 ---
 
 ## 9. Determinism Is Non-Negotiable
@@ -271,4 +301,3 @@ TaskX is not designed to be helpful.
 It is designed to be correct.
 
 And correctness is hotter than convenience.
-

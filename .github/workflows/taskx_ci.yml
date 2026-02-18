@@ -35,12 +35,13 @@ jobs:
         run: |
           uv sync --dev
 
-      - name: Fail on Poetry references
+      - name: Check for Poetry (Absolutely Not)
         run: |
+          echo "Reject Poetry check"
           if rg -n -i '\bpoetry\b' . \
             --glob '!.github/workflows/taskx_ci.yml' \
             --glob '!uv.lock'; then
-            echo "Poetry references are disallowed."
+            echo "Poetry detected. Rejected."
             exit 1
           fi
       
@@ -52,7 +53,7 @@ jobs:
         run: |
           uv run mypy src/taskx
       
-      - name: Run unit tests
+      - name: Run Tests (Be Honest)
         run: |
           uv run pytest
 

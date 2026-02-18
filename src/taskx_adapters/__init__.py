@@ -40,8 +40,8 @@ __all__ = [
 def discover_adapters() -> Iterator[BaseAdapter]:
     """Yield all adapters registered under the ``taskx.adapters`` entry-point group.
 
-    Uses ``importlib.metadata.entry_points(group=...)`` which is available
-    in Python 3.10+ and is the recommended API.
+    Uses ``importlib.metadata.entry_points(group=...)`` (Python 3.10+).
+    Since this project requires Python >=3.11, the ``group`` parameter is always available.
     """
     from importlib.metadata import entry_points
 

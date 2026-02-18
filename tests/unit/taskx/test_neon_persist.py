@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from taskx.cli import app
 from taskx.neon_persist import MARKER_BEGIN, MARKER_END, persist_rc_file, render_block
 
 
@@ -111,4 +113,36 @@ def test_malformed_markers_refuse(tmp_path: Path) -> None:
             remove=False,
             dry_run=True,
         )
+
+
+def test_cli_rejects_invalid_theme(tmp_path: Path) -> None:
+    """Test that the CLI rejects invalid themes to prevent shell injection."""
+    runner = CliRunner()
+    rc = tmp_path / "rc"
+
+    # Test malicious theme with shell metacharacters
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "malicious$(whoami)", "--path", str(rc)],
+    )
+    assert result.exit_code == 2
+    assert "Unknown theme:" in result.output
+    assert not rc.exists()  # File should not be created
+
+    # Test malicious theme with semicolon
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "evil; rm -rf /", "--path", str(rc)],
+    )
+    assert result.exit_code == 2
+    assert "Unknown theme:" in result.output
+    assert not rc.exists()
+
+    # Test valid theme
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "mintwave", "--path", str(rc)],
+    )
+    assert result.exit_code == 0
+    assert "Unknown theme:" not in result.output
 

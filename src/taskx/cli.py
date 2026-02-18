@@ -411,6 +411,16 @@ def neon_persist(
     desired_strict = str(strict) if strict is not None else os.getenv("TASKX_STRICT", "0")
     desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
 
+    # Validate theme against known themes to prevent shell injection
+    if desired_theme not in THEMES:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Unknown theme:[/bold red] {desired_theme}")
+            neon_console.print("Try: taskx neon list")
+        else:
+            print(f"Unknown theme: {desired_theme}")
+            print("Try: taskx neon list")
+        raise typer.Exit(2)
+
     if desired_neon not in ("0", "1") or desired_strict not in ("0", "1"):
         if neon_enabled():
             if desired_neon not in ("0", "1"):

@@ -6,6 +6,27 @@ Tone: Deterministic. Unapologetic.
 
 ---
 
+## Kernel Code of Honor ⚙️🖤
+
+- TaskX does not whisper sweet nothings.
+- TaskX speaks in invariants.
+
+We pledge:
+- 💋 To refuse rather than fake it.
+- 🧠 To plan before we act.
+- 🧾 To leave artifacts after every encounter.
+- 🚫 To never perform behind your back.
+- ⚡ To choose one path and commit.
+
+No hidden retries.
+No secret fallbacks.
+No quiet second chances.
+
+If TaskX says "no," it means it.
+And that's hotter than guessing.
+
+---
+
 ## 1. What TaskX Is
 
 TaskX is a deterministic execution kernel.
@@ -271,4 +292,3 @@ TaskX is not designed to be helpful.
 It is designed to be correct.
 
 And correctness is hotter than convenience.
-

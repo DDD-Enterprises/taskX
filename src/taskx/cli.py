@@ -1,6 +1,7 @@
 """TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -9,8 +10,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+import click
 import typer
 from rich.console import Console
+from typer.core import TyperGroup
 
 from taskx import __version__
 from taskx.manifest import (
@@ -53,6 +56,19 @@ from taskx.router import (
     parse_steps as parse_route_steps,
 )
 from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
+from taskx.ui import (
+    THEMES,
+    NeonSpinner,
+    console as neon_console,
+    get_theme_name,
+    neon_enabled,
+    persist_neon_rc_file,
+    render_banner,
+    should_show_banner,
+    sleep_ms,
+    strict_enabled,
+    worship as worship_impl,
+)
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -108,13 +124,37 @@ try:
 except ImportError:
     audit_case_impl = None  # type: ignore
 
+try:
+    from taskx.ops.cli import app as ops_app
+except ImportError:
+    ops_app = None  # type: ignore
+
+
+class BannerTyperGroup(TyperGroup):
+    """Custom TyperGroup that displays banner before help text."""
+
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        """Format help with optional banner prepended."""
+        if should_show_banner(sys.argv):
+            from typer.rich_utils import _get_rich_console
+            console_rich = _get_rich_console()
+            render_banner()
+        super().format_help(ctx, formatter)
+
 
 cli = typer.Typer(
     name="taskx",
     help="TaskX - Minimal Task Packet Lifecycle CLI",
     no_args_is_help=True,
+    cls=BannerTyperGroup,
 )
+if ops_app:
+    cli.add_typer(ops_app, name="ops")
+app = cli
 console = Console()
+
+neon_app = typer.Typer(help="Neon terminal cosmetics (console-only). Artifacts stay sterile.")
+cli.add_typer(neon_app, name="neon")
 
 
 def _use_compat_options(*_values: object) -> None:
@@ -137,6 +177,8 @@ class FinishMode(StrEnum):
 def _version_option_callback(value: bool) -> None:
     """Handle eager --version option."""
     if value:
+        if should_show_banner(sys.argv):
+            render_banner()
         typer.echo(__version__)
         raise typer.Exit()
 
@@ -188,6 +230,204 @@ def _check_import_shadowing() -> None:
             f"[yellow]Expected locations: */site-packages/taskx/ or */code/taskX/[/yellow]",
             err=True,
         )
+
+
+@cli.command()
+def worship() -> None:
+    """Console-only easter egg (no artifacts)."""
+    worship_impl()
+
+
+@neon_app.callback(invoke_without_command=True)
+def neon() -> None:
+    """Show current neon theme banner."""
+    render_banner()
+
+
+@neon_app.command("list")
+def neon_list() -> None:
+    """List available neon themes."""
+    for name in sorted(THEMES):
+        if neon_enabled():
+            neon_console.print(f"[bold]  {name}[/bold]")
+        else:
+            print(f"  {name}")
+
+
+@neon_app.command("preview")
+def neon_preview(
+    theme: str = typer.Argument(..., help="Theme name."),
+) -> None:
+    """Preview a theme banner."""
+    if theme not in THEMES:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Unknown theme:[/bold red] {theme}")
+            neon_console.print("Try: taskx neon list")
+        else:
+            print(f"Unknown theme: {theme}")
+            print("Try: taskx neon list")
+        raise typer.Exit(2)
+    render_banner(theme=theme)
+
+
+@neon_app.command("demo")
+def neon_demo(
+    delay_ms: int = typer.Option(220, "--delay-ms", help="Delay between themes (ms)."),
+) -> None:
+    """Cycle through all themes."""
+    for theme in sorted(THEMES):
+        render_banner(theme=theme)
+        sleep_ms(delay_ms)
+
+
+@neon_app.command("set")
+def neon_set(
+    theme: str = typer.Argument(..., help="Theme name."),
+) -> None:
+    """Print a shell export line for TASKX_THEME."""
+    if theme not in THEMES:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Unknown theme:[/bold red] {theme}")
+            neon_console.print("Try: taskx neon list")
+        else:
+            print(f"Unknown theme: {theme}")
+            print("Try: taskx neon list")
+        raise typer.Exit(2)
+    line = f'export TASKX_THEME="{theme}"'
+    if neon_enabled():
+        neon_console.print("[bold bright_green]Copy/paste into your shell:[/bold bright_green]")
+        neon_console.print(line)
+    else:
+        print(line)
+
+
+@neon_app.command("status")
+def neon_status() -> None:
+    """Show neon/strict toggles and selected theme."""
+    enabled = "1" if neon_enabled() else "0"
+    strict = "1" if strict_enabled() else "0"
+    theme = get_theme_name()
+    lines = [
+        f"TASKX_NEON={enabled}",
+        f"TASKX_THEME={theme}",
+        f"TASKX_STRICT={strict}",
+    ]
+    if neon_enabled():
+        neon_console.print("[bold]Neon status[/bold]")
+        for s in lines:
+            neon_console.print(f"  {s}")
+    else:
+        for s in lines:
+            print(s)
+
+
+@neon_app.command("persist")
+def neon_persist(
+    shell: str | None = typer.Option(
+        None,
+        "--shell",
+        help="Target shell: zsh or bash (defaults to inferred $SHELL).",
+    ),
+    rc_path: Path | None = typer.Option(
+        None,
+        "--rc-path",
+        "--path",
+        help="Override rc file path (otherwise derived from shell).",
+    ),
+    remove: bool = typer.Option(
+        False,
+        "--remove",
+        help="Remove the managed TASKX NEON block.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Do not write any changes (dry run mode).",
+    ),
+    theme: str | None = typer.Option(
+        None,
+        "--theme",
+        help="Theme override (default: TASKX_THEME or mintwave).",
+    ),
+) -> None:
+    """Persist neon env exports into a shell rc file (idempotent markers)."""
+    # Validate shell parameter if provided
+    if shell is not None and shell not in ("zsh", "bash"):
+        if neon_enabled():
+            neon_console.print(f"[bold red]Refused:[/bold red] invalid shell '{shell}'")
+            neon_console.print("Valid options: zsh, bash")
+        else:
+            print(f"Refused: invalid shell '{shell}'. Valid options: zsh, bash")
+        raise typer.Exit(2)
+
+    if rc_path is None:
+        resolved_shell: str | None = None
+        shell_env = os.environ.get("SHELL", "")
+        if shell_env.endswith("zsh"):
+            resolved_shell = "zsh"
+        elif shell_env.endswith("bash"):
+            resolved_shell = "bash"
+        if shell is not None:
+            resolved_shell = shell
+
+        if resolved_shell == "zsh":
+            rc_path = Path.home() / ".zshrc"
+        elif resolved_shell == "bash":
+            rc_path = Path.home() / ".bashrc"
+        else:
+            if neon_enabled():
+                neon_console.print("[bold red]Refused:[/bold red] unable to determine shell rc target.")
+                neon_console.print("Use --shell zsh|bash or --rc-path /path/to/rcfile")
+            else:
+                print("Refused: unable to determine shell rc target. Use --shell or --rc-path.")
+            raise typer.Exit(2)
+
+    desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
+
+    # Validate theme against known themes to prevent shell injection
+    if desired_theme not in THEMES:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Unknown theme:[/bold red] {desired_theme}")
+            neon_console.print("Try: taskx neon list")
+        else:
+            print(f"Unknown theme: {desired_theme}")
+            print("Try: taskx neon list")
+        raise typer.Exit(2)
+
+    try:
+        result = persist_neon_rc_file(
+            path=rc_path,
+            theme=desired_theme,
+            remove=remove,
+            dry_run=dry_run,
+        )
+    except OSError as exc:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Error:[/bold red] {exc}")
+        else:
+            print(f"Error: {exc}")
+        raise typer.Exit(1) from exc
+
+    if neon_enabled():
+        neon_console.print(f"[bold]Target:[/bold] {result.path}")
+        neon_console.print("[dim]Mode: dry-run[/dim]" if dry_run else "[dim]Mode: write[/dim]")
+    else:
+        print(f"Target: {result.path}")
+        print("Mode: dry-run" if dry_run else "Mode: write")
+
+    if result.diff:
+        print(result.diff, end="" if result.diff.endswith("\n") else "\n")
+    else:
+        if neon_enabled():
+            neon_console.print("[green]No changes.[/green]")
+        else:
+            print("No changes.")
+
+    if result.backup_path is not None:
+        if neon_enabled():
+            neon_console.print(f"[cyan]Backup:[/cyan] {result.backup_path}")
+        else:
+            print(f"Backup: {result.backup_path}")
 
 
 def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
@@ -703,6 +943,147 @@ def print_runtime_origin() -> None:
         console.print(f"  {i}. {path}")
 
     raise typer.Exit(0)
+
+
+class InitTier(StrEnum):
+    """Bootstrap tier controlling what ``taskx init`` sets up."""
+
+    OPS = "ops"
+    STANDARD = "standard"
+    DEEP = "deep"
+
+
+@cli.command(name="init")
+def init_cmd(
+    tier: InitTier = typer.Option(
+        InitTier.STANDARD,
+        "--tier",
+        help="Bootstrap tier: ops (operator prompts only), standard (ops + project files), deep (all + adapter wiring).",
+    ),
+    preset: str = typer.Option(
+        "taskx",
+        "--preset",
+        help="Directive preset for project init (taskx, chatx, both, none).",
+    ),
+    platform: str = typer.Option(
+        "chatgpt",
+        "--platform",
+        help="Target platform for operator prompt.",
+    ),
+    adapter: str | None = typer.Option(
+        None,
+        "--adapter",
+        help="Adapter name to wire (discovered via taskx.adapters entry points).",
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        "-y",
+        help="Non-interactive mode: accept all defaults, skip prompts.",
+    ),
+    out: Path = typer.Option(
+        Path("."),
+        "--out",
+        help="Output directory for project files (standard/deep tiers).",
+    ),
+) -> None:
+    """Bootstrap TaskX integration into the current repository.
+
+    Tier controls scope:
+    - ops: operator prompt configuration only (ops/ directory)
+    - standard: ops + project directive files
+    - deep: standard + adapter wiring via entry-point discovery
+    """
+    _use_compat_options(yes)  # consumed by CLI interface; suppresses interactive prompts
+
+    from taskx.utils.repo import detect_repo_root
+
+    # Determine repo root best-effort
+    cwd = Path.cwd()
+    try:
+        repo_root_path = detect_repo_root(cwd).root
+    except RuntimeError:
+        repo_root_path = cwd
+
+    # --- Tier: ops (and above) ---
+    # Always run ops init
+    if ops_app is not None:
+        from taskx.ops.cli import run_export_flow as _ops_export
+
+        # Prepare ops directory
+        ops_dir = repo_root_path / "ops"
+        ops_dir.mkdir(exist_ok=True)
+
+        profile_path = ops_dir / "operator_profile.yaml"
+        if not profile_path.exists():
+            import yaml  # type: ignore[import-untyped]
+
+            profile = {
+                "project": {
+                    "name": repo_root_path.name,
+                    "repo_root": str(repo_root_path),
+                    "timezone": "America/Vancouver",
+                },
+                "taskx": {
+                    "pin_type": "git_commit",
+                    "pin_value": "UNKNOWN",
+                    "cli_min_version": __version__,
+                },
+                "platform": {
+                    "target": platform,
+                    "model": "gpt-5.2-thinking",
+                },
+            }
+            with open(profile_path, "w") as f:
+                yaml.dump(profile, f)
+            console.print(f"[green]Created {profile_path}[/green]")
+
+        templates_dir = ops_dir / "templates"
+        templates_dir.mkdir(exist_ok=True)
+        (templates_dir / "overlays").mkdir(exist_ok=True)
+
+        overlay_p = templates_dir / "overlays" / f"{platform}.md"
+        if not overlay_p.exists():
+            overlay_p.write_text(f"# {platform} Overlay\nSpecifics for {platform}\n")
+
+        try:
+            _ops_export(platform=platform)
+        except Exception:
+            console.print("[yellow]Warning: ops export failed (templates may be missing).[/yellow]")
+
+        console.print("[green]Ops tier: complete.[/green]")
+
+    # --- Tier: standard (and above) ---
+    if tier in (InitTier.STANDARD, InitTier.DEEP):
+        from taskx.project.init import init_project
+
+        try:
+            result = init_project(out_dir=out.resolve(), preset=preset)
+            created = sum(1 for f in result["files"] if f["status"] == "created")
+            updated = sum(1 for f in result["files"] if f["status"] == "updated")
+            console.print(f"[green]Project tier: {created} created, {updated} updated.[/green]")
+        except Exception as exc:
+            console.print(f"[yellow]Warning: project init failed: {exc}[/yellow]")
+
+    # --- Tier: deep ---
+    if tier == InitTier.DEEP:
+        from taskx_adapters import discover_adapters, get_adapter
+
+        if adapter:
+            found = get_adapter(adapter)
+            if found is None:
+                console.print(f"[yellow]Adapter '{adapter}' not found in entry points.[/yellow]")
+            else:
+                console.print(f"[green]Adapter '{found.name}' available.[/green]")
+        else:
+            adapters = list(discover_adapters())
+            if adapters:
+                names = ", ".join(a.name for a in adapters)
+                console.print(f"[green]Discovered adapters: {names}[/green]")
+            else:
+                console.print("[dim]No adapters discovered via entry points.[/dim]")
+
+    console.print(f"[bold green]taskx init complete (tier={tier.value}).[/bold green]")
 
 
 @cli.command()
@@ -1730,10 +2111,12 @@ def route_plan(
 ) -> None:
     """Build deterministic route plan artifacts from packet + availability."""
     try:
-        plan = build_route_plan(
-            repo_root=repo_root,
-            packet_path=packet,
-            steps=parse_route_steps(steps),
+        plan = NeonSpinner("Planning route (no guessing)...").run(
+            lambda: build_route_plan(
+                repo_root=repo_root,
+                packet_path=packet,
+                steps=parse_route_steps(steps),
+            )
         )
     except Exception as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")

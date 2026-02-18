@@ -10,6 +10,9 @@ jobs:
   test-and-build:
     name: Lint, Check, Test & Build (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      TASKX_NEON: "0"
+      TASKX_STRICT: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -57,10 +60,15 @@ jobs:
           deactivate
           rm -rf /tmp/taskx-wheel-test
 
-      - name: Verify clean venv installation
+      - name: Smoke install built wheel
         if: matrix.python-version == '3.11'
         run: |
-          bash scripts/taskx_verify_clean_venv.sh
+          python -m venv .venv-smoke
+          source .venv-smoke/bin/activate
+          python -m pip install --upgrade pip
+          pip install dist/*.whl
+          taskx doctor --timestamp-mode deterministic
+          deactivate
 
       - name: Upload build artifacts
         if: always() && matrix.python-version == '3.11'

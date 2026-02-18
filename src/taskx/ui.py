@@ -173,6 +173,8 @@ def sleep_ms(delay_ms: int) -> None:
 
 
 def render_neon_rc_block(*, theme: str) -> str:
+    if theme not in THEMES:
+        raise ValueError(f"Unknown theme: {theme!r}. Valid themes: {', '.join(sorted(THEMES))}")
     lines = [
         NEON_RC_MARKER_BEGIN,
         "export TASKX_NEON=1",
@@ -281,6 +283,8 @@ def persist_neon_rc_file(
     remove: bool,
     dry_run: bool,
 ) -> NeonRcPersistResult:
+    if theme not in THEMES:
+        raise ValueError(f"Unknown theme: {theme!r}. Valid themes: {', '.join(sorted(THEMES))}")
     try:
         old = path.read_text(encoding="utf-8") if path.exists() else ""
     except OSError as exc:

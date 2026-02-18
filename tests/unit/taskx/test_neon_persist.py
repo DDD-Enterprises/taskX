@@ -43,6 +43,7 @@ def test_persist_write_creates_backup_and_is_idempotent(tmp_path: Path) -> None:
     content1 = rc.read_text(encoding="utf-8")
     assert MARKER_BEGIN in content1
 
+    # Second call with identical settings should not change the file
     result2 = persist_rc_file(
         path=rc,
         neon="1",
@@ -52,8 +53,9 @@ def test_persist_write_creates_backup_and_is_idempotent(tmp_path: Path) -> None:
         dry_run=False,
         backup_suffix_fn=lambda: "TEST2",
     )
-    assert result2.backup_path is not None
-    assert result2.backup_path.exists()
+    # No backup is created when the file is unchanged (idempotent behavior)
+    assert result2.backup_path is None
+    assert not result2.changed
     assert rc.read_text(encoding="utf-8") == content1
 
 
@@ -111,4 +113,44 @@ def test_malformed_markers_refuse(tmp_path: Path) -> None:
             remove=False,
             dry_run=True,
         )
+
+
+def test_multiple_persist_calls_create_unique_backups(tmp_path: Path) -> None:
+    """Verify that rapid successive persist calls create distinct backup files."""
+    rc = tmp_path / "rc"
+    rc.write_text("export INITIAL=1\n", encoding="utf-8")
+
+    # First call - creates initial backup with default suffix
+    result1 = persist_rc_file(
+        path=rc,
+        neon="1",
+        theme="mintwave",
+        strict="0",
+        remove=False,
+        dry_run=False,
+    )
+    assert result1.backup_path is not None
+    backup1 = result1.backup_path
+
+    # Update file to trigger a change
+    rc.write_text("export INITIAL=1\nexport CHANGED=2\n", encoding="utf-8")
+
+    # Second call - should create a different backup file
+    result2 = persist_rc_file(
+        path=rc,
+        neon="1",
+        theme="dark",
+        strict="1",
+        remove=False,
+        dry_run=False,
+    )
+    assert result2.backup_path is not None
+    backup2 = result2.backup_path
+
+    # Verify both backups exist with different names
+    assert backup1.exists()
+    assert backup2.exists()
+    assert backup1 != backup2
+    assert backup1.read_text(encoding="utf-8") == "export INITIAL=1\n"
+    assert "export CHANGED=2" in backup2.read_text(encoding="utf-8")
 

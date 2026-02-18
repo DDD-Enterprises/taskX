@@ -78,7 +78,15 @@ def _atomic_write(path: Path, content: str) -> None:
 
 
 def _default_backup_suffix() -> str:
-    return time.strftime("%Y%m%d%H%M%S")
+    """Generate a timestamp-based backup suffix with microsecond precision.
+    
+    Uses format: YYYYMMDDHHMMSS_MMMMMM (e.g., 20260218074700_123456)
+    This prevents backup file collisions when persist_rc_file is called
+    multiple times within the same second.
+    """
+    import datetime
+    now = datetime.datetime.now()
+    return now.strftime("%Y%m%d%H%M%S") + f"_{now.microsecond:06d}"
 
 
 @dataclass(frozen=True)

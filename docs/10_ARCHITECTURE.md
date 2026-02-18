@@ -207,9 +207,6 @@ Artifact writing is forensic, not decorative.
 - Write artifacts before process exit.
 - Fail loudly if write guarantees are not met.
 
-Artifacts are not logs.
-Artifacts are evidence.
-
 ---
 
 ## 9. Determinism Is Non-Negotiable

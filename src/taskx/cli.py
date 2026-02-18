@@ -54,7 +54,7 @@ from taskx.router import (
     parse_steps as parse_route_steps,
 )
 from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
-from taskx.ui import render_banner, should_show_banner
+from taskx.ui import render_banner, should_show_banner, worship as worship_impl
 
 # Import pipeline modules (from migrated taskx code)
 try:
@@ -221,6 +221,12 @@ def _check_import_shadowing() -> None:
             f"[yellow]Expected locations: */site-packages/taskx/ or */code/taskX/[/yellow]",
             err=True,
         )
+
+
+@cli.command()
+def worship() -> None:
+    """Console-only easter egg (no artifacts)."""
+    worship_impl()
 
 
 def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:

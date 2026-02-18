@@ -342,7 +342,7 @@ def neon_persist(
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
-        help="Print a unified diff and do not write.",
+        help="Do not write any changes (dry run mode).",
     ),
     theme: str | None = typer.Option(
         None,

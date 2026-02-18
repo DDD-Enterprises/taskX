@@ -56,6 +56,7 @@ from taskx.router import (
 from taskx.router.types import DEFAULT_PLAN_RELATIVE_PATH
 from taskx.ui import (
     THEMES,
+    NeonSpinner,
     console as neon_console,
     get_theme_name,
     neon_enabled,
@@ -2006,11 +2007,14 @@ def route_plan(
 ) -> None:
     """Build deterministic route plan artifacts from packet + availability."""
     try:
-        plan = build_route_plan(
-            repo_root=repo_root,
-            packet_path=packet,
-            steps=parse_route_steps(steps),
-        )
+        def _do_plan():
+            return build_route_plan(
+                repo_root=repo_root,
+                packet_path=packet,
+                steps=parse_route_steps(steps),
+            )
+
+        plan = NeonSpinner("Planning route (no guessing)...").run(_do_plan)
     except Exception as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc

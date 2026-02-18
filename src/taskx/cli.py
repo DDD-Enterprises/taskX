@@ -436,14 +436,21 @@ def neon_persist(
 
     from taskx.neon_persist import persist_rc_file
 
-    result = persist_rc_file(
-        path=path,
-        neon=desired_neon,
-        theme=desired_theme,
-        strict=desired_strict,
-        remove=remove,
-        dry_run=not yes,
-    )
+    try:
+        result = persist_rc_file(
+            path=path,
+            neon=desired_neon,
+            theme=desired_theme,
+            strict=desired_strict,
+            remove=remove,
+            dry_run=not yes,
+        )
+    except OSError as exc:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Error:[/bold red] {exc}")
+        else:
+            print(f"Error: {exc}")
+        raise typer.Exit(1) from exc
 
     if neon_enabled():
         neon_console.print(f"[bold]Target:[/bold] {result.path}")

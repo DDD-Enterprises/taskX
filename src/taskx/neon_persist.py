@@ -3,9 +3,9 @@ from __future__ import annotations
 import difflib
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 MARKER_BEGIN = "# >>> TASKX NEON BEGIN >>>"
 MARKER_END = "# <<< TASKX NEON END <<<"
@@ -99,7 +99,12 @@ def persist_rc_file(
     dry_run: bool,
     backup_suffix_fn: Callable[[], str] = _default_backup_suffix,
 ) -> PersistResult:
-    old = path.read_text(encoding="utf-8") if path.exists() else ""
+    # Read existing file content
+    try:
+        old = path.read_text(encoding="utf-8") if path.exists() else ""
+    except (OSError, PermissionError) as exc:
+        raise OSError(f"Failed to read rc file {path}: {exc}") from exc
+
     block = render_block(neon=neon, theme=theme, strict=strict)
     new, changed = apply_managed_block(old, block=block, remove=remove)
     diff = unified_diff(old, new, path=path)
@@ -109,7 +114,15 @@ def persist_rc_file(
 
     backup_path = path.with_name(f"{path.name}.taskx.bak.{backup_suffix_fn()}")
     # Always create a backup, even if the file doesn't exist yet.
-    _atomic_write(backup_path, old)
-    _atomic_write(path, new)
+    try:
+        _atomic_write(backup_path, old)
+    except (OSError, PermissionError) as exc:
+        raise OSError(f"Failed to write backup file {backup_path}: {exc}") from exc
+
+    try:
+        _atomic_write(path, new)
+    except (OSError, PermissionError) as exc:
+        raise OSError(f"Failed to write rc file {path}: {exc}") from exc
+
     return PersistResult(path=path, changed=changed, diff=diff, backup_path=backup_path)
 

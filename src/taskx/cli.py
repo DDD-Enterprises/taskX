@@ -149,6 +149,7 @@ cli = typer.Typer(
 )
 if ops_app:
     cli.add_typer(ops_app, name="ops")
+app = cli
 console = Console()
 
 neon_app = typer.Typer(help="Neon terminal cosmetics (console-only). Artifacts stay sterile.")

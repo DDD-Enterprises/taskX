@@ -2007,14 +2007,13 @@ def route_plan(
 ) -> None:
     """Build deterministic route plan artifacts from packet + availability."""
     try:
-        def _do_plan():
-            return build_route_plan(
+        plan = NeonSpinner("Planning route (no guessing)...").run(
+            lambda: build_route_plan(
                 repo_root=repo_root,
                 packet_path=packet,
                 steps=parse_route_steps(steps),
             )
-
-        plan = NeonSpinner("Planning route (no guessing)...").run(_do_plan)
+        )
     except Exception as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc

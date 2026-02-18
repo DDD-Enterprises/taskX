@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import difflib
 import os
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,8 +9,15 @@ from pathlib import Path
 MARKER_BEGIN = "# >>> TASKX NEON BEGIN >>>"
 MARKER_END = "# <<< TASKX NEON END <<<"
 
+# Valid theme names for shell rc persistence (must match ui.THEMES keys)
+VALID_THEMES = frozenset({"mintwave", "cyberpunk", "ultraviolet", "magma", "toxic_lime"})
+
 
 def render_block(*, neon: str, theme: str, strict: str) -> str:
+    if theme not in VALID_THEMES:
+        raise ValueError(
+            f"Unknown theme: {theme!r}. Valid themes: {', '.join(sorted(VALID_THEMES))}"
+        )
     lines = [
         MARKER_BEGIN,
         f'export TASKX_NEON="{neon}"',
@@ -118,6 +124,12 @@ def persist_rc_file(
     dry_run: bool,
     backup_suffix_fn: Callable[[], str] = _default_backup_suffix,
 ) -> PersistResult:
+    # Validate theme before any processing to prevent shell injection
+    if theme not in VALID_THEMES:
+        raise ValueError(
+            f"Unknown theme: {theme!r}. Valid themes: {', '.join(sorted(VALID_THEMES))}"
+        )
+
     # Read existing file content
     try:
         old = path.read_text(encoding="utf-8") if path.exists() else ""

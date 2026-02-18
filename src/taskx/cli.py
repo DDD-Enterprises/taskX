@@ -372,6 +372,16 @@ def neon_persist(
 ) -> None:
     """Persist neon env exports into a shell rc file (idempotent markers)."""
     if yes and dry_run:
+        if neon_enabled():
+            neon_console.print(
+                "[bold red]Refused:[/bold red] --yes and --dry-run are mutually exclusive. "
+                "Use either --yes to write changes or --dry-run to preview them."
+            )
+        else:
+            print(
+                "Refused: --yes and --dry-run are mutually exclusive. "
+                "Use either --yes to write changes or --dry-run to preview them."
+            )
         raise typer.Exit(2)
 
     if path is None:
@@ -410,6 +420,16 @@ def neon_persist(
     desired_neon = str(neon) if neon is not None else os.getenv("TASKX_NEON", "1")
     desired_strict = str(strict) if strict is not None else os.getenv("TASKX_STRICT", "0")
     desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
+
+    # Validate theme against known themes to prevent shell injection
+    if desired_theme not in THEMES:
+        if neon_enabled():
+            neon_console.print(f"[bold red]Unknown theme:[/bold red] {desired_theme}")
+            neon_console.print("Try: taskx neon list")
+        else:
+            print(f"Unknown theme: {desired_theme}")
+            print("Try: taskx neon list")
+        raise typer.Exit(2)
 
     if desired_neon not in ("0", "1") or desired_strict not in ("0", "1"):
         if neon_enabled():

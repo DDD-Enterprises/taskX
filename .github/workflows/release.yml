@@ -31,6 +31,14 @@ jobs:
       - name: Build artifacts
         run: uv build
 
+      - name: Verify wheel installation
+        run: |
+          python -m venv .venv-wheel-smoke
+          source .venv-wheel-smoke/bin/activate
+          python -m pip install --upgrade pip
+          pip install dist/*.whl
+          taskx --version
+
       - name: Generate release hashes
         run: sha256sum dist/* > dist/SHA256SUMS.txt
 

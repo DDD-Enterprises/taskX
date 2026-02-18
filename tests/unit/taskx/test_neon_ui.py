@@ -129,7 +129,7 @@ def test_render_banner_outputs_when_enabled(capsys, monkeypatch) -> None:
     monkeypatch.setenv("TASKX_NEON", "1")
     render_banner(theme="mintwave")
     captured = capsys.readouterr()
-    
+
     # Check for ASCII art banner content
     assert "████████╗" in captured.out
     assert "DETERMINISTIC TASK EXECUTION KERNEL" in captured.out
@@ -144,7 +144,7 @@ def test_render_banner_silent_when_disabled(capsys, monkeypatch) -> None:
     monkeypatch.setenv("TASKX_NEON", "0")
     render_banner(theme="mintwave")
     captured = capsys.readouterr()
-    
+
     assert captured.out == ""
     assert captured.err == ""
 
@@ -153,18 +153,18 @@ def test_render_banner_uses_theme_override(capsys, monkeypatch) -> None:
     """render_banner respects explicit theme parameter."""
     monkeypatch.setenv("TASKX_NEON", "1")
     monkeypatch.setenv("TASKX_THEME", "mintwave")
-    
+
     render_banner(theme="cyberpunk")
     captured = capsys.readouterr()
-    
+
     assert "Theme: cyberpunk" in captured.out
 
 
 def test_render_banner_all_themes_work(capsys, monkeypatch) -> None:
     """All theme names render without error."""
     monkeypatch.setenv("TASKX_NEON", "1")
-    
-    for theme_name in THEMES.keys():
+
+    for theme_name in THEMES:
         render_banner(theme=theme_name)
         captured = capsys.readouterr()
         assert f"Theme: {theme_name}" in captured.out
@@ -176,10 +176,10 @@ def test_render_banner_all_themes_work(capsys, monkeypatch) -> None:
 def test_neon_spinner_runs_function_when_enabled(monkeypatch) -> None:
     """NeonSpinner executes function and returns result when neon enabled."""
     monkeypatch.setenv("TASKX_NEON", "1")
-    
+
     def test_fn() -> int:
         return 42
-    
+
     spinner = NeonSpinner(message="Testing...")
     result = spinner.run(test_fn)
     assert result == 42
@@ -188,10 +188,10 @@ def test_neon_spinner_runs_function_when_enabled(monkeypatch) -> None:
 def test_neon_spinner_runs_function_when_disabled(monkeypatch) -> None:
     """NeonSpinner executes function when neon disabled (no spinner shown)."""
     monkeypatch.setenv("TASKX_NEON", "0")
-    
+
     def test_fn() -> str:
         return "result"
-    
+
     spinner = NeonSpinner(message="Testing...")
     result = spinner.run(test_fn)
     assert result == "result"
@@ -200,10 +200,10 @@ def test_neon_spinner_runs_function_when_disabled(monkeypatch) -> None:
 def test_neon_spinner_propagates_exceptions(monkeypatch) -> None:
     """NeonSpinner propagates exceptions from wrapped function."""
     monkeypatch.setenv("TASKX_NEON", "1")
-    
+
     def failing_fn() -> None:
         raise ValueError("test error")
-    
+
     spinner = NeonSpinner(message="This will fail...")
     with pytest.raises(ValueError, match="test error"):
         spinner.run(failing_fn)
@@ -215,10 +215,10 @@ def test_neon_spinner_propagates_exceptions(monkeypatch) -> None:
 def test_strict_violation_prints_when_enabled(capsys, monkeypatch) -> None:
     """strict_violation prints warning when TASKX_STRICT=1."""
     monkeypatch.setenv("TASKX_STRICT", "1")
-    
+
     strict_violation("Test violation message")
     captured = capsys.readouterr()
-    
+
     assert "STRICT MODE VIOLATION" in captured.out
     assert "Test violation message" in captured.out
 
@@ -226,10 +226,10 @@ def test_strict_violation_prints_when_enabled(capsys, monkeypatch) -> None:
 def test_strict_violation_silent_when_disabled(capsys, monkeypatch) -> None:
     """strict_violation is silent when TASKX_STRICT=0."""
     monkeypatch.setenv("TASKX_STRICT", "0")
-    
+
     strict_violation("This should not appear")
     captured = capsys.readouterr()
-    
+
     assert captured.out == ""
     assert captured.err == ""
 
@@ -240,10 +240,10 @@ def test_strict_violation_silent_when_disabled(capsys, monkeypatch) -> None:
 def test_worship_outputs_when_neon_enabled(capsys, monkeypatch) -> None:
     """worship command outputs formatted text when TASKX_NEON=1."""
     monkeypatch.setenv("TASKX_NEON", "1")
-    
+
     worship()
     captured = capsys.readouterr()
-    
+
     assert "KERNEL WORSHIP ACCEPTED" in captured.out
     assert "Show me the packet." in captured.out
     assert "Leave artifacts. No excuses." in captured.out
@@ -254,10 +254,10 @@ def test_worship_outputs_when_neon_enabled(capsys, monkeypatch) -> None:
 def test_worship_outputs_plain_when_neon_disabled(capsys, monkeypatch) -> None:
     """worship command outputs plain text when TASKX_NEON=0."""
     monkeypatch.setenv("TASKX_NEON", "0")
-    
+
     worship()
     captured = capsys.readouterr()
-    
+
     # Should print to stdout in plain mode
     assert "KERNEL WORSHIP ACCEPTED" in captured.out
     assert "Show me the packet." in captured.out

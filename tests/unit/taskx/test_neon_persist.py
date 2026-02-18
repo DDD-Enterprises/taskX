@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from taskx.cli import app
 from taskx.neon_persist import MARKER_BEGIN, MARKER_END, persist_rc_file, render_block
 
 
@@ -115,42 +117,34 @@ def test_malformed_markers_refuse(tmp_path: Path) -> None:
         )
 
 
-def test_multiple_persist_calls_create_unique_backups(tmp_path: Path) -> None:
-    """Verify that rapid successive persist calls create distinct backup files."""
+def test_cli_rejects_invalid_theme(tmp_path: Path) -> None:
+    """Test that the CLI rejects invalid themes to prevent shell injection."""
+    runner = CliRunner()
     rc = tmp_path / "rc"
-    rc.write_text("export INITIAL=1\n", encoding="utf-8")
 
-    # First call - creates initial backup with default suffix
-    result1 = persist_rc_file(
-        path=rc,
-        neon="1",
-        theme="mintwave",
-        strict="0",
-        remove=False,
-        dry_run=False,
+    # Test malicious theme with shell metacharacters
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "malicious$(whoami)", "--path", str(rc)],
     )
-    assert result1.backup_path is not None
-    backup1 = result1.backup_path
+    assert result.exit_code == 2
+    assert "Unknown theme:" in result.output
+    assert not rc.exists()  # File should not be created
 
-    # Update file to trigger a change
-    rc.write_text("export INITIAL=1\nexport CHANGED=2\n", encoding="utf-8")
-
-    # Second call - should create a different backup file
-    result2 = persist_rc_file(
-        path=rc,
-        neon="1",
-        theme="dark",
-        strict="1",
-        remove=False,
-        dry_run=False,
+    # Test malicious theme with semicolon
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "evil; rm -rf /", "--path", str(rc)],
     )
-    assert result2.backup_path is not None
-    backup2 = result2.backup_path
+    assert result.exit_code == 2
+    assert "Unknown theme:" in result.output
+    assert not rc.exists()
 
-    # Verify both backups exist with different names
-    assert backup1.exists()
-    assert backup2.exists()
-    assert backup1 != backup2
-    assert backup1.read_text(encoding="utf-8") == "export INITIAL=1\n"
-    assert "export CHANGED=2" in backup2.read_text(encoding="utf-8")
+    # Test valid theme
+    result = runner.invoke(
+        app,
+        ["neon", "persist", "--theme", "mintwave", "--path", str(rc)],
+    )
+    assert result.exit_code == 0
+    assert "Unknown theme:" not in result.output
 

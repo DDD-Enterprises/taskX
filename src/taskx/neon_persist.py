@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import difflib
 import os
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -83,7 +82,7 @@ def unified_diff(old: str, new: str, *, path: Path) -> str:
 
 def _atomic_write(path: Path, content: str) -> None:
     import tempfile
-    
+
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with tempfile.NamedTemporaryFile(

@@ -3,10 +3,11 @@ from __future__ import annotations
 import difflib
 import os
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import cycle
 from pathlib import Path
-from typing import Callable, Sequence, TypeVar
+from typing import TypeVar
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -244,7 +245,7 @@ def neon_rc_unified_diff(old: str, new: str, *, path: Path) -> str:
 
 def _atomic_write(path: Path, content: str) -> None:
     import tempfile
-    
+
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with tempfile.NamedTemporaryFile(

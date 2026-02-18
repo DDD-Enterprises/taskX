@@ -1,29 +1,35 @@
-## Summary
+## Summary 👀
+- What changed:
+- Why:
 
-Describe what changed and why.
-
-## Scope Boundary
-
-Changed files:
+## Scope Boundary 🔥
+**Changed:**
 -
 
-Untouched files:
--
+**Untouched (unless explicitly justified):**
+- artifact writers
+- canonical JSON logic
+- refusal schema
+- route plan schema
+- hashing
 
-## Determinism Impact
+## Determinism Impact 💣
+- Expected impact: NONE / LOW / MED / HIGH
+- Explanation:
 
-Does this alter route planning, refusal logic, artifact structure, or exit codes?
-If yes, explain.
+## Artifact Impact 🧾
+- Expected impact: NONE / SCHEMA_CHANGE / NEW_ARTIFACT (default: NONE; non-NONE requires strong justification and contract review)
+- Explanation: (for non-NONE, include justification and contract review details)
 
-## Tests
-
+## Tests 🧪
 - [ ] `uv run pytest` passed
-- [ ] Determinism preserved
-- [ ] No hidden side effects
 
-## Proof Bundle
+## Proof Bundle (v1.2) 🧾😈
+Paste outputs:
 
-Paste:
 - `git status --porcelain`
 - `git diff main...HEAD --name-only`
-- Relevant test output
+- `git diff main...HEAD` (or key excerpts)
+- `uv run pytest`
+
+No receipts? No merge. 💅

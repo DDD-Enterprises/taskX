@@ -412,6 +412,26 @@ def neon_persist(
     desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
 
     if desired_neon not in ("0", "1") or desired_strict not in ("0", "1"):
+        if neon_enabled():
+            if desired_neon not in ("0", "1"):
+                neon_console.print(
+                    f"[bold red]Refused:[/bold red] invalid TASKX_NEON value {desired_neon!r}. "
+                    "Expected '0' or '1'."
+                )
+            if desired_strict not in ("0", "1"):
+                neon_console.print(
+                    f"[bold red]Refused:[/bold red] invalid TASKX_STRICT value {desired_strict!r}. "
+                    "Expected '0' or '1'."
+                )
+        else:
+            if desired_neon not in ("0", "1"):
+                print(
+                    f"Refused: invalid TASKX_NEON value {desired_neon!r}. Expected '0' or '1'."
+                )
+            if desired_strict not in ("0", "1"):
+                print(
+                    f"Refused: invalid TASKX_STRICT value {desired_strict!r}. Expected '0' or '1'."
+                )
         raise typer.Exit(2)
 
     from taskx.neon_persist import persist_rc_file

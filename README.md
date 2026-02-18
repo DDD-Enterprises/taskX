@@ -9,7 +9,7 @@
 
 ## Install
 
-[Installation](docs/INSTALL.md) • [Release Guidelines](docs/RELEASE.md) • [Contributing](AGENTS.md)
+[Installation](docs/INSTALL.md) • [Release Guidelines](docs/RELEASE.md) • [Contributing](CONTRIBUTING.md) • [Security Policy](SECURITY.md)
 
 </div>
 
@@ -137,4 +137,3 @@ Expected outputs:
 TaskX (kernel) validates packets, plans deterministically, executes one path (or emits a manual handoff), and writes canonical artifacts.
 
 Everything else (scheduling, orchestration, memory, UX) belongs in the ecosystem above the kernel.
-

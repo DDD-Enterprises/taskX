@@ -138,3 +138,53 @@ TaskX (kernel) validates packets, plans deterministically, executes one path (or
 
 Everything else (scheduling, orchestration, memory, UX) belongs in the ecosystem above the kernel.
 
+## Badge wall
+
+- Deterministic: VERBATIM_REQUIRED
+- Implicit Retries: VERBATIM_REQUIRED
+- Silent Fallbacks: VERBATIM_REQUIRED
+- Cross-Run State: VERBATIM_REQUIRED
+- Multi-Runner: VERBATIM_REQUIRED
+- Ghost Behavior: VERBATIM_REQUIRED
+
+## Kernel Manifesto
+
+VERBATIM_REQUIRED
+
+## Anti-Features
+
+TaskX will never:
+- retry silently
+- fallback to a different runner
+- execute multiple paths
+- persist state across runs
+- perform undeclared network calls
+- "do what you meant"
+- reorder declared steps
+- mutate your repository implicitly
+
+If you want flexibility, build it above the kernel.
+
+## Kernel FAQ
+
+VERBATIM_REQUIRED
+
+## Determinism Stress Test
+
+Given identical:
+- packet
+- declared environment inputs
+- TaskX version
+
+You must observe identical:
+- route plans
+- artifacts
+- exit codes
+- hashes
+
+If any of those change without a version bump:
+the contract has been violated.
+
+## Why TaskX Is Hot
+
+VERBATIM_REQUIRED

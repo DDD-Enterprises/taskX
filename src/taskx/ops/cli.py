@@ -62,9 +62,40 @@ def run_export_flow(
     return changed
 
 @app.command()
+def compile(
+    out_path: Path | None = typer.Option(None, "--out-path"),
+    platform: str | None = typer.Option(None, "--platform"),
+    model: str | None = typer.Option(None, "--model"),
+):
+    """Compile operator prompt to ops/OUT_OPERATOR_SYSTEM_PROMPT.md."""
+    root = get_repo_root()
+    profile_path = root / "ops" / "operator_profile.yaml"
+    profile = load_profile(profile_path)
+    templates_dir = root / "ops" / "templates"
+
+    compiled = export_prompt(
+        profile,
+        templates_dir,
+        platform_override=platform,
+        model_override=model,
+        taskx_version=__version__,
+        git_hash=get_git_hash(),
+    )
+
+    final_path = out_path or (root / "ops" / "OUT_OPERATOR_SYSTEM_PROMPT.md")
+    changed = write_if_changed(final_path, compiled)
+    console.print(f"Compile: wrote {final_path} (changed={changed})")
+
+@app.command()
 def init(
     platform: str = typer.Option("chatgpt", "--platform"),
     model: str = typer.Option("gpt-5.2-thinking", "--model"),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        "-y",
+        help="Non-interactive mode (accept defaults).",
+    ),
     no_export: bool = typer.Option(False, "--no-export"),
     export_path: Path | None = typer.Option(None, "--export-path"),
 ):
@@ -262,8 +293,11 @@ def apply(
 
     # We must have content to apply. Prefer exported file, but export on the fly (in-memory) if missing.
     # Must NOT write export file.
+    out_file_path = root / "ops" / "OUT_OPERATOR_SYSTEM_PROMPT.md"
     export_file_path = root / "ops" / "EXPORTED_OPERATOR_PROMPT.md"
-    if export_file_path.exists():
+    if out_file_path.exists():
+        content = out_file_path.read_text()
+    elif export_file_path.exists():
         content = export_file_path.read_text()
     else:
         try:
@@ -384,4 +418,3 @@ def diff():
 def handoff():
     """Execute handoff sequence."""
     pass
-

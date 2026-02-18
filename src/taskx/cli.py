@@ -12,6 +12,7 @@ from typing import Any
 import click
 import typer
 from rich.console import Console
+from typer.core import TyperGroup
 
 from taskx import __version__
 from taskx.manifest import (
@@ -127,11 +128,23 @@ except ImportError:
     ops_app = None  # type: ignore
 
 
+class BannerTyperGroup(TyperGroup):
+    """Custom TyperGroup that displays banner before help text."""
+
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        """Format help with optional banner prepended."""
+        if should_show_banner(sys.argv):
+            from typer.rich_utils import _get_rich_console
+            console_rich = _get_rich_console()
+            render_banner()
+        super().format_help(ctx, formatter)
+
+
 cli = typer.Typer(
     name="taskx",
     help="TaskX - Minimal Task Packet Lifecycle CLI",
     no_args_is_help=True,
-    add_help_option=False,
+    cls=BannerTyperGroup,
 )
 if ops_app:
     cli.add_typer(ops_app, name="ops")
@@ -167,27 +180,9 @@ def _version_option_callback(value: bool) -> None:
         raise typer.Exit()
 
 
-def _help_option_callback(value: bool) -> None:
-    """Handle eager --help option (so we can show banner on help)."""
-    if value:
-        if should_show_banner(sys.argv):
-            render_banner()
-        ctx = click.get_current_context()
-        typer.echo(ctx.get_help())
-        raise typer.Exit()
-
-
 @cli.callback(invoke_without_command=True)
 def _cli_callback(
     ctx: typer.Context,
-    help: bool = typer.Option(
-        False,
-        "--help",
-        "-h",
-        help="Show this message and exit.",
-        is_eager=True,
-        callback=_help_option_callback,
-    ),
     version: bool = typer.Option(
         False,
         "--version",
@@ -202,9 +197,6 @@ def _cli_callback(
     Checks for import shadowing issues and emits warnings.
     """
     _ = version
-    _use_compat_options(help)
-    if should_show_banner(sys.argv):
-        render_banner()
     # Skip shadowing check for print-runtime-origin command
     if ctx.invoked_subcommand != "print-runtime-origin":
         _check_import_shadowing()

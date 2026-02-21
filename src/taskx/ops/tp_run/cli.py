@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 import typer
 
 from taskx.ops.tp_git.guards import resolve_repo_root
 from taskx.ops.tp_git.naming import normalize_slug
+from taskx.ops.tp_run.plan import RunOptions, execute_run
 from taskx.ops.tp_run.proof import ProofWriter, build_run_id, resolve_paths
 
 
@@ -21,6 +21,12 @@ def register(tp_app: typer.Typer) -> None:
         slug: str = typer.Argument(...),
         repo: Path | None = typer.Option(None, "--repo", help="Repository path."),
         dry_run: bool = typer.Option(False, "--dry-run", help="Generate proof pack without mutating git state."),
+        continue_mode: bool = typer.Option(False, "--continue", help="Continue using existing TP worktree."),
+        stop_after: str | None = typer.Option(
+            None,
+            "--stop-after",
+            help="Stop after a stage: doctor|start|test|pr|merge|sync|cleanup.",
+        ),
     ) -> None:
         """Run complete TP lifecycle (scaffold; writes deterministic proof pack)."""
         try:
@@ -34,19 +40,40 @@ def register(tp_app: typer.Typer) -> None:
         paths = resolve_paths(repo_root=repo_root, tp_id=tp_id, run_id=run_id)
         writer = ProofWriter(paths)
 
-        started_at = datetime.now(UTC).isoformat()
-        writer.write_json(
-            "RUN.json",
-            {
-                "tp_id": tp_id,
-                "slug": normalized_slug,
-                "run_id": run_id,
-                "repo_root": str(repo_root),
-                "proof_dir": str(paths.run_dir),
-                "dry_run": dry_run,
-                "start_time": started_at,
-                "end_time": datetime.now(UTC).isoformat(),
-            },
+        if dry_run:
+            writer.write_json(
+                "RUN.json",
+                {
+                    "tp_id": tp_id,
+                    "slug": normalized_slug,
+                    "run_id": run_id,
+                    "repo_root": str(repo_root),
+                    "proof_dir": str(paths.run_dir),
+                    "dry_run": True,
+                },
+            )
+            typer.echo(f"repo_root={repo_root}")
+            typer.echo(f"tp_id={tp_id}")
+            typer.echo(f"slug={normalized_slug}")
+            typer.echo(f"run_id={run_id}")
+            typer.echo(f"proof_dir={paths.run_dir}")
+            typer.echo("mode=dry-run")
+            raise typer.Exit(0)
+
+        if stop_after not in {None, "doctor", "start", "test", "pr", "merge", "sync", "cleanup"}:
+            typer.echo("invalid --stop-after value", err=True)
+            raise typer.Exit(1)
+
+        result = execute_run(
+            RunOptions(
+                repo_root=repo_root,
+                tp_id=tp_id,
+                slug=normalized_slug,
+                run_id=run_id,
+                continue_mode=continue_mode,
+                stop_after=stop_after,  # type: ignore[arg-type]
+            ),
+            writer,
         )
 
         typer.echo(f"repo_root={repo_root}")
@@ -54,5 +81,10 @@ def register(tp_app: typer.Typer) -> None:
         typer.echo(f"slug={normalized_slug}")
         typer.echo(f"run_id={run_id}")
         typer.echo(f"proof_dir={paths.run_dir}")
-        if dry_run:
-            typer.echo("mode=dry-run")
+        if result.worktree_path is not None:
+            typer.echo(f"worktree_path={result.worktree_path}")
+        if result.branch is not None:
+            typer.echo(f"branch={result.branch}")
+        typer.echo(result.message.strip())
+        if result.exit_code != 0:
+            raise typer.Exit(result.exit_code)

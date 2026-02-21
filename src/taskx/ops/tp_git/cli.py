@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 
 from taskx.ops.tp_git.guards import run_doctor
-from taskx.ops.tp_git.git_worktree import start_tp
+from taskx.ops.tp_git.git_worktree import cleanup_tp, list_worktrees, start_tp, sync_main
 from taskx.ops.tp_git.github import merge_pr, pr_create, pr_status
 
 app = typer.Typer(
@@ -168,21 +168,63 @@ def merge(
 
 
 @app.command("sync-main")
-def sync_main() -> None:
-    """Sync main branch (implemented in later commit)."""
-    typer.echo("taskx tp git sync-main: TODO")
+def sync_main_cmd(
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
+) -> None:
+    """Checkout main and fast-forward sync from origin."""
+    try:
+        payload = sync_main(repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    typer.echo(f"repo_root={payload['repo_root']}")
+    typer.echo(f"fetch={payload['fetch']}")
+    typer.echo(f"pull={payload['pull']}")
 
 
 @app.command("cleanup")
 def cleanup(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
 ) -> None:
-    """Remove TP worktree (implemented in later commit)."""
-    _ = tp_id
-    typer.echo("taskx tp git cleanup: TODO")
+    """Remove TP worktree and prune stale worktree metadata."""
+    try:
+        payload = cleanup_tp(tp_id=tp_id, repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    typer.echo(f"repo_root={payload['repo_root']}")
+    typer.echo(f"tp_id={tp_id}")
+    typer.echo(f"worktree_path={payload['worktree_path']}")
+    typer.echo(f"remove={payload['remove']}")
+    typer.echo(f"prune={payload['prune']}")
 
 
 @app.command("list")
-def list_cmd() -> None:
-    """List TP worktrees (implemented in later commit)."""
-    typer.echo("taskx tp git list: TODO")
+def list_cmd(
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
+) -> None:
+    """List worktrees and highlight TaskX TP worktree paths."""
+    try:
+        listing = list_worktrees(repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    for raw_line in listing.splitlines():
+        marker = "[tp]" if "/.worktrees/" in raw_line else "     "
+        typer.echo(f"{marker} {raw_line}")

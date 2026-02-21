@@ -47,7 +47,16 @@ jobs:
           echo "Tag/version consistency OK: $TAG_VERSION"
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check src/taskx
+
+      - name: Typecheck (mypy)
+        run: uv run mypy src/taskx
+
+      - name: Run tests
+        run: uv run pytest
 
       - name: Build artifacts
         run: uv build

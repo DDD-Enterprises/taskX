@@ -11,6 +11,7 @@ taskx route init --repo-root .
 2. Create a minimal packet file:
 
 ```markdown
+<<<<<<< HEAD
 # TASK_PACKET TP_0001 — Example minimal packet
 
 ## GOAL
@@ -22,6 +23,11 @@ Summarize the current routing setup.
 
 ## ROUTER_HINTS
 risk: low
+=======
+# Packet
+ROUTER_HINTS:
+  risk: low
+>>>>>>> codex/TP-DOCS-STRUCTURE-0002-doc-spine
 ```
 
 3. Produce deterministic route plan artifacts:

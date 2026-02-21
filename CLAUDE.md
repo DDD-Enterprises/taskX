@@ -2,6 +2,30 @@
 
 Evergreen: DO NOT edit per task. Task packets change; this file stays stable.
 
+<!-- TASKX_TP_GIT_WORKFLOW_START -->
+## Mandatory Git Workflow for All Task Packets (TaskX)
+
+- Never work directly on `main`. `main` must remain clean.
+- Stashes are forbidden. If `git stash list` is non-empty, STOP and clean it.
+- Every TP must use a dedicated worktree + branch created by TaskX:
+  - `taskx tp git doctor`
+  - `taskx tp git start <TP_ID> <slug>`
+- Work must be performed inside `.worktrees/<TP_ID>`.
+- Commits must follow the TP’s commit plan.
+- Integration must happen via PR:
+  - `taskx tp git pr <TP_ID> --title "TP-XXXX: ..." --body-file ...`
+  - `taskx tp git merge <TP_ID>` (auto-merge when available; fail-closed otherwise)
+- After merge (confirmed), sync and cleanup:
+  - `taskx tp git sync-main`
+  - `taskx tp git cleanup <TP_ID>`
+
+### One-command mode (preferred)
+Use:
+- `taskx tp run <TP_ID> <slug> [--test-cmd "..."] [--wait-merge]`
+
+This command must emit a proof pack under `runs/tp/...` and must not claim merge/cleanup success unless verified.
+<!-- TASKX_TP_GIT_WORKFLOW_END -->
+
 ## 0) Prime rule
 TASK PACKETS ARE LAW.
 If no task packet is provided: STOP and ask for it.

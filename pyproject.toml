@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "taskx-kernel"
-version = "0.1.3"
+version = "0.1.0"
 description = "TaskX - deterministic task-packet lifecycle + gates"
 readme = "README.md"
 license = {text = "MIT"}

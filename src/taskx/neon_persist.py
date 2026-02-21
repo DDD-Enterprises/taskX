@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import difflib
 import os
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 MARKER_BEGIN = "# >>> TASKX NEON BEGIN >>>"
 MARKER_END = "# <<< TASKX NEON END <<<"

@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import subprocess
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from taskx.obs.run_artifacts import DIRTY_STATE_FILENAME, WORKTREE_FILENAME
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 VALID_DIRTY_POLICIES = {"refuse", "stash"}
 

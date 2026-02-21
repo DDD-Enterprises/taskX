@@ -6,7 +6,7 @@ import json
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from taskx.git.worktree import (
     VALID_DIRTY_POLICIES,
@@ -26,7 +26,9 @@ from taskx.obs.run_artifacts import (
     WORKTREE_FILENAME,
 )
 from taskx.pipeline.task_runner.parser import parse_task_packet
-from taskx.pipeline.task_runner.types import CommitStep, TaskPacketInfo
+
+if TYPE_CHECKING:
+    from taskx.pipeline.task_runner.types import CommitStep, TaskPacketInfo
 
 
 def _timestamp(mode: str) -> str:

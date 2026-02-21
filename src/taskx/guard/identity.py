@@ -7,7 +7,7 @@ import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from taskx.obs.run_artifacts import (
     PROJECT_IDENTITY_PATH,
@@ -15,8 +15,6 @@ from taskx.obs.run_artifacts import (
 )
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from taskx.pipeline.task_runner.types import ProjectIdentity
 
 
@@ -323,14 +321,14 @@ def assert_repo_identity(
         raise RepoIdentityGuardError(expected_project_id or TASKX_PROJECT_ID, None, repo_root)
 
     identity = load_repo_identity(repo_root)
-    effective_expected = expected_project_id or identity.project_id
     if expected_project_id and identity.project_id != expected_project_id:
         raise RepoIdentityGuardError(expected_project_id, identity.project_id, repo_root)
+    effective_expected = expected_project_id or identity.project_id
 
     artifacts_dir = report_dir or (repo_root / GUARD_ARTIFACT_PATH)
     _write_guard_artifacts(
         artifacts_dir,
-        expected_project_id=expected_project_id,
+        expected_project_id=effective_expected,
         observed_project_id=identity.project_id,
         files={
             ".taskxroot": True,
@@ -346,7 +344,7 @@ def _write_guard_artifacts(
     *,
     expected_project_id: str,
     observed_project_id: str,
-    files: Dict[str, bool],
+    files: dict[str, bool],
 ) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -362,7 +360,7 @@ def _write_guard_artifacts(
     md_lines = [
         "# Repo Identity Check",
         "",
-        f"- ok: true",
+        "- ok: true",
         f"- expected_project_id: {expected_project_id}",
         f"- observed_project_id: {observed_project_id}",
     ]

@@ -2,6 +2,9 @@
 
 This guide details the release process for TaskX maintainers.
 
+PyPI package name: `taskx-kernel`  
+CLI entrypoint after install: `taskx`
+
 ## Release Process
 
 1. Bump version in `pyproject.toml`
@@ -42,17 +45,13 @@ Run tests:
 uv run pytest
 ```
 
-Build artifacts:
+Build artifacts locally for verification only:
 
 ```bash
 uv build
 ```
 
-Publish:
-
-```bash
-uv publish
-```
+Do not publish from laptops or local developer machines. Publishing occurs in CI only after a release tag is pushed.
 
 If your repo uses a local release verification script, run it before tagging.
 
@@ -72,10 +71,12 @@ Pushing a tag should trigger the release workflow in CI.
 After pushing the tag, your GitHub Actions release workflow should:
 
 1. Verify tag matches `pyproject.toml` version
-2. Run tests in a clean environment
-3. Build sdist and wheel
-4. Smoke test install and `taskx --help`
-5. Publish artifacts
+2. Install dependencies with a frozen lockfile
+3. Run lint (`ruff`) and typecheck (`mypy`)
+4. Run tests in a clean environment
+5. Build sdist and wheel
+6. Smoke test install and `taskx --help`
+7. Publish artifacts from CI only
 
 ## Security & Provenance Gates
 
@@ -83,3 +84,9 @@ After pushing the tag, your GitHub Actions release workflow should:
 2. Release artifact provenance attestation is generated in CI.
 3. Container provenance attestation is generated in CI.
 4. Release remains tag-gated and fails on tag/version mismatch.
+
+## Provenance Expectations
+
+1. Release artifacts are built in CI on tag push (`vX.Y.Z`).
+2. Release hashes are generated in CI and recorded with the release artifacts.
+3. Local machines never perform direct publish operations for release artifacts.

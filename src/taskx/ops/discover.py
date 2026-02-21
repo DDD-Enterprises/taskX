@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def discover_instruction_file(repo_root: Path) -> Path | None:
     candidates = [
         ".claude/CLAUDE.md",
@@ -14,6 +15,7 @@ def discover_instruction_file(repo_root: Path) -> Path | None:
         if full_path.exists():
             return full_path
     return None
+
 
 def get_sidecar_path(repo_root: Path) -> Path:
     return repo_root / "docs" / "llm" / "TASKX_OPERATOR_SYSTEM.md"

@@ -20,6 +20,7 @@ from taskx.utils.repo import detect_repo_root
 app = typer.Typer(help="Manage operator system instructions.")
 console = Console()
 
+
 def get_repo_root() -> Path:
     try:
         return detect_repo_root(Path.cwd()).root
@@ -83,8 +84,9 @@ def init(
     ),
     no_export: bool = typer.Option(False, "--no-export"),
     export_path: Path | None = typer.Option(None, "--export-path"),
-):
+) -> None:
     """Initialize TaskX operator configuration. Exports unified prompt by default."""
+    _ = yes
     root = get_repo_root()
     ops_dir = root / "ops"
     ops_dir.mkdir(exist_ok=True)
@@ -228,15 +230,15 @@ When forced to choose:
 def export(
     export_path: Path | None = typer.Option(None, "--export-path"),
     platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model")
-):
+    model: str | None = typer.Option(None, "--model"),
+) -> None:
     """Export a unified operator system prompt from TaskX templates and profile configuration. Does not affect packet execution behavior."""
     run_export_flow(export_path=export_path, platform=platform, model=model)
 
 @app.command()
 def preview(
-    target: Path | None = typer.Option(None, "--target")
-):
+    target: Path | None = typer.Option(None, "--target"),
+) -> None:
     """Preview changes to instruction files."""
     root = get_repo_root()
     profile = load_profile(root / "ops" / "operator_profile.yaml")
@@ -266,8 +268,8 @@ def apply(
     strategy: str = typer.Option("append", "--strategy"),
     dry_run: bool = typer.Option(False, "--dry-run"),
     platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model")
-):
+    model: str | None = typer.Option(None, "--model"),
+) -> None:
     """Apply compiled prompt to instruction files."""
     from taskx.ops.doctor import get_canonical_target
 
@@ -333,8 +335,8 @@ def apply(
 @app.command()
 def manual(
     platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model")
-):
+    model: str | None = typer.Option(None, "--model"),
+) -> None:
     """Run manual merge mode."""
     from taskx.ops.manual import run_manual_mode
 
@@ -348,7 +350,7 @@ def doctor(
     json: bool = typer.Option(False, "--json"),
     no_export: bool = typer.Option(False, "--no-export"),
     export_path: Path | None = typer.Option(None, "--export-path"),
-):
+) -> None:
     """Diagnose configuration drift and conflicts. Exports unified prompt by default."""
     from taskx.ops.doctor import run_doctor
     root = get_repo_root()
@@ -394,12 +396,12 @@ def doctor(
         raise typer.Exit(2)
 
 @app.command()
-def diff():
+def diff() -> None:
     """Compare local configuration against last export."""
     # Placeholder for diff command if needed, though not explicitly requested in behavioral spec beyond listing it.
     pass
 
 @app.command()
-def handoff():
+def handoff() -> None:
     """Execute handoff sequence."""
     pass

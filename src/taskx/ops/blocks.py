@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple
 
+
 class BlockMatch(NamedTuple):
     start: int
     end: int
@@ -24,6 +25,7 @@ def find_block(text: str) -> BlockMatch | None:
         )
     return None
 
+
 def inject_block(text: str, content: str, platform: str, model: str, content_hash: str) -> str:
     block = f"<!-- TASKX:BEGIN operator_system v=1 platform={platform} model={model} hash={content_hash} -->\n{content}\n<!-- TASKX:END operator_system -->"
 
@@ -34,6 +36,7 @@ def inject_block(text: str, content: str, platform: str, model: str, content_has
     if text.strip():
         return text.rstrip() + "\n\n" + block + "\n"
     return block + "\n"
+
 
 def update_file(path: Path, content: str, platform: str, model: str, content_hash: str) -> bool:
     if path.exists():

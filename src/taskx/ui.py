@@ -3,11 +3,13 @@ from __future__ import annotations
 import difflib
 import os
 import time
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import cycle
 from pathlib import Path
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -97,9 +99,7 @@ def should_show_banner(argv: Sequence[str]) -> bool:
         return True
     if any(a in ("--help", "-h", "--version") for a in argv[1:]):
         return True
-    if len(argv) >= 2 and argv[1] in ("version",):
-        return True
-    return False
+    return bool(len(argv) >= 2 and argv[1] in ("version",))
 
 
 def render_banner(theme: str | None = None) -> None:

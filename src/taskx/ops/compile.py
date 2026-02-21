@@ -7,10 +7,32 @@ Historically, the ops toolchain exposed hashing/compilation helpers via
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from taskx.ops.export import calculate_hash, export_prompt, load_profile
+from taskx.ops.export import (
+    calculate_hash as _calculate_hash,
+)
+from taskx.ops.export import (
+    export_prompt,
+)
+from taskx.ops.export import (
+    load_profile as _load_profile,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+def calculate_hash(content: str) -> str:
+    """Compatibility wrapper for legacy import path."""
+
+    return _calculate_hash(content)
+
+
+def load_profile(path: Path) -> dict[str, Any]:
+    """Compatibility wrapper for legacy import path."""
+
+    return _load_profile(path)
 
 
 def compile_prompt(
@@ -32,4 +54,3 @@ def compile_prompt(
         taskx_version=taskx_version,
         git_hash=git_hash,
     )
-

@@ -5,7 +5,7 @@ This is the single source of truth for installation.
 ## End users (pip)
 
 ```bash
-python -m pip install taskx
+python -m pip install taskx-kernel
 ```
 
 ## Developers (uv-first)
@@ -27,4 +27,3 @@ uv run pytest
 ```bash
 python -m pip install -e ".[dev]"
 ```
-

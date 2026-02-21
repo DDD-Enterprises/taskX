@@ -128,7 +128,7 @@ curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.
 Let's run a loop. A loop creates tasks, runs them, checks them, and promotes them.
 
 ```bash
-python -m pip install taskx
+python -m pip install taskx-kernel
 taskx --help
 ```
 

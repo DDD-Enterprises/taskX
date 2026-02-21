@@ -544,6 +544,28 @@ def _load_repo_identity_for_command(cwd: Path) -> tuple[Path | None, Any | None]
     return repo_root, repo_identity
 
 
+def _require_repo_identity(
+    repo_root: Path | None,
+    require_project_id: str | None,
+    *,
+    allow_missing_identity: bool = False,
+) -> None:
+    if repo_root is None:
+        return
+    from taskx.guard.identity import RepoIdentityGuardError, assert_repo_identity
+
+    project_file = repo_root / ".taskx" / "project.json"
+    taskxroot = repo_root / ".taskxroot"
+    if allow_missing_identity and (not taskxroot.exists() or not project_file.exists()):
+        return
+
+    try:
+        assert_repo_identity(repo_root, expected_project_id=require_project_id)
+    except RepoIdentityGuardError as exc:
+        console.print(str(exc))
+        raise typer.Exit(2) from exc
+
+
 def _load_packet_identity_for_run(run_dir: Path, repo_identity: Any) -> Any | None:
     """Load packet identity declaration from run packet when available."""
     from taskx.pipeline.task_runner.parser import parse_packet_project_identity
@@ -2220,6 +2242,11 @@ def wt_start(
         "--quiet",
         help="Suppress identity banner output",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
 ) -> None:
     """Create an isolated worktree + task branch for a Task Packet run.
     All packet commits must occur inside this worktree.
@@ -2228,6 +2255,8 @@ def wt_start(
     from taskx.git.worktree_ops import start_worktree
 
     try:
+        repo_root = _try_git_repo_root(Path.cwd())
+        _require_repo_identity(repo_root, require_project_id)
         _repo_root, repo_identity = _enforce_run_identity_guards(
             run_dir=run,
             require_branch=True,
@@ -2281,6 +2310,11 @@ def commit_sequence_cmd(
         "--quiet",
         help="Suppress identity banner output",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
 ) -> None:
     """Execute the COMMIT PLAN defined in the Task Packet.
     Creates one commit per step, staging only allowlisted changed files.
@@ -2290,6 +2324,8 @@ def commit_sequence_cmd(
     from taskx.git.worktree_ops import commit_sequence
 
     try:
+        repo_root = _try_git_repo_root(Path.cwd())
+        _require_repo_identity(repo_root, require_project_id)
         _enforce_run_identity_guards(
             run_dir=run,
             require_branch=True,
@@ -2340,6 +2376,11 @@ def finish_cmd(
         "--quiet",
         help="Suppress identity banner output",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
 ) -> None:
     """Finalize a Task Packet run.
     Rebases task branch onto origin/main, fast-forwards main,
@@ -2348,6 +2389,8 @@ def finish_cmd(
     from taskx.git.worktree_ops import finish_run
 
     try:
+        repo_root = _try_git_repo_root(Path.cwd())
+        _require_repo_identity(repo_root, require_project_id)
         _enforce_run_identity_guards(
             run_dir=run,
             require_branch=True,
@@ -2398,13 +2441,21 @@ def docs_refresh_llm(
         "--check",
         help="Check for drift without modifying files (exit 1 on drift)",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
 ) -> None:
     """Refresh marker-scoped AUTOGEN sections from deterministic command surface."""
     from taskx.docs.refresh_llm import MarkerStructureError, run_refresh_llm
 
+    resolved_repo_root = repo_root.resolve()
+    _require_repo_identity(resolved_repo_root, require_project_id)
+
     try:
         result = run_refresh_llm(
-            repo_root=repo_root.resolve(),
+            repo_root=resolved_repo_root,
             cli_app=cli,
             check=check,
         )
@@ -2734,6 +2785,11 @@ def pr_open(
         "--refresh-llm/--no-refresh-llm",
         help="Run docs refresh-llm before push/PR and include result in report",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
     require_branch_prefix: str = typer.Option(
         "codex/tp-pr-open-branch-guard",
         "--require-branch-prefix",
@@ -2749,6 +2805,8 @@ def pr_open(
     resolved_repo = repo_root.resolve()
     resolved_body = body_file if body_file.is_absolute() else (resolved_repo / body_file)
     resolved_body = resolved_body.resolve()
+
+    _require_repo_identity(resolved_repo, require_project_id)
 
     def _refresh_runner(root: Path) -> dict[str, Any]:
         from taskx.docs.refresh_llm import MarkerStructureError, run_refresh_llm
@@ -3975,9 +4033,21 @@ def project_upgrade_cmd(
         "--allow-init-rails",
         help="Initialize missing .taskxroot/.taskx/project.json rails",
     ),
+    require_project_id: str | None = typer.Option(
+        None,
+        "--require-project-id",
+        help="Refuse unless repo project_id matches.",
+    ),
 ) -> None:
     """Run deterministic project stabilization flow in one command."""
     from taskx.project.upgrade import ProjectUpgradeRefusalError, run_project_upgrade
+
+    resolved_repo = repo_root.resolve()
+    _require_repo_identity(
+        resolved_repo,
+        require_project_id,
+        allow_missing_identity=allow_init_rails,
+    )
 
     try:
         report = run_project_upgrade(

@@ -22,11 +22,22 @@ def _run(cmd: list[str], *, cwd: Path) -> str:
 def _init_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir(parents=True, exist_ok=True)
+    (repo / ".taskxroot").write_text("", encoding="utf-8")
+    taskx_dir = repo / ".taskx"
+    taskx_dir.mkdir(parents=True, exist_ok=True)
+    (taskx_dir / "project.json").write_text(
+        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _run(["git", "init", "-b", "main"], cwd=repo)
     _run(["git", "config", "user.email", "test@example.com"], cwd=repo)
     _run(["git", "config", "user.name", "Test User"], cwd=repo)
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
-    _run(["git", "add", "README.md"], cwd=repo)
+    _run(
+        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        cwd=repo,
+    )
     _run(["git", "commit", "-m", "init"], cwd=repo)
     return repo
 

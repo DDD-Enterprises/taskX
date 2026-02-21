@@ -18,6 +18,13 @@ RUNNER = CliRunner()
 
 
 def _write_target_files(repo_root: Path, *, include_codex_markers: bool = True) -> None:
+    (repo_root / ".taskxroot").write_text("", encoding="utf-8")
+    (repo_root / ".taskx").mkdir(parents=True, exist_ok=True)
+    (repo_root / ".taskx" / "project.json").write_text(
+        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
     (repo_root / "AGENTS.md").write_text(
         f"# AGENTS\n\n{AUTOGEN_START}\nold\n{AUTOGEN_END}\n",
         encoding="utf-8",
@@ -61,6 +68,20 @@ def test_idempotency_second_run_has_no_modifications(tmp_path: Path) -> None:
 def test_refusal_on_malformed_marker_structure_exit_2(tmp_path: Path, monkeypatch) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True, exist_ok=True)
+
+    (repo_root / ".taskxroot").write_text("taskx", encoding="utf-8")
+    taskx_dir = repo_root / ".taskx"
+    taskx_dir.mkdir(parents=True, exist_ok=True)
+    taskx_dir.joinpath("project.json").write_text(
+        json.dumps(
+            {
+                "project_id": "taskx.core",
+                "project_slug": "taskX",
+                "repo_remote_hint": "taskX",
+            }
+        ),
+        encoding="utf-8",
+    )
 
     (repo_root / "AGENTS.md").write_text(f"# AGENTS\n{AUTOGEN_START}\n", encoding="utf-8")
     (repo_root / "CLAUDE.md").write_text(f"# CLAUDE\n{AUTOGEN_START}\nold\n{AUTOGEN_END}\n", encoding="utf-8")

@@ -36,9 +36,19 @@ def _init_repo_with_origin(tmp_path: Path) -> tuple[Path, Path]:
     _run(["git", "checkout", "-b", "main"], cwd=repo)
 
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
+    (repo / ".taskxroot").write_text("", encoding="utf-8")
+    (repo / ".taskx").mkdir(parents=True, exist_ok=True)
+    (repo / ".taskx" / "project.json").write_text(
+        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     (repo / "src").mkdir(parents=True, exist_ok=True)
     (repo / "src" / "file.py").write_text("print('base')\n", encoding="utf-8")
-    _run(["git", "add", "README.md", "src/file.py"], cwd=repo)
+    _run(
+        ["git", "add", "README.md", "src/file.py", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        cwd=repo,
+    )
     _run(["git", "commit", "-m", "init"], cwd=repo)
     _run(["git", "push", "-u", "origin", "main"], cwd=repo)
     return repo, remote
@@ -82,6 +92,7 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
     """wt start should stash root dirt and write DIRTY_STATE entry."""
     repo, _ = _init_repo_with_origin(tmp_path)
     run_dir = tmp_path / "RUN_0101"
+    _write_task_packet(run_dir)
 
     # Dirty root: tracked + untracked.
     (repo / "README.md").write_text("# dirty\n", encoding="utf-8")
@@ -105,7 +116,11 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
     assert result.exit_code == 0
 
     worktree = _load_worktree_json(run_dir)
+<<<<<<< Updated upstream
     assert Path(worktree["worktree_path"]).exists()
+=======
+    assert (tmp_path / "workspace" / "repo" / "out" / "worktrees" / "tp_taskx_core_0101_feature").exists()
+>>>>>>> Stashed changes
     dirty_state = _load_dirty_state(run_dir)
     assert len(dirty_state) == 1
     entry = dirty_state[0]
@@ -128,7 +143,7 @@ def test_commit_sequence_stash_only_disallowed_changes(tmp_path: Path, monkeypat
     monkeypatch.chdir(repo)
     start = runner.invoke(
         cli,
-        ["wt", "start", "--run", str(run_dir), "--branch", "tp/0102-feature"],
+        ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0102-feature"],
     )
     assert start.exit_code == 0
 
@@ -178,7 +193,7 @@ def test_finish_stash_cleans_up_and_appends_dirty_state(tmp_path: Path, monkeypa
 
     runner = CliRunner()
     monkeypatch.chdir(repo)
-    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/0103-feature"]).exit_code == 0
+    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0103-feature"]).exit_code == 0
 
     wt = repo / "out" / "worktrees" / "tp_0103_feature"
     (wt / "src" / "file.py").write_text("print('commit me')\n", encoding="utf-8")
@@ -221,7 +236,7 @@ def test_dirty_state_is_append_only_across_stash_phases(tmp_path: Path, monkeypa
     assert (
         runner.invoke(
             cli,
-            ["wt", "start", "--run", str(run_dir), "--branch", "tp/0104-feature", "--dirty-policy", "stash"],
+            ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0104-feature", "--dirty-policy", "stash"],
         ).exit_code
         == 0
     )
@@ -257,7 +272,7 @@ def test_finish_refuses_when_main_not_fast_forwardable(tmp_path: Path, monkeypat
 
     runner = CliRunner()
     monkeypatch.chdir(repo)
-    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/0105-feature"]).exit_code == 0
+    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0105-feature"]).exit_code == 0
 
     wt = repo / "out" / "worktrees" / "tp_0105_feature"
     (wt / "src" / "file.py").write_text("print('branch change')\n", encoding="utf-8")

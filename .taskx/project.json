@@ -1,5 +1,5 @@
 {
-  "project_id": "taskx",
+  "project_id": "taskx.core",
   "project_slug": "taskX",
   "repo_remote_hint": "taskX",
   "packet_required_header": true

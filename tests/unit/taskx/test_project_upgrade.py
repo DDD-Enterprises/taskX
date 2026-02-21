@@ -38,8 +38,8 @@ def test_project_upgrade_refuses_when_rails_missing_without_allow_init(tmp_path:
     )
 
     assert result.exit_code == 2
-    assert "Missing identity rails" in result.output
-    assert "Refusing to" in result.output
+    assert "REFUSAL: repo identity mismatch" in result.output
+    assert "expected_project_id: taskx.core" in result.output
 
 
 def test_project_upgrade_creates_rails_with_allow_init(tmp_path: Path) -> None:

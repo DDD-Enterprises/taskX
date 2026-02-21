@@ -6,7 +6,8 @@ import json
 import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict
 
 from taskx.obs.run_artifacts import (
     PROJECT_IDENTITY_PATH,
@@ -35,6 +36,11 @@ class RepoIdentity:
     packet_required_header: bool
 
 
+GUARD_ARTIFACT_PATH = Path("out/taskx_guard")
+TASKX_PROJECT_ID = "taskx.core"
+SAFE_INVOCATION = "PYTHONPATH=src python -m taskx ..."
+
+
 @dataclass(frozen=True)
 class RunIdentity:
     """Identity binding persisted in each run directory."""
@@ -61,7 +67,10 @@ def load_repo_identity(repo_root: Path) -> RepoIdentity:
     if not isinstance(payload, dict):
         raise RuntimeError(f"Invalid repo identity payload in {identity_path}")
 
-    project_id = str(payload.get("project_id", "")).strip()
+    project_id_value = payload.get("project_id")
+    if not isinstance(project_id_value, str):
+        raise RuntimeError(f"'project_id' must be a string in {identity_path}")
+    project_id = project_id_value.strip()
     if not project_id:
         raise RuntimeError(f"Missing required key 'project_id' in {identity_path}")
 
@@ -272,3 +281,91 @@ def _to_bool(value: object, *, default: bool) -> bool:
     if value is None:
         return default
     return bool(value)
+
+
+class RepoIdentityGuardError(RuntimeError):
+    def __init__(self, expected_project_id: str, observed_project_id: str | None, repo_root: Path):
+        observed = observed_project_id or "MISSING"
+        message = (
+            "REFUSAL: repo identity mismatch\n"
+            f"expected_project_id: {expected_project_id}\n"
+            f"observed_project_id: {observed}\n"
+            f"repo_root: {repo_root}\n"
+            f"hint: You are likely running the wrong repo or a shadowed taskx install. "
+            f"Use {SAFE_INVOCATION}"
+        )
+        super().__init__(message)
+        self.expected_project_id = expected_project_id
+        self.observed_project_id = observed
+        self.repo_root = repo_root
+
+
+def read_observed_project_id(repo_root: Path) -> str | None:
+    try:
+        identity = load_repo_identity(repo_root)
+        return identity.project_id
+    except RuntimeError:
+        return None
+
+
+def assert_repo_identity(
+    repo_root: Path,
+    *,
+    expected_project_id: str | None = None,
+    report_dir: Path | None = None,
+) -> RepoIdentity:
+    taskxroot = repo_root / ".taskxroot"
+    project_file = repo_root / PROJECT_IDENTITY_PATH
+
+    if not taskxroot.exists():
+        raise RepoIdentityGuardError(expected_project_id or TASKX_PROJECT_ID, None, repo_root)
+    if not project_file.exists():
+        raise RepoIdentityGuardError(expected_project_id or TASKX_PROJECT_ID, None, repo_root)
+
+    identity = load_repo_identity(repo_root)
+    effective_expected = expected_project_id or identity.project_id
+    if expected_project_id and identity.project_id != expected_project_id:
+        raise RepoIdentityGuardError(expected_project_id, identity.project_id, repo_root)
+
+    artifacts_dir = report_dir or (repo_root / GUARD_ARTIFACT_PATH)
+    _write_guard_artifacts(
+        artifacts_dir,
+        expected_project_id=expected_project_id,
+        observed_project_id=identity.project_id,
+        files={
+            ".taskxroot": True,
+            ".taskx/project.json": project_file.exists(),
+        },
+    )
+
+    return identity
+
+
+def _write_guard_artifacts(
+    directory: Path,
+    *,
+    expected_project_id: str,
+    observed_project_id: str,
+    files: Dict[str, bool],
+) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "check": "repo_identity",
+        "ok": True,
+        "expected_project_id": expected_project_id,
+        "observed_project_id": observed_project_id,
+        "files": files,
+    }
+    json_path = directory / "REPO_IDENTITY.json"
+    md_path = directory / "REPO_IDENTITY.md"
+    json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    md_lines = [
+        "# Repo Identity Check",
+        "",
+        f"- ok: true",
+        f"- expected_project_id: {expected_project_id}",
+        f"- observed_project_id: {observed_project_id}",
+    ]
+    for key, present in files.items():
+        md_lines.append(f"- {key}: {present}")
+    md_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")

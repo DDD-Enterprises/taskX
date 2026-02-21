@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from typing import TYPE_CHECKING
 
@@ -20,7 +21,19 @@ def _init_repo(path: Path) -> None:
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=path, check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=path, check=True, capture_output=True)
     (path / "README.md").write_text("# repo\n", encoding="utf-8")
-    subprocess.run(["git", "add", "README.md"], cwd=path, check=True, capture_output=True)
+    (path / ".taskxroot").write_text("", encoding="utf-8")
+    (path / ".taskx").mkdir(parents=True, exist_ok=True)
+    (path / ".taskx" / "project.json").write_text(
+        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (path / ".gitignore").write_text("out/\n", encoding="utf-8")
+    subprocess.run(
+        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        cwd=path,
+        check=True,
+        capture_output=True,
+    )
     subprocess.run(["git", "commit", "-m", "init"], cwd=path, check=True, capture_output=True)
 
 
@@ -56,6 +69,7 @@ def test_wt_start_refuses_dirty_repo(tmp_path: Path, monkeypatch) -> None:
 
     runner = CliRunner()
     run_dir = repo / "out" / "runs" / "RUN_0123"
+    _write_task_packet_with_commit_plan(run_dir)
     monkeypatch.chdir(repo)
     result = runner.invoke(cli, ["wt", "start", "--run", str(run_dir)])
 
@@ -118,7 +132,7 @@ def test_commit_sequence_refuses_with_staged_files(tmp_path: Path, monkeypatch) 
     """`taskx commit-sequence` should refuse when index is pre-staged."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
 
     src_dir = repo / "src"
     src_dir.mkdir(parents=True, exist_ok=True)
@@ -149,7 +163,7 @@ def test_commit_sequence_refuses_empty_step(tmp_path: Path, monkeypatch) -> None
     """`taskx commit-sequence` should refuse empty commits per step."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
     run_dir = tmp_path / "RUN_0123"
     _write_task_packet_with_commit_plan(run_dir)
 
@@ -174,7 +188,7 @@ def test_commit_sequence_accepts_unstaged_allowlisted_changes(tmp_path: Path, mo
     """Unstaged allowlisted edits should be committed by commit-sequence."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
 
     src_dir = repo / "src"
     src_dir.mkdir(parents=True, exist_ok=True)

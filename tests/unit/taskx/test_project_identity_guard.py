@@ -67,9 +67,8 @@ def test_wt_start_refuses_packet_repo_mismatch_with_exact_message(
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo, check=True, capture_output=True)
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
-    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
-
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / ".taskxroot").write_text("", encoding="utf-8")
     (repo / ".taskx").mkdir(parents=True, exist_ok=True)
     (repo / ".taskx" / "project.json").write_text(
         "{\n"
@@ -80,6 +79,13 @@ def test_wt_start_refuses_packet_repo_mismatch_with_exact_message(
         "}\n",
         encoding="utf-8",
     )
+    subprocess.run(
+        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
 
     run_dir = repo / "out" / "runs" / "RUN_X"
     run_dir.mkdir(parents=True, exist_ok=True)

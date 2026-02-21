@@ -36,8 +36,18 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - Removed duplicate `wt start`, `commit-sequence`, and `finish` command definitions from CLI registration.
 - Removed broken legacy/placeholder workflows that were not operable in this repository state.
 
-## [0.1.0] - 2026-02-18
+## [0.1.0] - 2026-02-21
 
 ### Added
 
 - Initial public release baseline.
+- Deterministic build hash verification and wheel smoke validation in CI.
+- Tag-gated release and container distribution workflows.
+
+### Changed
+
+- Release flow is CI-driven from version tags with uv-native build/publish steps.
+
+### Fixed
+
+- Removed legacy manual release workflow to enforce a single release path.

@@ -116,11 +116,10 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
     assert result.exit_code == 0
 
     worktree = _load_worktree_json(run_dir)
-<<<<<<< Updated upstream
     assert Path(worktree["worktree_path"]).exists()
-=======
-    assert (tmp_path / "workspace" / "repo" / "out" / "worktrees" / "tp_taskx_core_0101_feature").exists()
->>>>>>> Stashed changes
+    expected_path = tmp_path / "workspace" / "repo" / "out" / "worktrees" / "tp_taskx_core_0101_feature"
+    assert Path(worktree["worktree_path"]) == expected_path
+    assert expected_path.exists()
     dirty_state = _load_dirty_state(run_dir)
     assert len(dirty_state) == 1
     entry = dirty_state[0]

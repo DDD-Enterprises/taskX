@@ -8,6 +8,7 @@ import typer
 
 from taskx.ops.tp_git.guards import run_doctor
 from taskx.ops.tp_git.git_worktree import start_tp
+from taskx.ops.tp_git.github import merge_pr, pr_create, pr_status
 
 app = typer.Typer(
     name="git",
@@ -75,28 +76,95 @@ def start(
 @app.command("status")
 def status(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
 ) -> None:
-    """Show TP workflow status (implemented in later commit)."""
-    _ = tp_id
-    typer.echo("taskx tp git status: TODO")
+    """Show TP local state and PR metadata when available."""
+    try:
+        payload = pr_status(tp_id=tp_id, repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    typer.echo(f"repo_root={payload['repo_root']}")
+    typer.echo(f"tp_id={payload['tp_id']}")
+    typer.echo(f"worktree_path={payload['worktree_path']}")
+    typer.echo(f"branch={payload['branch']}")
+    typer.echo(f"dirty={'yes' if payload['dirty'] else 'no'}")
+    pr_payload = payload.get("pr")
+    if isinstance(pr_payload, dict):
+        typer.echo(f"pr_url={pr_payload.get('url', '')}")
+        typer.echo(f"pr_state={pr_payload.get('state', '')}")
+    elif "pr_error" in payload:
+        typer.echo(f"pr_error={payload['pr_error']}")
 
 
 @app.command("pr")
 def pr(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
+    title: str = typer.Option(..., "--title", help="Pull request title."),
+    body: str | None = typer.Option(None, "--body", help="Pull request body text."),
+    body_file: Path | None = typer.Option(None, "--body-file", help="Pull request body file path."),
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
 ) -> None:
-    """Create PR for TP branch (implemented in later commit)."""
-    _ = tp_id
-    typer.echo("taskx tp git pr: TODO")
+    """Push TP branch and open PR via GitHub CLI."""
+    if body is not None and body_file is not None:
+        typer.echo("pr failed: pass either --body or --body-file, not both", err=True)
+        raise typer.Exit(1)
+
+    try:
+        payload = pr_create(tp_id=tp_id, title=title, body=body, body_file=body_file, repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    typer.echo(f"repo_root={payload['repo_root']}")
+    typer.echo(f"tp_id={payload['tp_id']}")
+    typer.echo(f"branch={payload['branch']}")
+    typer.echo(f"worktree_path={payload['worktree_path']}")
+    typer.echo(f"url={payload.get('url', '')}")
+    typer.echo(f"state={payload.get('state', '')}")
+    typer.echo(f"mergeStateStatus={payload.get('mergeStateStatus', '')}")
 
 
 @app.command("merge")
 def merge(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
+    squash: bool = typer.Option(False, "--squash", help="Use squash merge mode."),
+    merge_flag: bool = typer.Option(False, "--merge", help="Use merge commit mode."),
+    rebase: bool = typer.Option(False, "--rebase", help="Use rebase merge mode."),
+    repo: Path | None = typer.Option(
+        None,
+        "--repo",
+        help="Repository path (defaults to current working directory).",
+    ),
 ) -> None:
-    """Merge TP PR (implemented in later commit)."""
-    _ = tp_id
-    typer.echo("taskx tp git merge: TODO")
+    """Attempt auto-merge for TP PR via GitHub CLI."""
+    selected = [name for enabled, name in ((squash, "squash"), (merge_flag, "merge"), (rebase, "rebase")) if enabled]
+    if len(selected) > 1:
+        typer.echo("merge failed: choose only one mode flag", err=True)
+        raise typer.Exit(1)
+    mode = selected[0] if selected else "squash"
+
+    try:
+        payload = merge_pr(tp_id=tp_id, mode=mode, repo=repo)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+    typer.echo(f"repo_root={payload['repo_root']}")
+    typer.echo(f"tp_id={payload['tp_id']}")
+    typer.echo(f"mode={payload['mode']}")
+    typer.echo(f"url={payload.get('url', '')}")
+    typer.echo(f"state={payload.get('state', '')}")
+    typer.echo(f"mergeStateStatus={payload.get('mergeStateStatus', '')}")
 
 
 @app.command("sync-main")

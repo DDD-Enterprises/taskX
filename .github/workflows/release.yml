@@ -46,6 +46,11 @@ jobs:
 
           echo "TAG_VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
           echo "Tag/version consistency OK: $TAG_VERSION"
+          
+          # Calculate previous tag for changelog
+          PREV_TAG="$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "v0.0.0")"
+          echo "PREV_TAG=$PREV_TAG" >> "$GITHUB_ENV"
+          echo "Previous tag: $PREV_TAG"
 
       - name: Install dependencies
         run: uv sync --dev --frozen
@@ -94,8 +99,37 @@ jobs:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           if [ -n "${PYPI_API_TOKEN:-}" ]; then
+            echo "🔑 Publishing to PyPI using API token..."
             uv publish --token "$PYPI_API_TOKEN"
           else
-            echo "No PYPI_API_TOKEN provided. Attempting trusted publishing via OIDC..."
+            echo "🔐 Publishing to PyPI using OIDC trusted publishing..."
             uv publish
           fi
+          echo "📦 Published taskx-kernel v${{ env.TAG_VERSION }} to PyPI"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: TaskX v${{ env.TAG_VERSION }}
+          body: |
+            ## TaskX Kernel v${{ env.TAG_VERSION }}
+            
+            **Automated Release** - ${{ github.ref_name }}
+            
+            ### Installation
+            ```bash
+            pip install taskx-kernel==${{ env.TAG_VERSION }}
+            ```
+            
+            ### Changes
+            - [View commit history](${{ github.server_url }}/${{ github.repository }}/compare/v${{ env.PREV_TAG }}...${{ github.ref_name }})
+            
+            ### Assets
+            - Wheel: `taskx_kernel-${{ env.TAG_VERSION }}-py3-none-any.whl`
+            - Source: `taskx_kernel-${{ env.TAG_VERSION }}.tar.gz`
+            - Checksums: `SHA256SUMS.txt`
+          files: |
+            dist/taskx_kernel-${{ env.TAG_VERSION }}-py3-none-any.whl
+            dist/taskx_kernel-${{ env.TAG_VERSION }}.tar.gz
+            dist/SHA256SUMS.txt

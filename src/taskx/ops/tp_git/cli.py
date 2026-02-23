@@ -6,9 +6,9 @@ from pathlib import Path
 
 import typer
 
-from taskx.ops.tp_git.guards import run_doctor
 from taskx.ops.tp_git.git_worktree import cleanup_tp, list_worktrees, start_tp, sync_main
 from taskx.ops.tp_git.github import merge_pr, pr_create, pr_status
+from taskx.ops.tp_git.guards import run_doctor
 
 app = typer.Typer(
     name="git",

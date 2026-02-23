@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from taskx.ops.tp_git.exec import ExecResult, run_command, run_git
+from taskx.ops.tp_git.exec import run_command, run_git
 from taskx.ops.tp_git.guards import resolve_repo_root
 from taskx.ops.tp_git.naming import build_worktree_path
 

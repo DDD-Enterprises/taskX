@@ -3220,10 +3220,9 @@ def upgrade(
                 pass
             elif pypi:
                 install_method = "pypi"
-            elif install_method != "wheel":
+            elif install_method != "wheel" and install_method != "pypi":
                 # Default to git if ambiguous and not explicitly pypi
-                if install_method != "pypi":
-                     install_method = "git"
+                install_method = "git"
 
         elif latest:
             if install_method == "pypi":

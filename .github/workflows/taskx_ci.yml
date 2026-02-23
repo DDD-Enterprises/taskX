@@ -33,7 +33,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --dev
+          uv sync --extra dev
+
+      - name: Install ripgrep
+        run: sudo apt-get install -y ripgrep
 
       - name: Fail on Poetry references
         run: |
@@ -46,15 +49,15 @@ jobs:
       
       - name: Lint (ruff)
         run: |
-          uv run ruff check src/taskx
+          uv run --extra dev ruff check src/taskx
       
       - name: Typecheck (mypy)
         run: |
-          uv run mypy src/taskx
+          uv run --extra dev mypy src/taskx
       
       - name: Run unit tests
         run: |
-          uv run pytest
+          uv run --extra dev pytest
 
       - name: Doctor sanity
         run: |

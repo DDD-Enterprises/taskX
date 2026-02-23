@@ -114,7 +114,24 @@ Get up and running faster than you can say "idempotency."
 
 ### 1. Installation
 
-The easiest way to join the cult—err, project—is via the installer script:
+You can install TaskX via `pip`, `uv`, or our unified installer script.
+
+**Using uv (Recommended):**
+
+```bash
+uv tool install taskx-kernel
+taskx --version
+```
+
+**Using pip:**
+
+```bash
+pip install taskx-kernel
+```
+
+**Using the Unified Installer (for Repo Wiring):**
+
+The installer script sets up a pinned environment and repository integration:
 
 ```bash
 # Latest stable version
@@ -128,7 +145,6 @@ curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.
 Let's run a loop. A loop creates tasks, runs them, checks them, and promotes them.
 
 ```bash
-python -m pip install taskx-kernel
 taskx --help
 ```
 

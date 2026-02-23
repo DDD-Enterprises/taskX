@@ -39,6 +39,12 @@ You can customize the installation by providing arguments to the script or creat
 curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.sh | bash -s -- --version v0.2.0
 ```
 
+**Install from PyPI:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.sh | bash -s -- --pypi
+```
+
 **Manual Pin Configuration:**
 
 Create `.taskx-pin` before running the installer:
@@ -89,7 +95,7 @@ These commands will automatically update your `.taskx-pin` file and reinstall th
 
 The `.taskx-pin` file defines which TaskX version to install. Place it at your repository root.
 
-#### Option 1: Git Tag (Recommended)
+#### Option 1: Git Tag
 
 Install from a specific git tag:
 
@@ -99,7 +105,16 @@ repo=https://github.com/hu3mann/taskX.git
 ref=v0.1.0
 ```
 
-#### Option 2: Local Wheel
+#### Option 2: PyPI (Recommended)
+
+Install from PyPI:
+
+```
+install=pypi
+ref=0.1.0
+```
+
+#### Option 3: Local Wheel
 
 Install from a local wheel file:
 

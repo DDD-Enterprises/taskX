@@ -29,6 +29,11 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/hu3mann/taskX"
+Repository = "https://github.com/hu3mann/taskX"
+Issues = "https://github.com/hu3mann/taskX/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3,<9",

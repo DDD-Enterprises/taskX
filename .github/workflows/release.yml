@@ -31,12 +31,13 @@ jobs:
       - name: Enforce tag and version consistency
         run: |
           TAG="$(git describe --tags --exact-match)"
-          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag must be semver (vX.Y.Z): $TAG"
+          # Relaxed regex to allow pre-releases (e.g. v0.1.0-rc1)
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "Tag must be semver (vX.Y.Z[-modifier]): $TAG"
             exit 1
           fi
 
-          PYPROJECT_VERSION="$(grep '^version = ' pyproject.toml | head -n 1 | sed -E 's/version = \"([^\"]+)\"/\\1/')"
+          PYPROJECT_VERSION="$(grep -m 1 '^version = ' pyproject.toml | cut -d '"' -f 2)"
           TAG_VERSION="${TAG#v}"
           if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
             echo "Tag/version mismatch: tag=$TAG_VERSION pyproject=$PYPROJECT_VERSION"
@@ -95,5 +96,6 @@ jobs:
           if [ -n "${PYPI_API_TOKEN:-}" ]; then
             uv publish --token "$PYPI_API_TOKEN"
           else
+            echo "No PYPI_API_TOKEN provided. Attempting trusted publishing via OIDC..."
             uv publish
           fi

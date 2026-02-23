@@ -56,10 +56,10 @@ jobs:
         run: uv sync --dev --frozen
 
       - name: Lint (ruff)
-        run: uv run --extra dev ruff check src/taskx
+        run: uv run --extra dev ruff check src/dopetask
 
       - name: Typecheck (mypy)
-        run: uv run --extra dev mypy src/taskx
+        run: uv run --extra dev mypy src/dopetask
 
       - name: Run tests
         run: uv run pytest

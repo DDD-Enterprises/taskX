@@ -3215,13 +3215,11 @@ def upgrade(
         target_ref = current_ref
         if version:
             target_ref = version
-            if install_method == "git":
-                # Implicitly stay on git if already there
-                pass
-            elif pypi:
+            if pypi:
                 install_method = "pypi"
-            elif install_method != "wheel" and install_method != "pypi":
-                # Default to git if ambiguous and not explicitly pypi
+            elif install_method != "git":
+                # When a specific version is requested without --pypi,
+                # always use the git install method.
                 install_method = "git"
 
         elif latest:
@@ -3247,8 +3245,8 @@ def upgrade(
                     console.print(f"[bold red]Error:[/bold red] Failed to fetch tags: {e}")
                     raise typer.Exit(1) from e
             else:
-                 console.print(f"[bold red]Error:[/bold red] --latest not supported for install method: {install_method}")
-                 raise typer.Exit(1)
+                console.print(f"[bold red]Error:[/bold red] --latest not supported for install method: {install_method}")
+                raise typer.Exit(1)
 
         # Update pin file
         console.print(f"Updating {pin_file}...")
@@ -3268,35 +3266,35 @@ def upgrade(
 
         if install_method == "git":
             if not repo_url or not target_ref:
-                 console.print("[bold red]Error:[/bold red] Invalid git configuration in pin file")
-                 raise typer.Exit(1)
+                console.print("[bold red]Error:[/bold red] Invalid git configuration in pin file")
+                raise typer.Exit(1)
             install_url = f"git+{repo_url}@{target_ref}"
             pip_cmd.append(install_url)
         elif install_method == "wheel":
             if not wheel_path:
-                 console.print("[bold red]Error:[/bold red] Invalid wheel configuration in pin file")
-                 raise typer.Exit(1)
+                console.print("[bold red]Error:[/bold red] Invalid wheel configuration in pin file")
+                raise typer.Exit(1)
             # Handle relative path
             full_wheel_path = repo_root / wheel_path
             if not full_wheel_path.exists():
-                 console.print(f"[bold red]Error:[/bold red] Wheel not found at {full_wheel_path}")
-                 raise typer.Exit(1)
+                console.print(f"[bold red]Error:[/bold red] Wheel not found at {full_wheel_path}")
+                raise typer.Exit(1)
             pip_cmd.append(str(full_wheel_path))
         elif install_method == "pypi":
             package_spec = "taskx-kernel"
             if target_ref and target_ref not in ("latest", "main"):
-                 version_spec = target_ref
-                 if version_spec.startswith("v"):
-                     version_spec = version_spec[1:]
-                 package_spec = f"{package_spec}=={version_spec}"
+                version_spec = target_ref
+                if version_spec.startswith("v"):
+                    version_spec = version_spec[1:]
+                package_spec = f"{package_spec}=={version_spec}"
             pip_cmd.append(package_spec)
 
         try:
             subprocess.check_call(pip_cmd)
             console.print("[green]✓ Upgrade successful[/green]")
         except subprocess.CalledProcessError as e:
-             console.print(f"[bold red]Error:[/bold red] Installation failed: {e}")
-             raise typer.Exit(1) from e
+            console.print(f"[bold red]Error:[/bold red] Installation failed: {e}")
+            raise typer.Exit(1) from e
 
         # Verify
         try:

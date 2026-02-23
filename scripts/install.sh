@@ -186,7 +186,7 @@ main() {
     # Handle --latest
     if [ "$USE_LATEST" = "true" ]; then
         if [ "$INSTALL_METHOD" = "pypi" ]; then
-             REF="latest"
+            REF="latest"
         elif [ "$INSTALL_METHOD" != "git" ]; then
             log_error "--latest is only supported for git install method (use --pypi for PyPI)"
             exit 1
@@ -208,9 +208,12 @@ main() {
     if [ -n "$TARGET_VERSION" ]; then
         REF="$TARGET_VERSION"
         if [ "$USE_PYPI" = "true" ]; then
-             INSTALL_METHOD="pypi"
-        elif [ "$INSTALL_METHOD" = "git" ]; then
-             INSTALL_METHOD="git"
+            INSTALL_METHOD="pypi"
+        else
+            # When a specific version is requested without --pypi,
+            # always use the git install method, even if the previous
+            # method was something else (e.g., wheel from pin file).
+            INSTALL_METHOD="git"
         fi
     fi
 
@@ -281,11 +284,11 @@ main() {
         PACKAGE_NAME="taskx-kernel"
 
         if [ -n "$REF" ] && [ "$REF" != "latest" ] && [ "$REF" != "main" ]; then
-             VERSION_SPEC="${REF}"
-             if [[ "$VERSION_SPEC" == v* ]]; then
-                  VERSION_SPEC="${VERSION_SPEC#v}"
-             fi
-             PACKAGE_NAME="${PACKAGE_NAME}==${VERSION_SPEC}"
+            VERSION_SPEC="${REF}"
+            if [[ "$VERSION_SPEC" == v* ]]; then
+                VERSION_SPEC="${VERSION_SPEC#v}"
+            fi
+            PACKAGE_NAME="${PACKAGE_NAME}==${VERSION_SPEC}"
         fi
 
         PIP_ARGS="--upgrade"

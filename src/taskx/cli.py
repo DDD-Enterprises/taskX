@@ -264,10 +264,12 @@ def _check_import_shadowing() -> None:
     # Expected locations:
     # 1. site-packages/taskx/ (installed package)
     # 2. /code/taskX/ (editable install from TaskX repo)
+    # 3. /app/src/taskx/ (common CI/container location)
     is_site_packages = "/site-packages/taskx/" in taskx_file
     is_taskx_repo = "/code/taskX/" in taskx_file
+    is_ci_env = "/app/src/taskx/" in taskx_file
 
-    if not is_site_packages and not is_taskx_repo:
+    if not is_site_packages and not is_taskx_repo and not is_ci_env:
         typer.echo(
             f"[bold yellow]WARNING: taskx is being imported from an unexpected location:[/bold yellow]\n"
             f"[yellow]  {taskx_file}[/yellow]\n"

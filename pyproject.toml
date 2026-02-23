@@ -36,7 +36,7 @@ Issues = "https://github.com/hu3mann/taskX/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3,<9",
+    "pytest>=8.3,<10",
     "pytest-cov>=4.0.0",
     "coverage[toml]>=7.6,<8",
     "ruff>=0.6.9,<1",

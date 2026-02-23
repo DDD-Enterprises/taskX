@@ -12,7 +12,11 @@ trap cleanup EXIT
 hashes1="$tmpdir/hashes1.txt"
 hashes2="$tmpdir/hashes2.txt"
 
-uv build
+# Reuse existing build artifacts as the first build output if available,
+# so CI can call this right after uv build without tripling build time.
+if ! ls dist/*.whl 1>/dev/null 2>&1; then
+  uv build
+fi
 sha256sum dist/*.whl | sort > "$hashes1"
 
 rm -rf dist

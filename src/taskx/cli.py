@@ -183,7 +183,7 @@ tp_app = typer.Typer(name="tp", help="Task Packet workflow commands", no_args_is
 cli.add_typer(tp_app, name="tp")
 if tp_git_app:
     tp_app.add_typer(tp_git_app, name="git")
-if register_tp_run:
+if register_tp_run is not None:
     register_tp_run(tp_app)
 
 

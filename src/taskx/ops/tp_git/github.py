@@ -49,7 +49,10 @@ def _gh_pr_view(worktree_path: Path, *, check: bool = True) -> dict[str, Any]:
         detail = (viewed.stderr or viewed.stdout).strip()
         raise RuntimeError(f"gh pr view failed: {detail}")
     try:
-        return json.loads(viewed.stdout)
+        payload = json.loads(viewed.stdout)
+        if not isinstance(payload, dict):
+            raise RuntimeError("gh pr view returned non-dict JSON output")
+        return payload
     except json.JSONDecodeError as exc:
         raise RuntimeError("gh pr view returned non-JSON output") from exc
 

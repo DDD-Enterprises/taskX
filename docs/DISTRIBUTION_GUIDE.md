@@ -1,13 +1,13 @@
 # TaskX Distribution Guide
 
-This guide outlines the steps to distribute TaskX (package name: `taskx-kernel`) on PyPI using the automated GitHub Actions workflow.
+This guide outlines the steps to distribute DopeTask (package name: `dopetask`) on PyPI using the automated GitHub Actions workflow.
 
 ## Prerequisites
 
 1.  **PyPI Account**: Ensure you have an account on [PyPI](https://pypi.org/).
 2.  **PyPI Token**:
     *   Go to your PyPI account settings > API tokens.
-    *   Create a new token with "Upload" scope (or scoped to `taskx-kernel` if it already exists).
+    *   Create a new token with "Upload" scope (or scoped to `dopetask` if it already exists).
     *   Copy the token.
 3.  **GitHub Secrets**:
     *   Go to your GitHub repository settings > Secrets and variables > Actions.
@@ -45,7 +45,7 @@ To publish a new version of TaskX to PyPI:
         *   Publish to PyPI using `uv publish`.
 
 4.  **Verify on PyPI**:
-    *   Visit [https://pypi.org/project/taskx-kernel/](https://pypi.org/project/taskx-kernel/) to see the new release.
+    *   Visit [https://pypi.org/project/dopetask/](https://pypi.org/project/dopetask/) to see the new release.
 
 ## Installing the New Version
 
@@ -53,12 +53,12 @@ Once published, users can install it via:
 
 **Using uv (Recommended):**
 ```bash
-uv tool install taskx-kernel
+uv tool install dopetask
 ```
 
 **Using pip:**
 ```bash
-pip install taskx-kernel
+pip install dopetask
 ```
 
 **Using the Unified Installer:**

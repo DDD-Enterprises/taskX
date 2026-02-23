@@ -5,7 +5,7 @@ This is the single source of truth for installation.
 ## End users (pip)
 
 ```bash
-python -m pip install taskx-kernel
+python -m pip install dopetask
 ```
 
 ## Developers (uv-first)

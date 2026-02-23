@@ -2,7 +2,7 @@
 
 This guide details the release process for TaskX maintainers.
 
-PyPI package name: `taskx-kernel`  
+PyPI package name: `dopetask`  
 CLI entrypoint after install: `taskx`
 
 ## Release Process

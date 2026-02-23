@@ -105,7 +105,7 @@ jobs:
             echo "🔐 Publishing to PyPI using OIDC trusted publishing..."
             uv publish
           fi
-          echo "📦 Published taskx-kernel v${{ env.TAG_VERSION }} to PyPI"
+          echo "📦 Published dopetask v${{ env.TAG_VERSION }} to PyPI"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -119,7 +119,7 @@ jobs:
             
             ### Installation
             ```bash
-            pip install taskx-kernel==${{ env.TAG_VERSION }}
+            pip install dopetask==${{ env.TAG_VERSION }}
             ```
             
             ### Changes

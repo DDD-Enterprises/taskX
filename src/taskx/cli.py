@@ -3287,7 +3287,7 @@ def upgrade(
                  raise typer.Exit(1)
             pip_cmd.append(str(full_wheel_path))
         elif install_method == "pypi":
-            package_spec = "taskx-kernel"
+            package_spec = "dopetask"
             if target_ref and target_ref not in ("latest", "main"):
                  version_spec = target_ref
                  if version_spec.startswith("v"):

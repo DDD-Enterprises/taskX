@@ -119,14 +119,14 @@ You can install TaskX via `pip`, `uv`, or our unified installer script.
 **Using uv (Recommended):**
 
 ```bash
-uv tool install taskx-kernel
+uv tool install dopetask
 taskx --version
 ```
 
 **Using pip:**
 
 ```bash
-pip install taskx-kernel
+pip install dopetask
 ```
 
 **Using the Unified Installer (for Repo Wiring):**

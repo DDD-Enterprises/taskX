@@ -29,6 +29,11 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/hu3mann/taskX"
+Repository = "https://github.com/hu3mann/taskX"
+Issues = "https://github.com/hu3mann/taskX/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3,<9",
@@ -87,7 +92,6 @@ select = [
     "UP",  # pyupgrade
     "ARG", # flake8-unused-arguments
     "SIM", # flake8-simplify
-    "TCH", # flake8-type-checking
 ]
 ignore = [
     "E501",  # line too long, handled by formatter

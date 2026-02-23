@@ -18,6 +18,7 @@ DEFAULT_REF="main"
 FORCE_REINSTALL=false
 TARGET_VERSION=""
 USE_LATEST=false
+USE_PYPI=false
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $*"
@@ -36,6 +37,7 @@ usage() {
     echo "Options:"
     echo "  --version <v>   Install specific version/tag/branch"
     echo "  --latest        Install latest version from git remote"
+    echo "  --pypi          Install from PyPI"
     echo "  --force         Force re-installation"
     echo "  --help          Show this help message"
 }
@@ -51,6 +53,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --latest)
             USE_LATEST=true
+            shift
+            ;;
+        --pypi)
+            USE_PYPI=true
             shift
             ;;
         --force)
@@ -135,6 +141,11 @@ EOF
 install=wheel
 path=$path
 EOF
+    elif [ "$method" = "pypi" ]; then
+        cat > "$pin_file" <<EOF
+install=pypi
+ref=$ref
+EOF
     fi
 }
 
@@ -167,30 +178,40 @@ main() {
         log_info "No .taskx-pin found. Creating new configuration."
     fi
 
+    # Handle --pypi
+    if [ "$USE_PYPI" = "true" ]; then
+        INSTALL_METHOD="pypi"
+    fi
+
     # Handle --latest
     if [ "$USE_LATEST" = "true" ]; then
-        if [ "$INSTALL_METHOD" != "git" ]; then
-            log_error "--latest is only supported for git install method"
+        if [ "$INSTALL_METHOD" = "pypi" ]; then
+             REF="latest"
+        elif [ "$INSTALL_METHOD" != "git" ]; then
+            log_error "--latest is only supported for git install method (use --pypi for PyPI)"
             exit 1
+        else
+            log_info "Fetching latest tag from $REPO_URL..."
+            LATEST_TAG=$(git ls-remote --tags --sort='v:refname' "$REPO_URL" | tail -n1 | sed 's/.*\///')
+
+            if [ -z "$LATEST_TAG" ]; then
+                log_error "Could not determine latest tag from $REPO_URL"
+                exit 1
+            fi
+
+            log_info "Latest version is: $LATEST_TAG"
+            REF="$LATEST_TAG"
         fi
-
-        log_info "Fetching latest tag from $REPO_URL..."
-        LATEST_TAG=$(git ls-remote --tags --sort='v:refname' "$REPO_URL" | tail -n1 | sed 's/.*\///')
-
-        if [ -z "$LATEST_TAG" ]; then
-            log_error "Could not determine latest tag from $REPO_URL"
-            exit 1
-        fi
-
-        log_info "Latest version is: $LATEST_TAG"
-        REF="$LATEST_TAG"
     fi
 
     # Handle --version override
     if [ -n "$TARGET_VERSION" ]; then
         REF="$TARGET_VERSION"
-        # If user specifies version, assume git install unless wheel path is somehow implied (it's not)
-        INSTALL_METHOD="git"
+        if [ "$USE_PYPI" = "true" ]; then
+             INSTALL_METHOD="pypi"
+        elif [ "$INSTALL_METHOD" = "git" ]; then
+             INSTALL_METHOD="git"
+        fi
     fi
 
     # Update/Create pin file if changed or missing
@@ -254,6 +275,26 @@ main() {
         fi
 
         pip install $PIP_ARGS "$WHEEL_PATH"
+
+    elif [ "$INSTALL_METHOD" = "pypi" ]; then
+        log_info "Installing TaskX from PyPI..."
+        PACKAGE_NAME="taskx-kernel"
+
+        if [ -n "$REF" ] && [ "$REF" != "latest" ] && [ "$REF" != "main" ]; then
+             VERSION_SPEC="${REF}"
+             if [[ "$VERSION_SPEC" == v* ]]; then
+                  VERSION_SPEC="${VERSION_SPEC#v}"
+             fi
+             PACKAGE_NAME="${PACKAGE_NAME}==${VERSION_SPEC}"
+        fi
+
+        PIP_ARGS="--upgrade"
+        if [ "$FORCE_REINSTALL" = "true" ]; then
+            PIP_ARGS="$PIP_ARGS --force-reinstall"
+        fi
+
+        log_info "  Package: $PACKAGE_NAME"
+        pip install $PIP_ARGS "$PACKAGE_NAME"
     fi
     echo ""
 

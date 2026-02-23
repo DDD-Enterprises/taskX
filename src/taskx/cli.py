@@ -183,7 +183,7 @@ tp_app = typer.Typer(name="tp", help="Task Packet workflow commands", no_args_is
 cli.add_typer(tp_app, name="tp")
 if tp_git_app:
     tp_app.add_typer(tp_git_app, name="git")
-if register_tp_run:
+if register_tp_run is not None:
     register_tp_run(tp_app)
 
 
@@ -264,10 +264,14 @@ def _check_import_shadowing() -> None:
     # Expected locations:
     # 1. site-packages/taskx/ (installed package)
     # 2. /code/taskX/ (editable install from TaskX repo)
+    # 3. /app/src/taskx/ (common CI/container location)
+    # 4. /home/runner/work/taskX/ (GitHub Actions CI location)
     is_site_packages = "/site-packages/taskx/" in taskx_file
     is_taskx_repo = "/code/taskX/" in taskx_file
+    is_ci_env = "/app/src/taskx/" in taskx_file
+    is_github_actions = "/home/runner/work/taskX/" in taskx_file
 
-    if not is_site_packages and not is_taskx_repo:
+    if not is_site_packages and not is_taskx_repo and not is_ci_env and not is_github_actions:
         typer.echo(
             f"[bold yellow]WARNING: taskx is being imported from an unexpected location:[/bold yellow]\n"
             f"[yellow]  {taskx_file}[/yellow]\n"
@@ -3159,6 +3163,11 @@ def upgrade(
         "--latest",
         help="Upgrade to the latest version from git remote",
     ),
+    pypi: bool = typer.Option(
+        False,
+        "--pypi",
+        help="Upgrade using PyPI",
+    ),
     force: bool = typer.Option(
         False,
         "--force",
@@ -3203,31 +3212,47 @@ def upgrade(
         current_ref = pin_config.get("ref")
         wheel_path = pin_config.get("path")
 
+        if pypi:
+            install_method = "pypi"
+
         # Determine target ref
         target_ref = current_ref
         if version:
             target_ref = version
-            # Implicitly switch to git if version is specified
-            install_method = "git"
-        elif latest:
-            if install_method != "git" or not repo_url:
-                console.print("[bold red]Error:[/bold red] --latest requires git install method with a valid repo URL")
-                raise typer.Exit(1)
+            if install_method == "git":
+                # Implicitly stay on git if already there
+                pass
+            elif pypi:
+                install_method = "pypi"
+            elif install_method != "wheel" and install_method != "pypi":
+                # Default to git if ambiguous and not explicitly pypi
+                install_method = "git"
 
-            console.print(f"Fetching latest tag from {repo_url}...")
-            try:
-                cmd = ["git", "ls-remote", "--tags", "--sort=v:refname", repo_url]
-                output = subprocess.check_output(cmd, stderr=subprocess.PIPE, text=True)
-                lines = output.strip().splitlines()
-                if not lines:
-                    console.print("[bold red]Error:[/bold red] No tags found")
+        elif latest:
+            if install_method == "pypi":
+                target_ref = "latest"
+            elif install_method == "git":
+                if not repo_url:
+                    console.print("[bold red]Error:[/bold red] --latest with git requires valid repo URL in pin file")
                     raise typer.Exit(1)
-                latest_tag = lines[-1].split("/")[-1]
-                console.print(f"Latest version: {latest_tag}")
-                target_ref = latest_tag
-            except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]Error:[/bold red] Failed to fetch tags: {e}")
-                raise typer.Exit(1) from e
+
+                console.print(f"Fetching latest tag from {repo_url}...")
+                try:
+                    cmd = ["git", "ls-remote", "--tags", "--sort=v:refname", repo_url]
+                    output = subprocess.check_output(cmd, stderr=subprocess.PIPE, text=True)
+                    lines = output.strip().splitlines()
+                    if not lines:
+                        console.print("[bold red]Error:[/bold red] No tags found")
+                        raise typer.Exit(1)
+                    latest_tag = lines[-1].split("/")[-1]
+                    console.print(f"Latest version: {latest_tag}")
+                    target_ref = latest_tag
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[bold red]Error:[/bold red] Failed to fetch tags: {e}")
+                    raise typer.Exit(1) from e
+            else:
+                 console.print(f"[bold red]Error:[/bold red] --latest not supported for install method: {install_method}")
+                 raise typer.Exit(1)
 
         # Update pin file
         console.print(f"Updating {pin_file}...")
@@ -3236,6 +3261,8 @@ def upgrade(
                 f.write(f"install=git\nrepo={repo_url or ''}\nref={target_ref}\n")
             elif install_method == "wheel":
                 f.write(f"install=wheel\npath={wheel_path or ''}\n")
+            elif install_method == "pypi":
+                f.write(f"install=pypi\nref={target_ref}\n")
 
         # Run pip install
         console.print("Running pip install...")
@@ -3259,6 +3286,14 @@ def upgrade(
                  console.print(f"[bold red]Error:[/bold red] Wheel not found at {full_wheel_path}")
                  raise typer.Exit(1)
             pip_cmd.append(str(full_wheel_path))
+        elif install_method == "pypi":
+            package_spec = "taskx-kernel"
+            if target_ref and target_ref not in ("latest", "main"):
+                 version_spec = target_ref
+                 if version_spec.startswith("v"):
+                     version_spec = version_spec[1:]
+                 package_spec = f"{package_spec}=={version_spec}"
+            pip_cmd.append(package_spec)
 
         try:
             subprocess.check_call(pip_cmd)

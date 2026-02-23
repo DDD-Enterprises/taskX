@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from taskx.git.commit_run import commit_run
+from dopetask.git.commit_run import commit_run
 
 
 @pytest.fixture

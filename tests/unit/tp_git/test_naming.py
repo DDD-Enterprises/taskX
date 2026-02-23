@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from taskx.ops.tp_git.naming import build_tp_branch, build_worktree_path, normalize_slug
+from dopetask.ops.tp_git.naming import build_tp_branch, build_worktree_path, normalize_slug
 
 
 def test_normalize_slug_basic() -> None:

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from jsonschema import validate
 
-from taskx.manifest import (
+from dopetask.manifest import (
     append_command_record,
     check_manifest,
     finalize_manifest,

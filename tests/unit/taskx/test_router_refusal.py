@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
+from dopetask.cli import cli
 
 if TYPE_CHECKING:
     from pathlib import Path

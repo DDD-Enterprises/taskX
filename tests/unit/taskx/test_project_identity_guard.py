@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 import pytest
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.guard.identity import RepoIdentity, assert_repo_packet_identity
-from taskx.pipeline.task_runner.parser import parse_packet_project_identity
-from taskx.pipeline.task_runner.types import ProjectIdentity
+from dopetask.cli import cli
+from dopetask.guard.identity import RepoIdentity, assert_repo_packet_identity
+from dopetask.pipeline.task_runner.parser import parse_packet_project_identity
+from dopetask.pipeline.task_runner.types import ProjectIdentity
 
 if TYPE_CHECKING:
     from pathlib import Path

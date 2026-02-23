@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.ui import THEMES
+from dopetask.cli import cli
+from dopetask.ui import THEMES
 
 runner = CliRunner()
 

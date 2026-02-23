@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.utils.repo import RepoInfo
+from dopetask.cli import cli
+from dopetask.utils.repo import RepoInfo
 
 runner = CliRunner()
 

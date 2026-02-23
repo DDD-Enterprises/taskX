@@ -1,8 +1,8 @@
 import hashlib
 from pathlib import Path
 import pytest
-from taskx.ops.doctor import extract_operator_blocks, run_doctor, get_canonical_target
-from taskx.ops.cli import app
+from dopetask.ops.doctor import extract_operator_blocks, run_doctor, get_canonical_target
+from dopetask.ops.cli import app
 from typer.testing import CliRunner
 
 runner = CliRunner()

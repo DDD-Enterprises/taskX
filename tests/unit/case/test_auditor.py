@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from taskx.pipeline.case.auditor import (
+from dopetask.pipeline.case.auditor import (
     _aggregate_anomalies,
     _detect_verification_gaps,
     audit_case,

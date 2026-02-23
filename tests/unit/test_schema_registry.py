@@ -1,7 +1,7 @@
 """Verify SchemaRegistry discovers and loads required schemas."""
 import pytest
 
-from taskx.utils.schema_registry import SchemaRegistry
+from dopetask.utils.schema_registry import SchemaRegistry
 
 REQUIRED = {"allowlist_diff", "promotion_token", "run_envelope", "run_summary"}
 

@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.guard.identity import RepoIdentityGuardError, assert_repo_identity
+from dopetask.cli import cli
+from dopetask.guard.identity import RepoIdentityGuardError, assert_repo_identity
 
 
 def _write_project_json(repo_dir: Path, project_id: object) -> None:

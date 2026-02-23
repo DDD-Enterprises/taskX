@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 
 import pytest
-from taskx.router.availability import AVAILABILITY_CONFIG_TEMPLATE
+from dopetask.router.availability import AVAILABILITY_CONFIG_TEMPLATE
 
 DEFAULT_LADDER = AVAILABILITY_CONFIG_TEMPLATE["policy"]["escalation_ladder"]
 

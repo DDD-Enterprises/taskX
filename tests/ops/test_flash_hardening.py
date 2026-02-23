@@ -1,13 +1,13 @@
 import pytest
 from pathlib import Path
-from taskx.ops.cli import init, compile, apply, doctor
-from taskx.ops.doctor import run_doctor
-from taskx.ops.compile import calculate_hash
+from dopetask.ops.cli import init, compile, apply, doctor
+from dopetask.ops.doctor import run_doctor
+from dopetask.ops.compile import calculate_hash
 from typer.testing import CliRunner
 
 def test_doctor_statuses_flash(tmp_path):
     # Mock get_repo_root
-    import taskx.ops.cli
+    import dopetask.ops.cli
     original_get_repo_root = taskx.ops.cli.get_repo_root
     taskx.ops.cli.get_repo_root = lambda: tmp_path
     
@@ -71,7 +71,7 @@ def test_doctor_statuses_flash(tmp_path):
         taskx.ops.cli.get_repo_root = original_get_repo_root
 
 def test_template_seed_no_overwrite(tmp_path):
-    import taskx.ops.cli
+    import dopetask.ops.cli
     original_get_repo_root = taskx.ops.cli.get_repo_root
     taskx.ops.cli.get_repo_root = lambda: tmp_path
     

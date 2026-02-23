@@ -9,8 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from taskx_adapters.base import AdapterInfo, BaseAdapter
-from taskx_adapters.types import DopemuxDetection, DopemuxPaths
+from dopetask_adapters.base import AdapterInfo, BaseAdapter
+from dopetask_adapters.types import DopemuxDetection, DopemuxPaths
 
 
 def detect_dopemux_root(start: Path | None = None, override: Path | None = None) -> DopemuxDetection:

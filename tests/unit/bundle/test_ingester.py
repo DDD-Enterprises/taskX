@@ -3,7 +3,7 @@ import json
 import zipfile
 from pathlib import Path
 
-from taskx.pipeline.bundle.ingester import _build_case_index, ingest_bundle
+from dopetask.pipeline.bundle.ingester import _build_case_index, ingest_bundle
 
 
 def _write_json(path: Path, payload: dict) -> None:

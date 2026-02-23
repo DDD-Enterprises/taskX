@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from taskx.ui import (
+from dopetask.ui import (
     THEMES,
     NeonSpinner,
     get_theme_name,
@@ -271,7 +271,7 @@ def test_worship_outputs_plain_when_neon_disabled(capsys, monkeypatch) -> None:
 
 def test_render_neon_rc_block_rejects_invalid_theme() -> None:
     """Test that render_neon_rc_block validates theme to prevent shell injection."""
-    from taskx.ui import render_neon_rc_block
+    from dopetask.ui import render_neon_rc_block
 
     # Test shell injection attempt via command substitution
     with pytest.raises(ValueError) as exc_info:
@@ -291,7 +291,7 @@ def test_render_neon_rc_block_rejects_invalid_theme() -> None:
 
 def test_persist_neon_rc_file_rejects_invalid_theme(tmp_path) -> None:
     """Test that persist_neon_rc_file validates theme to prevent shell injection."""
-    from taskx.ui import persist_neon_rc_file
+    from dopetask.ui import persist_neon_rc_file
 
     rc = tmp_path / "rc"
 

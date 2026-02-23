@@ -7,7 +7,7 @@ import argparse
 import shlex
 from pathlib import Path
 
-from taskx.docs.llm_refresh import refresh_llm_docs
+from dopetask.docs.llm_refresh import refresh_llm_docs
 
 
 

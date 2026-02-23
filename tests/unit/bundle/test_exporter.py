@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from taskx.pipeline.bundle.exporter import BundleExporter
+from dopetask.pipeline.bundle.exporter import BundleExporter
 
 class TestBundleExporter:
     """Test bundle export logic."""

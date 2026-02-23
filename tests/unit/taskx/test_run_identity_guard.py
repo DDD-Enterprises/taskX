@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from taskx.guard.identity import (
+from dopetask.guard.identity import (
     RepoIdentity,
     RunIdentity,
     assert_repo_run_identity,
     ensure_run_identity,
 )
-from taskx.obs.run_artifacts import RUN_IDENTITY_FILENAME
+from dopetask.obs.run_artifacts import RUN_IDENTITY_FILENAME
 
 if TYPE_CHECKING:
     from pathlib import Path

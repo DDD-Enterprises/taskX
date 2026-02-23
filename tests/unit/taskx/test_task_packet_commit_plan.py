@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from taskx.pipeline.task_runner.parser import parse_task_packet
+from dopetask.pipeline.task_runner.parser import parse_task_packet
 
 
 def _write_packet(tmp_path: Path, *, commit_plan_block: str) -> Path:

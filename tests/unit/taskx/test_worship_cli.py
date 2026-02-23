@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
+from dopetask.cli import cli
 
 runner = CliRunner()
 

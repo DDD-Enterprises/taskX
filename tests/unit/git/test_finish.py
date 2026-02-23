@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from taskx.git.finish import finish_run
-from taskx.git.worktree import start_worktree
-from taskx.obs.run_artifacts import FINISH_FILENAME, WORKTREE_FILENAME
+from dopetask.git.finish import finish_run
+from dopetask.git.worktree import start_worktree
+from dopetask.obs.run_artifacts import FINISH_FILENAME, WORKTREE_FILENAME
 
 
 def _git(cwd: Path, *args: str) -> str:

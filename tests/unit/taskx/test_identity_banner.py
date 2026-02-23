@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from taskx.guard.banner import BannerContext, print_identity_banner
+from dopetask.guard.banner import BannerContext, print_identity_banner
 
 
 def test_banner_prints_single_line_when_origin_matches_hint(capsys, monkeypatch) -> None:

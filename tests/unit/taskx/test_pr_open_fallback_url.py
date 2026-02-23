@@ -1,6 +1,6 @@
 """Fallback URL parsing tests for PR open flow."""
 
-from taskx.pr.open import _parse_owner_repo
+from dopetask.pr.open import _parse_owner_repo
 
 
 def test_parse_owner_repo_https() -> None:

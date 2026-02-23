@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from taskx.docs.refresh_llm import AUTOGEN_END, AUTOGEN_START, inject_autogen
+from dopetask.docs.refresh_llm import AUTOGEN_END, AUTOGEN_START, inject_autogen
 
 if TYPE_CHECKING:
     from pathlib import Path

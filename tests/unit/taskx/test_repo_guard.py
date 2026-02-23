@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from taskx.utils.repo import find_taskx_repo_root, require_taskx_repo_root
+from dopetask.utils.repo import find_taskx_repo_root, require_taskx_repo_root
 
 
 class TestFindTaskXRepoRoot:

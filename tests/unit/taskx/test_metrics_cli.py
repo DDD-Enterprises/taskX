@@ -10,8 +10,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.metrics import load_metrics, resolve_metrics_path
+from dopetask.cli import cli
+from dopetask.metrics import load_metrics, resolve_metrics_path
 
 RUNNER = CliRunner()
 REPO_ROOT = Path(__file__).resolve().parents[3]

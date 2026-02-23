@@ -4,7 +4,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
+from dopetask.cli import cli
 
 
 def test_project_init_command(tmp_path: Path) -> None:

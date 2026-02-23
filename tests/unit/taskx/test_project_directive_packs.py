@@ -2,9 +2,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.project.common import SENTINELS
-from taskx.project.toggles import project_status
+from dopetask.cli import cli
+from dopetask.project.common import SENTINELS
+from dopetask.project.toggles import project_status
 
 
 RUNNER = CliRunner()

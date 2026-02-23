@@ -5,7 +5,7 @@ These tests are minimal but exercise actual code paths to prevent "no data colle
 from pathlib import Path
 
 import pytest
-from taskx import __version__
+from dopetask import __version__
 
 
 class TestTaskXImport:
@@ -13,7 +13,7 @@ class TestTaskXImport:
 
     def test_taskx_imports(self):
         """TaskX package imports successfully."""
-        import taskx
+        import dopetask
 
         assert taskx is not None
         assert hasattr(taskx, "__version__")
@@ -21,7 +21,7 @@ class TestTaskXImport:
 
     def test_doctor_module_imports(self):
         """Doctor module imports successfully."""
-        from taskx.doctor import DoctorReport, _check_taskx_import
+        from dopetask.doctor import DoctorReport, _check_taskx_import
 
         assert DoctorReport is not None
         assert _check_taskx_import is not None
@@ -32,7 +32,7 @@ class TestSchemaRegistry:
 
     def test_schema_registry_initialization(self):
         """Schema registry initializes and discovers schemas."""
-        from taskx.utils.schema_registry import SchemaRegistry
+        from dopetask.utils.schema_registry import SchemaRegistry
 
         registry = SchemaRegistry()
         assert registry is not None
@@ -41,7 +41,7 @@ class TestSchemaRegistry:
 
     def test_get_schema_json(self):
         """Can load a schema as JSON."""
-        from taskx.utils.schema_registry import get_schema_json
+        from dopetask.utils.schema_registry import get_schema_json
 
         schema = get_schema_json("allowlist_diff")
         assert isinstance(schema, dict)
@@ -54,7 +54,7 @@ class TestDoctorNonCLI:
 
     def test_check_taskx_import(self):
         """Internal taskx import check works."""
-        from taskx.doctor import _check_taskx_import
+        from dopetask.doctor import _check_taskx_import
 
         result = _check_taskx_import()
         assert result.status == "pass"
@@ -62,7 +62,7 @@ class TestDoctorNonCLI:
 
     def test_check_schema_registry(self):
         """Internal schema registry check works."""
-        from taskx.doctor import _check_schema_registry
+        from dopetask.doctor import _check_schema_registry
 
         result = _check_schema_registry()
         assert result.status == "pass"
@@ -70,7 +70,7 @@ class TestDoctorNonCLI:
 
     def test_run_doctor_minimal(self, tmp_path: Path):
         """Can run doctor and generate report."""
-        from taskx.doctor import run_doctor
+        from dopetask.doctor import run_doctor
 
         out_dir = tmp_path / "doctor_output"
         out_dir.mkdir()
@@ -97,7 +97,7 @@ class TestRepoUtils:
 
     def test_find_taskx_repo_root_with_marker(self, tmp_path: Path):
         """Can find TaskX repo root with .taskxroot marker."""
-        from taskx.utils.repo import find_taskx_repo_root
+        from dopetask.utils.repo import find_taskx_repo_root
 
         # Create a mock repo with marker
         marker = tmp_path / ".taskxroot"
@@ -108,14 +108,14 @@ class TestRepoUtils:
 
     def test_find_taskx_repo_root_no_marker(self, tmp_path: Path):
         """Returns None when no TaskX repo marker found."""
-        from taskx.utils.repo import find_taskx_repo_root
+        from dopetask.utils.repo import find_taskx_repo_root
 
         result = find_taskx_repo_root(tmp_path)
         assert result is None
 
     def test_require_taskx_repo_root_raises(self, tmp_path: Path):
         """Raises helpful error when repo not found."""
-        from taskx.utils.repo import require_taskx_repo_root
+        from dopetask.utils.repo import require_taskx_repo_root
 
         with pytest.raises(RuntimeError) as exc_info:
             require_taskx_repo_root(tmp_path)

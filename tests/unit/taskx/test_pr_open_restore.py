@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import taskx.pr.open as pr_open_module
-from taskx.pr.open import run_pr_open
+import dopetask.pr.open as pr_open_module
+from dopetask.pr.open import run_pr_open
 
 if TYPE_CHECKING:
     from pathlib import Path

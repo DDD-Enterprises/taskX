@@ -11,14 +11,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from taskx_adapters.base import AdapterInfo, BaseAdapter
-from taskx_adapters.dopemux import (
+from dopetask_adapters.base import AdapterInfo, BaseAdapter
+from dopetask_adapters.dopemux import (
     DopemuxAdapter,
     compute_dopemux_paths,
     detect_dopemux_root,
     select_run_folder,
 )
-from taskx_adapters.types import DopemuxDetection, DopemuxPaths
+from dopetask_adapters.types import DopemuxDetection, DopemuxPaths
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

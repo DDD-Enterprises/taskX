@@ -8,9 +8,9 @@ from types import SimpleNamespace
 
 from typer.testing import CliRunner
 
-import taskx.cli as cli_module
-from taskx.cli import cli
-from taskx.obs.run_artifacts import get_default_run_root, resolve_run_dir
+import dopetask.cli as cli_module
+from dopetask.cli import cli
+from dopetask.obs.run_artifacts import get_default_run_root, resolve_run_dir
 
 
 def _file_snapshot(root: Path) -> set[str]:

@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from taskx.project.common import extract_block_content, read_pack_text
-from taskx.project.init import init_project
+from dopetask.project.common import extract_block_content, read_pack_text
+from dopetask.project.init import init_project
 
 
 def test_init_creates_files_when_missing(tmp_path: Path) -> None:

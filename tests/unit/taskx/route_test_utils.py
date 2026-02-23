@@ -9,7 +9,7 @@ from typing import Any, Iterable
 
 import yaml
 
-from taskx.router.availability import AVAILABILITY_CONFIG_TEMPLATE
+from dopetask.router.availability import AVAILABILITY_CONFIG_TEMPLATE
 
 
 def create_taskx_repo(repo_root: Path, project_id: str = "taskx.core") -> Path:

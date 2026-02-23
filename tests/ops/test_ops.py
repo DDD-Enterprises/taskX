@@ -1,10 +1,10 @@
 
 from typer.testing import CliRunner
 
-from taskx.ops.blocks import update_file
-from taskx.ops.cli import app
-from taskx.ops.discover import discover_instruction_file, get_sidecar_path
-from taskx.ops.export import calculate_hash, export_prompt
+from dopetask.ops.blocks import update_file
+from dopetask.ops.cli import app
+from dopetask.ops.discover import discover_instruction_file, get_sidecar_path
+from dopetask.ops.export import calculate_hash, export_prompt
 
 
 def test_idempotent_apply(tmp_path):
@@ -197,7 +197,7 @@ def test_export_determinism(tmp_path):
 # --- __all__ exports ---
 
 def test_ops_all_exports():
-    import taskx.ops as ops
+    import dopetask.ops as ops
     assert hasattr(ops, "__all__")
     # Spot-check key public API names
     for name in ["export_prompt", "load_profile", "run_doctor", "inject_block", "update_file",
@@ -205,7 +205,7 @@ def test_ops_all_exports():
                  "extract_operator_blocks", "get_canonical_target", "check_conflicts",
                  "find_block", "write_if_changed"]:
         assert name in ops.__all__, f"{name} missing from ops.__all__"
-        assert hasattr(ops, name), f"{name} not importable from taskx.ops"
+        assert hasattr(ops, name), f"{name} not importable from dopetask.ops"
 
 
 # --- BaseAdapter + DopemuxAdapter ---
@@ -213,13 +213,13 @@ def test_ops_all_exports():
 def test_base_adapter_interface():
     import abc
 
-    from taskx_adapters.base import BaseAdapter
+    from dopetask_adapters.base import BaseAdapter
     # BaseAdapter should be abstract
     assert abc.ABC in BaseAdapter.__mro__
 
 
 def test_dopemux_adapter_class(tmp_path):
-    from taskx_adapters.dopemux import DopemuxAdapter
+    from dopetask_adapters.dopemux import DopemuxAdapter
     adapter = DopemuxAdapter()
     assert adapter.name == "dopemux"
     # detect should raise when no markers found
@@ -229,7 +229,7 @@ def test_dopemux_adapter_class(tmp_path):
 
 
 def test_dopemux_adapter_detect_with_marker(tmp_path):
-    from taskx_adapters.dopemux import DopemuxAdapter
+    from dopetask_adapters.dopemux import DopemuxAdapter
     (tmp_path / ".dopemux").mkdir()
     adapter = DopemuxAdapter()
     info = adapter.detect(start=tmp_path)
@@ -239,14 +239,14 @@ def test_dopemux_adapter_detect_with_marker(tmp_path):
 
 
 def test_dopemux_adapter_compute_paths(tmp_path):
-    from taskx_adapters.dopemux import DopemuxAdapter
+    from dopetask_adapters.dopemux import DopemuxAdapter
     adapter = DopemuxAdapter()
     paths = adapter.compute_paths(tmp_path)
     assert paths.out_root == tmp_path / "out" / "taskx"
 
 
 def test_adapter_discovery():
-    from taskx_adapters import discover_adapters
+    from dopetask_adapters import discover_adapters
     # Should yield at least the dopemux adapter (registered via entry point)
     adapters = list(discover_adapters())
     # May or may not find dopemux depending on editable install state;
@@ -255,7 +255,7 @@ def test_adapter_discovery():
 
 
 def test_get_adapter_not_found():
-    from taskx_adapters import get_adapter
+    from dopetask_adapters import get_adapter
     result = get_adapter("nonexistent_adapter_xyz")
     assert result is None
 
@@ -269,7 +269,7 @@ def test_doctor_config_locations(tmp_path, monkeypatch):
     # Setup ops dir
     runner.invoke(app, ["init", "--no-export"])
 
-    from taskx.ops.doctor import run_doctor
+    from dopetask.ops.doctor import run_doctor
     report = run_doctor(tmp_path)
 
     assert "config_locations" in report
@@ -283,7 +283,7 @@ def test_doctor_config_locations(tmp_path, monkeypatch):
 
 def test_doctor_config_locations_missing(tmp_path):
     """Doctor should report None for missing config paths."""
-    from taskx.ops.doctor import run_doctor
+    from dopetask.ops.doctor import run_doctor
     report = run_doctor(tmp_path)
 
     locs = report["config_locations"]
@@ -295,13 +295,13 @@ def test_doctor_config_locations_missing(tmp_path):
 # --- taskx init top-level command ---
 
 def test_taskx_init_ops_tier(tmp_path, monkeypatch):
-    from taskx.cli import cli
+    from dopetask.cli import cli
     monkeypatch.chdir(tmp_path)
 
     # Mock detect_repo_root to return tmp_path
     from types import SimpleNamespace
 
-    from taskx.utils import repo as repo_mod
+    from dopetask.utils import repo as repo_mod
     monkeypatch.setattr(repo_mod, "detect_repo_root", lambda cwd: SimpleNamespace(root=tmp_path))
 
     runner = CliRunner()
@@ -316,8 +316,8 @@ def test_taskx_init_yes_no_prompts(tmp_path, monkeypatch):
     """--yes mode should complete without any interactive prompts."""
     from types import SimpleNamespace
 
-    from taskx.cli import cli
-    from taskx.utils import repo as repo_mod
+    from dopetask.cli import cli
+    from dopetask.utils import repo as repo_mod
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(repo_mod, "detect_repo_root", lambda cwd: SimpleNamespace(root=tmp_path))
 

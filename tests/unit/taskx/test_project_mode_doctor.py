@@ -5,10 +5,10 @@ from __future__ import annotations
 from hashlib import sha256
 from pathlib import Path
 
-from taskx.project.common import MANAGED_FILES, SENTINELS, apply_block_content, read_pack_text
-from taskx.project.doctor import check_project, fix_project
-from taskx.project.init import init_project
-from taskx.project.mode import set_mode
+from dopetask.project.common import MANAGED_FILES, SENTINELS, apply_block_content, read_pack_text
+from dopetask.project.doctor import check_project, fix_project
+from dopetask.project.init import init_project
+from dopetask.project.mode import set_mode
 
 
 def _hash_file(path: Path) -> str:

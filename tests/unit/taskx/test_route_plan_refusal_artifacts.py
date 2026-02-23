@@ -6,8 +6,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.router.types import DEFAULT_STEPS
+from dopetask.cli import cli
+from dopetask.router.types import DEFAULT_STEPS
 from tests.unit.taskx.route_test_utils import (
     create_taskx_repo,
     ordered_steps,

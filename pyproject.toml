@@ -45,13 +45,14 @@ dev = [
 ]
 
 [project.scripts]
-taskx = "taskx.cli:cli"
+taskx = "dopetask.cli:cli"
+dopetask = "dopetask.cli:cli"
 
-[project.entry-points."taskx.adapters"]
-dopemux = "taskx_adapters.dopemux:DopemuxAdapter"
+[project.entry-points."dopetask.adapters"]
+dopemux = "dopetask_adapters.dopemux:DopemuxAdapter"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/taskx", "src/taskx_adapters", "taskx_schemas"]
+packages = ["src/dopetask", "src/dopetask_adapters", "dopetask_schemas"]
 include = [
     "src/taskx/assets/templates/*.md",
     "src/taskx/assets/templates/*.yaml",

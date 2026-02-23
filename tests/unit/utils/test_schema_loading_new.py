@@ -1,6 +1,6 @@
 
 import pytest
-from taskx.utils.schema_registry import SchemaRegistry
+from dopetask.utils.schema_registry import SchemaRegistry
 
 class TestNewSchemaLoading:
     """Test loading of Packet 0001 schemas."""

@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from taskx.cli import app
-from taskx.neon_persist import MARKER_BEGIN, MARKER_END, persist_rc_file, render_block
+from dopetask.cli import app
+from dopetask.neon_persist import MARKER_BEGIN, MARKER_END, persist_rc_file, render_block
 
 
 def test_persist_dry_run_does_not_write(tmp_path: Path) -> None:

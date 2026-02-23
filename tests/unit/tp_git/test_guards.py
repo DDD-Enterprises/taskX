@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from taskx.ops.tp_git.exec import ExecResult
-from taskx.ops.tp_git.guards import run_doctor
+from dopetask.ops.tp_git.exec import ExecResult
+from dopetask.ops.tp_git.guards import run_doctor
 
 
 class _GitStub:

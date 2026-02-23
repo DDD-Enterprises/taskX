@@ -1,7 +1,7 @@
 """Verify taskx doctor runs to completion in a clean environment."""
 from pathlib import Path
 
-from taskx.doctor import run_doctor
+from dopetask.doctor import run_doctor
 
 
 def test_doctor_passes_deterministic(tmp_path: Path):

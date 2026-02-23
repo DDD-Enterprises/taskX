@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.docs.refresh_llm import AUTOGEN_END, AUTOGEN_START, run_refresh_llm
+from dopetask.cli import cli
+from dopetask.docs.refresh_llm import AUTOGEN_END, AUTOGEN_START, run_refresh_llm
 
 if TYPE_CHECKING:
     from pathlib import Path

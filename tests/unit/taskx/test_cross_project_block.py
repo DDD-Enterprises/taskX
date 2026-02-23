@@ -5,7 +5,7 @@ import subprocess
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
+from dopetask.cli import cli
 
 
 RUNNER = CliRunner()

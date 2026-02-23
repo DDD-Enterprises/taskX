@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from taskx.project.common import extract_block_content, read_pack_text
-from taskx.project.init import init_project
-from taskx.project.toggles import apply_pack, disable_pack, enable_pack, project_status
+from dopetask.project.common import extract_block_content, read_pack_text
+from dopetask.project.init import init_project
+from dopetask.project.toggles import apply_pack, disable_pack, enable_pack, project_status
 
 
 def test_apply_pack_creates_missing_file_from_template(tmp_path: Path) -> None:

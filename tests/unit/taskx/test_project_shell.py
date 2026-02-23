@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
 
-from taskx.cli import cli
-from taskx.doctor import run_doctor
-from taskx.project.shell import init_shell, status_shell
+from dopetask.cli import cli
+from dopetask.doctor import run_doctor
+from dopetask.project.shell import init_shell, status_shell
 
 if TYPE_CHECKING:
     from pathlib import Path

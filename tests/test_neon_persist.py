@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from taskx.ui import (
+from dopetask.ui import (
     NEON_RC_MARKER_BEGIN,
     NEON_RC_MARKER_END,
     persist_neon_rc_file,

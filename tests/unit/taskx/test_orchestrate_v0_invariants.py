@@ -10,10 +10,10 @@ from typing import Any
 
 from typer.testing import CliRunner
 
-from taskx.artifacts import canonical_dumps, sha256_file
-from taskx.cli import cli
-from taskx.orchestrator import kernel
-from taskx.orchestrator.kernel import orchestrate
+from dopetask.artifacts import canonical_dumps, sha256_file
+from dopetask.cli import cli
+from dopetask.orchestrator import kernel
+from dopetask.orchestrator.kernel import orchestrate
 from tests.unit.taskx.route_test_utils import create_taskx_repo, write_availability
 
 

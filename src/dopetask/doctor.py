@@ -70,7 +70,7 @@ def _check_taskx_import() -> CheckItem:
     """Check A: TaskX import sanity."""
     try:
         import dopetask
-        version = getattr(taskx, "__version__", None)
+        version = getattr(dopetask, "__version__", None)
 
         return CheckItem(
             id="taskx_import",
@@ -362,7 +362,7 @@ def run_doctor(
     # Extract TaskX version for report
     try:
         import dopetask
-        version = getattr(taskx, "__version__", None)
+        version = getattr(dopetask, "__version__", None)
         report.taskx = {
             "import_ok": check_a.status == "pass",
             "version": version

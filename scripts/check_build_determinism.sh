@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export LC_ALL=C
+
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/taskx-determinism.XXXXXX")"
 cleanup() {
   rm -rf "$tmpdir"
@@ -11,11 +13,11 @@ hashes1="$tmpdir/hashes1.txt"
 hashes2="$tmpdir/hashes2.txt"
 
 uv build
-sha256sum dist/*.whl > "$hashes1"
+sha256sum dist/*.whl | sort > "$hashes1"
 
 rm -rf dist
 uv build
-sha256sum dist/*.whl > "$hashes2"
+sha256sum dist/*.whl | sort > "$hashes2"
 
 diff -u "$hashes1" "$hashes2"
 

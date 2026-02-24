@@ -40,7 +40,7 @@ def test_upgrade_version(mock_repo):
         assert "git+https://example.com/repo.git@v0.2.0" in cmd
 
 def test_upgrade_latest(mock_repo):
-    with patch("taskx.utils.repo.detect_repo_root") as mock_detect, \
+    with patch("dopetask.utils.repo.detect_repo_root") as mock_detect, \
          patch("subprocess.check_output") as mock_check_output, \
          patch("subprocess.check_call") as mock_check_call, \
          patch("pathlib.Path.cwd", return_value=mock_repo):

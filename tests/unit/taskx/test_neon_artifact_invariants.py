@@ -18,7 +18,7 @@ def _run_doctor(out_dir: Path, env_overrides: dict[str, str]) -> None:
     cmd = [
         sys.executable,
         "-m",
-        "taskx",
+        "dopetask",
         "doctor",
         "--timestamp-mode",
         "deterministic",

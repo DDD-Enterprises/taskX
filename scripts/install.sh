@@ -277,8 +277,8 @@ main() {
         pip install $PIP_ARGS "$WHEEL_PATH"
 
     elif [ "$INSTALL_METHOD" = "pypi" ]; then
-        log_info "Installing TaskX from PyPI..."
-        PACKAGE_NAME="taskx-kernel"
+        log_info "Installing dopeTask from PyPI..."
+        PACKAGE_NAME="dopetask"
 
         if [ -n "$REF" ] && [ "$REF" != "latest" ] && [ "$REF" != "main" ]; then
              VERSION_SPEC="${REF}"
@@ -299,17 +299,17 @@ main() {
     echo ""
 
     # Verify installation
-    log_info "Verifying TaskX installation..."
+    log_info "Verifying dopeTask installation..."
 
     VERIFICATION_OUTPUT=$(python3 -c "
 import sys
-import taskx
-print(f'Version: {taskx.__version__}')
-print(f'Location: {taskx.__file__}')
+import dopetask
+print(f'Version: {dopetask.__version__}')
+print(f'Location: {dopetask.__file__}')
 
 # Test schema loading
 try:
-    from taskx.utils.schema_registry import SchemaRegistry
+    from dopetask.utils.schema_registry import SchemaRegistry
     registry = SchemaRegistry()
     schema = registry.get('allowlist_diff')
     print(f'Schema loading: OK (loaded allowlist_diff)')

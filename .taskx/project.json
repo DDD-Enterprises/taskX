@@ -1,6 +1,6 @@
 {
-  "project_id": "taskx.core",
-  "project_slug": "taskX",
-  "repo_remote_hint": "taskX",
+  "project_id": "dopetask.core",
+  "project_slug": "dopetask",
+  "repo_remote_hint": "dopetask",
   "packet_required_header": true
 }

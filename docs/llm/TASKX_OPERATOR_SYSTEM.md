@@ -1,12 +1,12 @@
 <!-- TASKX:BEGIN operator_system v=1 platform=chatgpt model=gpt-5.2-thinking hash=7fd85f3de3a271198bb5a7eaf9b87be44a14ab02c68342d76b837dec1e455782 -->
 # OPERATOR SYSTEM PROMPT
-# Project: taskX
+# Project: dopeTask
 # Platform: chatgpt
 # Model: gpt-5.2-thinking
 # Repo Root: .
 # Timezone: America/Vancouver
-# TaskX Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
-# CLI Min Version: 0.1.2
+# dopeTask Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
+# CLI Min Version: 0.1.4
 
 # BASE SUPERVISOR (Canonical Minimal Baseline v1)
 

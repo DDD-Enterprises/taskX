@@ -65,7 +65,7 @@ jobs:
         run: uv run --extra dev mypy src/dopetask
 
       - name: Run tests
-        run: uv pip install pytest && PYTHONPATH="src:taskx_schemas" python -m pytest
+        run: uv pip install pytest && PYTHONPATH="src:taskx_schemas" $(uv run which python) -m pytest
 
       - name: Build artifacts
         run: uv build

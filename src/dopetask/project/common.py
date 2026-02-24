@@ -42,7 +42,7 @@ DISABLED_TEXT = "(disabled)"
 BUNDLE_FILE = "taskx_bundle.yaml"
 BUNDLE_TEMPLATE_FILE = "taskx_bundle.template.yaml"
 
-_ASSETS_PACKAGE = "taskx.assets.templates"
+_ASSETS_PACKAGE = "dopetask.assets.templates"
 
 
 @dataclass(frozen=True)

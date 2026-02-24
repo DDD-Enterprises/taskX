@@ -17,13 +17,6 @@ def test_project_init_command(tmp_path: Path) -> None:
         ["project", "init", "--out", str(project_dir), "--preset", "both"],
     )
 
-    print(f"Exit code: {result.exit_code}")
-    print(f"Output: {result.output}")
-    if result.exception:
-        import traceback
-        print("Exception:")
-        traceback.print_exception(type(result.exception), result.exception, result.exception.__traceback__)
-
     assert result.exit_code == 0
     assert (project_dir / "PROJECT_INSTRUCTIONS.md").exists()
     assert (project_dir / "PROJECT_INIT_REPORT.md").exists()

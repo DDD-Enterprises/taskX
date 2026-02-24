@@ -18,14 +18,14 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _run_taskx(args: list[str], *, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
-    """Run `python -m taskx ...` and return completed process."""
+    """Run `python -m dopetask ...` and return completed process."""
     run_env = dict(env)
     src_path = str(REPO_ROOT / "src")
     existing_pythonpath = run_env.get("PYTHONPATH")
     run_env["PYTHONPATH"] = f"{src_path}:{existing_pythonpath}" if existing_pythonpath else src_path
 
     return subprocess.run(
-        [sys.executable, "-m", "taskx", *args],
+        [sys.executable, "-m", "dopetask", *args],
         cwd=REPO_ROOT,
         env=run_env,
         capture_output=True,

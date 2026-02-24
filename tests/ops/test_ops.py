@@ -79,7 +79,7 @@ def test_create_sidecar(tmp_path):
     assert "TaskX content" in sidecar.read_text()
 
 def test_ops_init_exports_by_default(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     # Run init
@@ -98,7 +98,7 @@ def test_ops_init_exports_by_default(tmp_path, monkeypatch):
     assert calculate_hash(export_file.read_text()) == first_hash
 
 def test_ops_init_no_export(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     result = runner.invoke(app, ["init", "--no-export"])
@@ -108,7 +108,7 @@ def test_ops_init_no_export(tmp_path, monkeypatch):
     assert not export_file.exists()
 
 def test_ops_doctor_exports_even_on_fail(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     # Setup - init first
@@ -126,7 +126,7 @@ def test_ops_doctor_exports_even_on_fail(tmp_path, monkeypatch):
     assert export_file.exists()
 
 def test_ops_doctor_no_export(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     # Setup
@@ -138,7 +138,7 @@ def test_ops_doctor_no_export(tmp_path, monkeypatch):
     assert not export_file.exists()
 
 def test_ops_apply_does_not_export(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     # Setup
@@ -156,7 +156,7 @@ def test_ops_apply_does_not_export(tmp_path, monkeypatch):
     assert "updated" in result.output.lower()
 
 def test_ops_export_write_on_change(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     runner.invoke(app, ["init", "--no-export"])
@@ -263,7 +263,7 @@ def test_get_adapter_not_found():
 # --- Doctor config location reporting ---
 
 def test_doctor_config_locations(tmp_path, monkeypatch):
-    monkeypatch.setattr("taskx.ops.cli.get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
     runner = CliRunner()
 
     # Setup ops dir

@@ -47,7 +47,7 @@ def test_pr_open_runs_refresh_llm_when_enabled(tmp_path: Path, monkeypatch) -> N
     body_file = tmp_path / "PR_BODY.md"
     body_file.write_text("PR body\n", encoding="utf-8")
 
-    monkeypatch.setattr("taskx.pr.open.shutil.which", lambda _name: None)
+    monkeypatch.setattr("dopetask.pr.open.shutil.which", lambda _name: None)
 
     original_git_output = pr_open_module._git_output
 
@@ -56,7 +56,7 @@ def test_pr_open_runs_refresh_llm_when_enabled(tmp_path: Path, monkeypatch) -> N
             return "https://github.com/acme/taskX.git"
         return original_git_output(repo_root, args)
 
-    monkeypatch.setattr("taskx.pr.open._git_output", _patched_git_output)
+    monkeypatch.setattr("dopetask.pr.open._git_output", _patched_git_output)
 
     called = {"count": 0}
 

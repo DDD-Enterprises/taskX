@@ -45,7 +45,7 @@ def discover_adapters() -> Iterator[BaseAdapter]:
     """
     from importlib.metadata import entry_points
 
-    eps = entry_points(group="taskx.adapters")
+    eps = entry_points(group="dopetask.adapters")
 
     for ep in eps:
         adapter_cls = ep.load()

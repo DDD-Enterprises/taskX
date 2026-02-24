@@ -51,7 +51,7 @@ def test_pr_open_restores_branch_after_success(tmp_path: Path, monkeypatch) -> N
 
     original_branch = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo)
 
-    monkeypatch.setattr("taskx.pr.open.shutil.which", lambda _name: None)
+    monkeypatch.setattr("dopetask.pr.open.shutil.which", lambda _name: None)
     original_git_output = pr_open_module._git_output
 
     def _patched_git_output(repo_root, args):  # type: ignore[no-untyped-def]
@@ -59,7 +59,7 @@ def test_pr_open_restores_branch_after_success(tmp_path: Path, monkeypatch) -> N
             return "https://github.com/acme/taskX.git"
         return original_git_output(repo_root, args)
 
-    monkeypatch.setattr("taskx.pr.open._git_output", _patched_git_output)
+    monkeypatch.setattr("dopetask.pr.open._git_output", _patched_git_output)
 
     report = run_pr_open(
         repo_root=repo,
@@ -90,7 +90,7 @@ def test_pr_open_restores_branch_after_failure(tmp_path: Path, monkeypatch) -> N
 
     original_branch = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo)
 
-    monkeypatch.setattr("taskx.pr.open.shutil.which", lambda _name: None)
+    monkeypatch.setattr("dopetask.pr.open.shutil.which", lambda _name: None)
     original_git_output = pr_open_module._git_output
 
     def _patched_git_output(repo_root, args):  # type: ignore[no-untyped-def]
@@ -98,7 +98,7 @@ def test_pr_open_restores_branch_after_failure(tmp_path: Path, monkeypatch) -> N
             return "https://github.com/acme/taskX.git"
         return original_git_output(repo_root, args)
 
-    monkeypatch.setattr("taskx.pr.open._git_output", _patched_git_output)
+    monkeypatch.setattr("dopetask.pr.open._git_output", _patched_git_output)
 
     switched = {"done": False}
 
@@ -109,7 +109,7 @@ def test_pr_open_restores_branch_after_failure(tmp_path: Path, monkeypatch) -> N
             raise RuntimeError("forced push failure")
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
-    monkeypatch.setattr("taskx.pr.open._run", _failing_run)
+    monkeypatch.setattr("dopetask.pr.open._run", _failing_run)
 
     with pytest.raises(RuntimeError, match="forced push failure"):
         run_pr_open(

@@ -4,11 +4,11 @@
 def test_import_taskx():
     import dopetask
 
-    assert hasattr(taskx, "__version__")
+    assert hasattr(dopetask, "__version__")
 
 
 def test_import_taskx_schemas():
-    import dopetask_schemas
+    import taskx_schemas
 
     assert hasattr(taskx_schemas, "__version__")
 

@@ -15,9 +15,9 @@ class TestTaskXImport:
         """TaskX package imports successfully."""
         import dopetask
 
-        assert taskx is not None
-        assert hasattr(taskx, "__version__")
-        assert taskx.__version__ == __version__
+        assert dopetask is not None
+        assert hasattr(dopetask, "__version__")
+        assert dopetask.__version__ == __version__
 
     def test_doctor_module_imports(self):
         """Doctor module imports successfully."""

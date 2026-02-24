@@ -61,7 +61,19 @@ def test_metrics_enable_disable_show_and_reset(tmp_path: Path, monkeypatch) -> N
 
     shown = RUNNER.invoke(cli, ["metrics", "show"])
     assert shown.exit_code == 0, shown.output
-    payload = json.loads(shown.output)
+    # Extract JSON from output (may have warning messages)
+    output_lines = shown.output.split('\n')
+    json_lines = []
+    in_json = False
+    for line in output_lines:
+        if line.strip().startswith('{'):
+            in_json = True
+        if in_json:
+            json_lines.append(line)
+        if in_json and line.strip().endswith('}'):
+            break
+    json_text = '\n'.join(json_lines)
+    payload = json.loads(json_text)
     assert payload["enabled"] is True
     assert isinstance(payload["commands"], dict)
 

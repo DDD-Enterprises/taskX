@@ -103,9 +103,9 @@ def test_stateful_commands_write_only_inside_run_dir(
     monkeypatch.setattr(cli_module, "_check_repo_guard", fake_guard)
     monkeypatch.setattr(cli_module, "run_allowlist_gate", fake_allowlist_gate)
     monkeypatch.setattr(cli_module, "promote_run_impl", fake_promote_run)
-    commit_run_module = importlib.import_module("taskx.git.commit_run")
+    commit_run_module = importlib.import_module("dopetask.git.commit_run")
     monkeypatch.setattr(commit_run_module, "commit_run", fake_commit_run)
-    monkeypatch.setattr("taskx.ci_gate.run_ci_gate", fake_ci_gate)
+    monkeypatch.setattr("dopetask.ci_gate.run_ci_gate", fake_ci_gate)
 
     before = _file_snapshot(workspace)
 

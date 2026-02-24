@@ -51,11 +51,14 @@ dopetask = "dopetask.cli:cli"
 [project.entry-points."dopetask.adapters"]
 dopemux = "dopetask_adapters.dopemux:DopemuxAdapter"
 
+[project.entry-points."taskx.adapters"]
+dopemux = "dopetask_adapters.dopemux:DopemuxAdapter"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/dopetask", "src/dopetask_adapters", "dopetask_schemas"]
 include = [
-    "src/taskx/assets/templates/*.md",
-    "src/taskx/assets/templates/*.yaml",
+    "src/dopetask/assets/templates/*.md",
+    "src/dopetask/assets/templates/*.yaml",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -136,7 +139,7 @@ addopts = [
     "--strict-markers",
     "--disable-warnings",
     "--maxfail=1",
-    "--cov=taskx",
+    "--cov=dopetask",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-fail-under=1",
@@ -144,11 +147,11 @@ addopts = [
 
 [tool.coverage.run]
 branch = true
-source = ["taskx"]
+source = ["dopetask"]
 parallel = false
 omit = [
   "tests/*",
-  "*/taskx/__main__.py",
+  "*/dopetask/__main__.py",
 ]
 
 [tool.coverage.report]

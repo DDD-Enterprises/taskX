@@ -114,7 +114,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: TaskX v${{ env.TAG_VERSION }}
+          name: dopeTask v${{ env.TAG_VERSION }}
           body: |
             ## TaskX Kernel v${{ env.TAG_VERSION }}
             
@@ -129,10 +129,10 @@ jobs:
             - [View commit history](${{ github.server_url }}/${{ github.repository }}/compare/v${{ env.PREV_TAG }}...${{ github.ref_name }})
             
             ### Assets
-            - Wheel: `taskx_kernel-${{ env.TAG_VERSION }}-py3-none-any.whl`
-            - Source: `taskx_kernel-${{ env.TAG_VERSION }}.tar.gz`
+            - Wheel: `dopetask-${{ env.TAG_VERSION }}-py3-none-any.whl`
+            - Source: `dopetask-${{ env.TAG_VERSION }}.tar.gz`
             - Checksums: `SHA256SUMS.txt`
           files: |
-            dist/taskx_kernel-${{ env.TAG_VERSION }}-py3-none-any.whl
-            dist/taskx_kernel-${{ env.TAG_VERSION }}.tar.gz
+            dist/dopetask-${{ env.TAG_VERSION }}-py3-none-any.whl
+            dist/dopetask-${{ env.TAG_VERSION }}.tar.gz
             dist/SHA256SUMS.txt

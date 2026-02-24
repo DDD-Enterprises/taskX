@@ -56,7 +56,7 @@ def test_upgrade_latest(mock_repo):
         assert "v0.3.0" in (mock_repo / ".taskx-pin").read_text()
 
 def test_upgrade_no_pin(tmp_path):
-     with patch("taskx.utils.repo.detect_repo_root") as mock_detect, \
+     with patch("dopetask.utils.repo.detect_repo_root") as mock_detect, \
           patch("pathlib.Path.cwd", return_value=tmp_path):
 
         mock_detect.return_value = RepoInfo(root=tmp_path, project_type="python", marker=".git")

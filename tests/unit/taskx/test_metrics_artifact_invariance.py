@@ -20,7 +20,7 @@ def _run_taskx(args: list[str], *, env: dict[str, str]) -> None:
     run_env["PYTHONPATH"] = f"{src_path}:{existing_pythonpath}" if existing_pythonpath else src_path
 
     result = subprocess.run(
-        [sys.executable, "-m", "taskx", *args],
+        [sys.executable, "-m", "dopetask", *args],
         cwd=REPO_ROOT,
         env=run_env,
         capture_output=True,

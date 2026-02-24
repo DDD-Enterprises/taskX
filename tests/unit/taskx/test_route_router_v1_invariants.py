@@ -35,7 +35,7 @@ def _write_packet(repo_root: Path, text: str = "# Packet\n") -> Path:
 
 def _run(repo_root: Path, args: list[str], expect: int | None = None) -> CompletedProcess:
     result = subprocess.run(
-        ["taskx", *args],
+        [sys.executable, "-m", "dopetask", *args],
         cwd=repo_root,
         text=True,
         capture_output=True,

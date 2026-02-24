@@ -18,7 +18,7 @@ def mock_repo(tmp_path):
     return repo_root
 
 def test_upgrade_version(mock_repo):
-    with patch("taskx.utils.repo.detect_repo_root") as mock_detect, \
+    with patch("dopetask.utils.repo.detect_repo_root") as mock_detect, \
          patch("subprocess.check_call") as mock_check_call, \
          patch("pathlib.Path.cwd", return_value=mock_repo):
 

@@ -159,7 +159,7 @@ def test_project_upgrade_doctor_warns_when_direnv_missing(tmp_path: Path, monkey
             return "/usr/bin/git"
         return None
 
-    monkeypatch.setattr("taskx.project.shell.shutil.which", _fake_which)
+    monkeypatch.setattr("dopetask.project.shell.shutil.which", _fake_which)
     monkeypatch.setattr("dopetask.doctor.shutil.which", _fake_which)
 
     result = RUNNER.invoke(

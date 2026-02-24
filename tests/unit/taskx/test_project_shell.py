@@ -156,7 +156,7 @@ def test_doctor_warns_when_envrc_present_direnv_missing(tmp_path: Path, monkeypa
             return "/usr/bin/git"
         return None
 
-    monkeypatch.setattr("taskx.doctor.shutil.which", _fake_which)
+    monkeypatch.setattr("dopetask.doctor.shutil.which", _fake_which)
 
     report = run_doctor(
         out_dir=tmp_path / "doctor_out",

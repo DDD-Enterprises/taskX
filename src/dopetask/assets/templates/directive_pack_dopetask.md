@@ -1,5 +1,5 @@
-<!-- directive-pack:taskx@v1 -->
-## TaskX Directives (Base)
+<!-- directive-pack:dopetask@v1 -->
+## dopeTask Directives (Base)
 
 1. Task packets are law.
 2. Perform only actions explicitly authorized by the active task packet.

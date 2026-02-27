@@ -1,4 +1,4 @@
-"""Worktree orchestration for TaskX commit sequencing flows."""
+"""Worktree orchestration for dopeTask commit sequencing flows."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def start_worktree(
     errors: list[str] = []
     resolved_run_dir = run_dir.resolve()
     resolved_repo_root = repo_root.resolve()
-    resolved_branch = branch or f"taskx/{resolved_run_dir.name.lower()}"
+    resolved_branch = branch or f"dopetask/{resolved_run_dir.name.lower()}"
     resolved_worktree_path = (
         worktree_path.resolve()
         if worktree_path is not None
@@ -189,7 +189,7 @@ def start_worktree(
                     "Repository has uncommitted changes. "
                     "Use --dirty-policy stash to stash and continue."
                 )
-            stash_message = f"taskx:wt-start:{resolved_run_dir.name}"
+            stash_message = f"dopetask:wt-start:{resolved_run_dir.name}"
             stash_output = stash_changes(
                 cwd=resolved_repo_root,
                 message=stash_message,

@@ -1,4 +1,4 @@
-"""Guard helpers for TaskX CLI safety rails."""
+"""Guard helpers for dopeTask CLI safety rails."""
 
 from dopetask.guard.banner import (
     BannerContext,

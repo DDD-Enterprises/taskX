@@ -1,4 +1,4 @@
-"""Deterministic case audit for ingested TaskX bundles."""
+"""Deterministic case audit for ingested dopeTask bundles."""
 
 from __future__ import annotations
 
@@ -61,8 +61,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 
 def _discover_runs(case_dir: Path) -> list[Path]:
-    """Discover run directories under taskx/runs."""
-    runs_root = case_dir / "taskx" / "runs"
+    """Discover run directories under dopetask/runs."""
+    runs_root = case_dir / "dopetask" / "runs"
     if not runs_root.exists():
         return []
     return sorted([entry for entry in runs_root.iterdir() if entry.is_dir()], key=lambda item: item.name)
@@ -264,7 +264,7 @@ def _compute_drift_indicators(case_dir: Path, run_dirs: list[Path], run_summarie
         }
     )
 
-    diff_paths = sorted((case_dir / "taskx" / "runs").glob("*/ALLOWLIST_DIFF.json"))
+    diff_paths = sorted((case_dir / "dopetask" / "runs").glob("*/ALLOWLIST_DIFF.json"))
     hot_paths: dict[str, Any]
     if not diff_paths:
         hot_paths = {
@@ -463,9 +463,9 @@ def _build_recommendations(
                 "title": "Acquire summaries for cross-run evidence",
                 "rationale": (
                     "UNKNOWN: No RUN_SUMMARY.json artifacts were found. "
-                    "Request a new bundle containing taskx/runs/*/RUN_SUMMARY.json."
+                    "Request a new bundle containing dopetask/runs/*/RUN_SUMMARY.json."
                 ),
-                "evidence_pointers": [str(case_dir / "taskx" / "runs")],
+                "evidence_pointers": [str(case_dir / "dopetask" / "runs")],
                 "suggested_next_packet_type": "verification_hardening",
                 "acceptance_criteria": [
                     "At least one run includes RUN_SUMMARY.json",
@@ -516,7 +516,7 @@ def _build_recommendations(
             {
                 "title": "Tighten allowlist around hot paths",
                 "rationale": "Hot paths from ALLOWLIST_DIFF.json suggest concentrated churn.",
-                "evidence_pointers": [str(case_dir / "taskx" / "runs")],
+                "evidence_pointers": [str(case_dir / "dopetask" / "runs")],
                 "suggested_next_packet_type": "allowlist_tightening",
                 "acceptance_criteria": [
                     "Allowlist patterns explicitly cover high-churn files",
@@ -532,7 +532,7 @@ def _build_recommendations(
                     "UNKNOWN: ALLOWLIST_DIFF evidence is missing or unparseable. "
                     "Request a new bundle with ALLOWLIST_DIFF.json per run."
                 ),
-                "evidence_pointers": [str(case_dir / "taskx" / "runs")],
+                "evidence_pointers": [str(case_dir / "dopetask" / "runs")],
                 "suggested_next_packet_type": "allowlist_tightening",
                 "acceptance_criteria": [
                     "ALLOWLIST_DIFF.json exists for audited runs",

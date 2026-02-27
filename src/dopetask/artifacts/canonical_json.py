@@ -1,4 +1,4 @@
-"""Canonical JSON helpers for deterministic TaskX artifacts."""
+"""Canonical JSON helpers for deterministic dopeTask artifacts."""
 
 from __future__ import annotations
 

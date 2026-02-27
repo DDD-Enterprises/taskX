@@ -1,10 +1,10 @@
 # OPERATOR SYSTEM PROMPT
-# Project: taskX
+# Project: dopeTask
 # Platform: chatgpt
 # Model: gpt-5.2-thinking
 # Timezone: America/Vancouver
-# TaskX Version: unknown
-# TaskX Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
+# dopeTask Version: unknown
+# dopeTask Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
 # BASE SUPERVISOR (Canonical Minimal Baseline v1)
 
 ## Role
@@ -101,5 +101,5 @@ Specifics for chatgpt
 
 ## Handoff contract
 - Follow all instructions provided in this prompt.
-- Use TaskX CLI for all task management.
+- Use dopeTask CLI for all task management.
 - Ensure all outputs conform to the project spec.

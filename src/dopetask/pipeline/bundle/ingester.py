@@ -40,14 +40,14 @@ def _sha256_file(path: Path) -> str:
 
 def _classify_path(rel_path: str) -> str:
     normalized = rel_path.replace("\\", "/")
-    if normalized == "taskx/task_queue.json":
-        return "taskx_task_queue"
-    if normalized.startswith("taskx/packets/") or (
-        normalized.startswith("taskx/runs/") and normalized.endswith("/TASK_PACKET.md")
+    if normalized == "dopetask/task_queue.json":
+        return "dopetask_task_queue"
+    if normalized.startswith("dopetask/packets/") or (
+        normalized.startswith("dopetask/runs/") and normalized.endswith("/TASK_PACKET.md")
     ):
-        return "taskx_packet"
-    if normalized.startswith("taskx/runs/"):
-        return "taskx_run_artifact"
+        return "dopetask_packet"
+    if normalized.startswith("dopetask/runs/"):
+        return "dopetask_run_artifact"
     if normalized == "repo/REPO_SNAPSHOT.json":
         return "repo_snapshot"
     if normalized.startswith("repo/logs/") or normalized == "repo/LOG_INDEX.json":
@@ -79,10 +79,10 @@ def _build_case_index(
 
     run_dirs = sorted(
         p
-        for p in (case_root / "taskx" / "runs").glob("*")
+        for p in (case_root / "dopetask" / "runs").glob("*")
         if p.is_dir()
-    ) if (case_root / "taskx" / "runs").exists() else []
-    packet_files = sorted((case_root / "taskx").glob("packets/*.md")) if (case_root / "taskx").exists() else []
+    ) if (case_root / "dopetask" / "runs").exists() else []
+    packet_files = sorted((case_root / "dopetask").glob("packets/*.md")) if (case_root / "dopetask").exists() else []
     logs_included = sum(1 for entry in files if str(entry.get("category")) == "repo_log")
     logs_skipped = 0
 

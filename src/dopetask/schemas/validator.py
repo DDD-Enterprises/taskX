@@ -1,4 +1,4 @@
-"""Schema validation utilities for TaskX using package-data-only registry."""
+"""Schema validation utilities for dopeTask using package-data-only registry."""
 
 from typing import Any
 

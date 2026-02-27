@@ -1,1 +1,1 @@
-"""Template assets for TaskX project setup and directive packs."""
+"""Template assets for dopeTask project setup and directive packs."""

@@ -1,4 +1,4 @@
-"""Safety helpers for guarded TaskX operations."""
+"""Safety helpers for guarded dopeTask operations."""
 
 from dopetask.safety.wip_rescue import write_rescue_patch
 

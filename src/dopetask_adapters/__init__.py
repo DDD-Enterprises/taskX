@@ -1,9 +1,9 @@
-"""TaskX adapters for integrating with external systems.
+"""dopeTask adapters for integrating with external systems.
 
 Adapters provide thin shims that map external project structures
-to TaskX expectations without modifying TaskX core logic.
+to dopeTask expectations without modifying dopeTask core logic.
 
-Discovery uses the ``taskx.adapters`` entry-point group so that
+Discovery uses the ``dopetask.adapters`` entry-point group so that
 third-party packages can register adapters automatically.
 """
 
@@ -38,7 +38,7 @@ __all__ = [
 
 
 def discover_adapters() -> Iterator[BaseAdapter]:
-    """Yield all adapters registered under the ``taskx.adapters`` entry-point group.
+    """Yield all adapters registered under the ``dopetask.adapters`` entry-point group.
 
     Uses ``importlib.metadata.entry_points(group=...)`` (Python 3.10+).
     Since this project requires Python >=3.11, the ``group`` parameter is always available.

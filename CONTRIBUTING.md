@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for contributing to TaskX.
+Thank you for contributing to dopeTask.
 
 ## Development Setup
 

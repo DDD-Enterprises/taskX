@@ -17,7 +17,7 @@ from dopetask.project.common import (
     read_template_text,
 )
 
-VALID_PRESETS = {"taskx", "chatx", "both", "none"}
+VALID_PRESETS = {"dopetask", "chatx", "both", "none"}
 
 
 def init_project(out_dir: Path, preset: str) -> dict[str, Any]:
@@ -29,7 +29,7 @@ def init_project(out_dir: Path, preset: str) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     selected_packs = _selected_packs(normalized_preset)
     pack_content = {
-        "taskx": read_pack_text("taskx") if "taskx" in selected_packs else DISABLED_TEXT,
+        "dopetask": read_pack_text("dopetask") if "dopetask" in selected_packs else DISABLED_TEXT,
         "chatx": read_pack_text("chatx") if "chatx" in selected_packs else DISABLED_TEXT,
     }
 
@@ -82,12 +82,12 @@ def init_project(out_dir: Path, preset: str) -> dict[str, Any]:
 
 
 def _selected_packs(preset: str) -> set[str]:
-    if preset == "taskx":
-        return {"taskx"}
+    if preset == "dopetask":
+        return {"dopetask"}
     if preset == "chatx":
         return {"chatx"}
     if preset == "both":
-        return {"taskx", "chatx"}
+        return {"dopetask", "chatx"}
     return set()
 
 

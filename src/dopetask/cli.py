@@ -1,4 +1,4 @@
-"""TaskX Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
+"""dopeTask Ultra-Min CLI - Task Packet Lifecycle Commands Only."""
 
 import json
 import os
@@ -82,7 +82,7 @@ from dopetask.ui import (
     worship as worship_impl,
 )
 
-# Import pipeline modules (from migrated taskx code)
+# Import pipeline modules (from migrated dopetask code)
 try:
     from dopetask.pipeline.task_compiler.compiler import compile_task_queue
 except ImportError:
@@ -165,8 +165,8 @@ class BannerTyperGroup(TyperGroup):
 
 
 cli = typer.Typer(
-    name="taskx",
-    help="TaskX - Minimal Task Packet Lifecycle CLI",
+    name="dopetask",
+    help="dopeTask - Minimal Task Packet Lifecycle CLI",
     no_args_is_help=True,
     cls=BannerTyperGroup,
 )
@@ -220,7 +220,7 @@ def _cli_callback(
     version: bool = typer.Option(
         False,
         "--version",
-        help="Show TaskX version and exit.",
+        help="Show dopeTask version and exit.",
         is_eager=True,
         callback=_version_option_callback,
     ),
@@ -252,31 +252,31 @@ def _record_metrics_best_effort() -> None:
 
 def _check_import_shadowing() -> None:
     """
-    Check if taskx is being imported from an unexpected location.
+    Check if dopetask is being imported from an unexpected location.
 
     Emits a warning to stderr if dopetask.__file__ is not in site-packages
-    or the expected TaskX repository location.
+    or the expected dopeTask repository location.
     """
     import dopetask
 
-    taskx_file = dopetask.__file__ or ""
+    dopetask_file = dopetask.__file__ or ""
 
     # Expected locations:
-    # 1. site-packages/taskx/ (installed package)
-    # 2. /code/taskX/ (editable install from TaskX repo)
-    # 3. /app/src/taskx/ (common CI/container location)
-    # 4. /home/runner/work/taskX/ (GitHub Actions CI location)
-    is_site_packages = "/site-packages/taskx/" in taskx_file
-    is_taskx_repo = "/code/taskX/" in taskx_file
-    is_ci_env = "/app/src/taskx/" in taskx_file
-    is_github_actions = "/home/runner/work/taskX/" in taskx_file
+    # 1. site-packages/dopetask/ (installed package)
+    # 2. /code/dopeTask/ (editable install from dopeTask repo)
+    # 3. /app/src/dopetask/ (common CI/container location)
+    # 4. /home/runner/work/dopeTask/ (GitHub Actions CI location)
+    is_site_packages = "/site-packages/dopetask/" in dopetask_file
+    is_dopetask_repo = "/code/dopeTask/" in dopetask_file
+    is_ci_env = "/app/src/dopetask/" in dopetask_file
+    is_github_actions = "/home/runner/work/dopeTask/" in dopetask_file
 
-    if not is_site_packages and not is_taskx_repo and not is_ci_env and not is_github_actions:
+    if not is_site_packages and not is_dopetask_repo and not is_ci_env and not is_github_actions:
         typer.echo(
-            f"[bold yellow]WARNING: taskx is being imported from an unexpected location:[/bold yellow]\n"
-            f"[yellow]  {taskx_file}[/yellow]\n"
+            f"[bold yellow]WARNING: dopetask is being imported from an unexpected location:[/bold yellow]\n"
+            f"[yellow]  {dopetask_file}[/yellow]\n"
             f"[yellow]This often indicates .pth shadowing or PYTHONPATH issues.[/yellow]\n"
-            f"[yellow]Expected locations: */site-packages/taskx/ or */code/taskX/[/yellow]",
+            f"[yellow]Expected locations: */site-packages/dopetask/ or */code/dopeTask/[/yellow]",
             err=True,
         )
 
@@ -311,10 +311,10 @@ def neon_preview(
     if theme not in THEMES:
         if neon_enabled():
             neon_console.print(f"[bold red]Unknown theme:[/bold red] {theme}")
-            neon_console.print("Try: taskx neon list")
+            neon_console.print("Try: dopetask neon list")
         else:
             print(f"Unknown theme: {theme}")
-            print("Try: taskx neon list")
+            print("Try: dopetask neon list")
         raise typer.Exit(2)
     render_banner(theme=theme)
 
@@ -333,16 +333,16 @@ def neon_demo(
 def neon_set(
     theme: str = typer.Argument(..., help="Theme name."),
 ) -> None:
-    """Print a shell export line for TASKX_THEME."""
+    """Print a shell export line for DOPETASK_THEME."""
     if theme not in THEMES:
         if neon_enabled():
             neon_console.print(f"[bold red]Unknown theme:[/bold red] {theme}")
-            neon_console.print("Try: taskx neon list")
+            neon_console.print("Try: dopetask neon list")
         else:
             print(f"Unknown theme: {theme}")
-            print("Try: taskx neon list")
+            print("Try: dopetask neon list")
         raise typer.Exit(2)
-    line = f'export TASKX_THEME="{theme}"'
+    line = f'export DOPETASK_THEME="{theme}"'
     if neon_enabled():
         neon_console.print("[bold bright_green]Copy/paste into your shell:[/bold bright_green]")
         neon_console.print(line)
@@ -357,9 +357,9 @@ def neon_status() -> None:
     strict = "1" if strict_enabled() else "0"
     theme = get_theme_name()
     lines = [
-        f"TASKX_NEON={enabled}",
-        f"TASKX_THEME={theme}",
-        f"TASKX_STRICT={strict}",
+        f"DOPETASK_NEON={enabled}",
+        f"DOPETASK_THEME={theme}",
+        f"DOPETASK_STRICT={strict}",
     ]
     if neon_enabled():
         neon_console.print("[bold]Neon status[/bold]")
@@ -386,7 +386,7 @@ def neon_persist(
     remove: bool = typer.Option(
         False,
         "--remove",
-        help="Remove the managed TASKX NEON block.",
+        help="Remove the managed DOPETASK NEON block.",
     ),
     dry_run: bool = typer.Option(
         False,
@@ -396,7 +396,7 @@ def neon_persist(
     theme: str | None = typer.Option(
         None,
         "--theme",
-        help="Theme override (default: TASKX_THEME or mintwave).",
+        help="Theme override (default: DOPETASK_THEME or mintwave).",
     ),
 ) -> None:
     """Persist neon env exports into a shell rc file (idempotent markers)."""
@@ -431,16 +431,16 @@ def neon_persist(
                 print("Refused: unable to determine shell rc target. Use --shell or --rc-path.")
             raise typer.Exit(2)
 
-    desired_theme = theme or os.getenv("TASKX_THEME", "mintwave")
+    desired_theme = theme or os.getenv("DOPETASK_THEME", "mintwave")
 
     # Validate theme against known themes to prevent shell injection
     if desired_theme not in THEMES:
         if neon_enabled():
             neon_console.print(f"[bold red]Unknown theme:[/bold red] {desired_theme}")
-            neon_console.print("Try: taskx neon list")
+            neon_console.print("Try: dopetask neon list")
         else:
             print(f"Unknown theme: {desired_theme}")
-            print("Try: taskx neon list")
+            print("Try: dopetask neon list")
         raise typer.Exit(2)
 
     try:
@@ -532,7 +532,7 @@ def metrics_reset() -> None:
 
 def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
     """
-    Check TaskX repo guard unless bypassed.
+    Check dopeTask repo guard unless bypassed.
 
     Args:
         bypass: If True, skip guard check and warn user
@@ -544,20 +544,20 @@ def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
         RuntimeError: If guard check fails and not bypassed
     """
     from dopetask.safety.wip_rescue import write_rescue_patch
-    from dopetask.utils.repo import detect_repo_root, require_taskx_repo_root
+    from dopetask.utils.repo import detect_repo_root, require_dopetask_repo_root
 
     cwd = Path.cwd()
 
     if bypass:
         console.print(
             "[bold yellow]⚠️  WARNING: Repo guard bypassed![/bold yellow]\n"
-            "[yellow]Running stateful command without TaskX repo detection.[/yellow]"
+            "[yellow]Running stateful command without dopeTask repo detection.[/yellow]"
         )
         return cwd
 
     try:
-        # Stateful commands require explicit .taskxroot marker.
-        return require_taskx_repo_root(
+        # Stateful commands require explicit .dopetaskroot marker.
+        return require_dopetask_repo_root(
             cwd,
             allow_pyproject_fallback=False,
             stateful_command=True,
@@ -582,7 +582,7 @@ def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
 def _require_module(module_func: Any, module_name: str) -> None:
     """Check if a required module is available."""
     if module_func is None:
-        console.print(f"[bold red]Error:[/bold red] {module_name} module not available in this TaskX build")
+        console.print(f"[bold red]Error:[/bold red] {module_name} module not available in this dopeTask build")
         raise typer.Exit(1)
 
 
@@ -650,9 +650,9 @@ def _require_repo_identity(
         return
     from dopetask.guard.identity import RepoIdentityGuardError, assert_repo_identity
 
-    project_file = repo_root / ".taskx" / "project.json"
-    taskxroot = repo_root / ".taskxroot"
-    if allow_missing_identity and (not taskxroot.exists() or not project_file.exists()):
+    project_file = repo_root / ".dopetask" / "project.json"
+    dopetaskroot = repo_root / ".dopetaskroot"
+    if allow_missing_identity and (not dopetaskroot.exists() or not project_file.exists()):
         return
 
     try:
@@ -801,10 +801,10 @@ def _sync_promotion_token_alias(run_dir: Path) -> None:
 
 
 def _current_invocation_command() -> list[str]:
-    """Return current CLI invocation in canonical taskx form."""
+    """Return current CLI invocation in canonical dopetask form."""
     if len(sys.argv) <= 1:
-        return ["taskx"]
-    return ["taskx", *sys.argv[1:]]
+        return ["dopetask"]
+    return ["dopetask", *sys.argv[1:]]
 
 
 def _infer_task_packet_id(run_dir: Path) -> str:
@@ -1049,13 +1049,13 @@ def print_runtime_origin() -> None:
     """Print runtime import origin diagnostic information.
 
     Hidden diagnostic command to debug import shadowing issues.
-    Shows where taskx is being imported from and sys.path ordering.
+    Shows where dopetask is being imported from and sys.path ordering.
     """
     import sys
 
     import dopetask
 
-    console.print("[bold]TaskX Runtime Origin Diagnostic[/bold]\n")
+    console.print("[bold]dopeTask Runtime Origin Diagnostic[/bold]\n")
     console.print(f"dopetask.__file__: {dopetask.__file__}")
     console.print(f"dopetask.__version__: {__version__}")
     console.print(f"sys.executable: {sys.executable}")
@@ -1067,7 +1067,7 @@ def print_runtime_origin() -> None:
 
 
 class InitTier(StrEnum):
-    """Bootstrap tier controlling what ``taskx init`` sets up."""
+    """Bootstrap tier controlling what ``dopetask init`` sets up."""
 
     OPS = "ops"
     STANDARD = "standard"
@@ -1082,9 +1082,9 @@ def init_cmd(
         help="Bootstrap tier: ops (operator prompts only), standard (ops + project files), deep (all + adapter wiring).",
     ),
     preset: str = typer.Option(
-        "taskx",
+        "dopetask",
         "--preset",
-        help="Directive preset for project init (taskx, chatx, both, none).",
+        help="Directive preset for project init (dopetask, chatx, both, none).",
     ),
     platform: str = typer.Option(
         "chatgpt",
@@ -1094,7 +1094,7 @@ def init_cmd(
     adapter: str | None = typer.Option(
         None,
         "--adapter",
-        help="Adapter name to wire (discovered via taskx.adapters entry points).",
+        help="Adapter name to wire (discovered via dopetask.adapters entry points).",
     ),
     yes: bool = typer.Option(
         False,
@@ -1108,7 +1108,7 @@ def init_cmd(
         help="Output directory for project files (standard/deep tiers).",
     ),
 ) -> None:
-    """Bootstrap TaskX integration into the current repository.
+    """Bootstrap dopeTask integration into the current repository.
 
     Tier controls scope:
     - ops: operator prompt configuration only (ops/ directory)
@@ -1145,7 +1145,7 @@ def init_cmd(
                     "repo_root": str(repo_root_path),
                     "timezone": "America/Vancouver",
                 },
-                "taskx": {
+                "dopetask": {
                     "pin_type": "git_commit",
                     "pin_value": "UNKNOWN",
                     "cli_min_version": __version__,
@@ -1204,7 +1204,7 @@ def init_cmd(
             else:
                 console.print("[dim]No adapters discovered via entry points.[/dim]")
 
-    console.print(f"[bold green]taskx init complete (tier={tier.value}).[/bold green]")
+    console.print(f"[bold green]dopetask init complete (tier={tier.value}).[/bold green]")
 
 
 @cli.command()
@@ -1282,7 +1282,7 @@ def run_task(
     run_root: Path | None = typer.Option(
         None,
         "--run-root",
-        help="Run root directory (default resolves via --run-root, TASKX_RUN_ROOT, repo root, then cwd)",
+        help="Run root directory (default resolves via --run-root, DOPETASK_RUN_ROOT, repo root, then cwd)",
     ),
     out: Path | None = typer.Option(
         None,
@@ -1432,7 +1432,7 @@ def gate_allowlist(
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
-        help="Skip TaskX repo detection (use with caution)",
+        help="Skip dopeTask repo detection (use with caution)",
     ),
     manifest: bool = typer.Option(
         False,
@@ -1545,7 +1545,7 @@ def promote_run(
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
-        help="Skip TaskX repo detection (use with caution)",
+        help="Skip dopeTask repo detection (use with caution)",
     ),
     manifest: bool = typer.Option(
         False,
@@ -1653,7 +1653,7 @@ def commit_run(
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
-        help="Skip TaskX repo detection (use with caution)",
+        help="Skip dopeTask repo detection (use with caution)",
     ),
     manifest: bool = typer.Option(
         False,
@@ -1678,9 +1678,9 @@ def commit_run(
     - Not in a git repository
 
     Recommended workflow:
-    1. taskx gate-allowlist --run <RUN_DIR>
-    2. taskx promote-run --run <RUN_DIR>
-    3. taskx commit-run --run <RUN_DIR>
+    1. dopetask gate-allowlist --run <RUN_DIR>
+    2. dopetask promote-run --run <RUN_DIR>
+    3. dopetask commit-run --run <RUN_DIR>
     """
     from dopetask.git.commit_run import commit_run as commit_run_impl
 
@@ -1860,7 +1860,7 @@ def loop(
     """Run complete task packet lifecycle loop."""
     _use_compat_options(project_root)
     if not LOOP_AVAILABLE:
-        console.print("[bold red]Error:[/bold red] loop module not installed in this TaskX build")
+        console.print("[bold red]Error:[/bold red] loop module not installed in this dopeTask build")
         raise typer.Exit(1)
 
     _require_module(run_loop, "loop")
@@ -1870,8 +1870,8 @@ def loop(
     # Check repo root
     if repo_root is None:
         try:
-            from dopetask.utils.repo import find_taskx_repo_root
-            repo_root = find_taskx_repo_root(Path.cwd()) or Path.cwd()
+            from dopetask.utils.repo import find_dopetask_repo_root
+            repo_root = find_dopetask_repo_root(Path.cwd()) or Path.cwd()
         except ImportError:
             repo_root = Path.cwd()
 
@@ -2313,7 +2313,7 @@ def route_handoff(
         help="Existing ROUTE_PLAN.json path (optional)",
     ),
     out: Path = typer.Option(
-        Path("out/taskx_route/HANDOFF.md"),
+        Path("out/dopetask_route/HANDOFF.md"),
         "--out",
         help="Output path for HANDOFF.md",
     ),
@@ -2397,7 +2397,7 @@ def orchestrate(
         help="Path to packet JSON",
     ),
 ) -> None:
-    """Run TaskX orchestrator v0 for a packet."""
+    """Run dopeTask orchestrator v0 for a packet."""
     outcome = orchestrate_packet(str(packet))
     status = str(outcome.get("status", "error"))
     run_dir = str(outcome.get("run_dir", ""))
@@ -2546,7 +2546,7 @@ def pr_open(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(1) from exc
 
-    report_dir = resolved_repo / "out" / "taskx_pr"
+    report_dir = resolved_repo / "out" / "dopetask_pr"
     console.print("[green]✓ PR open flow complete[/green]")
     console.print(f"[cyan]Status:[/cyan] {report['status']}")
     console.print(f"[cyan]PR URL:[/cyan] {report['pr_url']}")
@@ -2560,7 +2560,7 @@ def pr_open(
 
 dopemux_app = typer.Typer(
     name="dopemux",
-    help="Dopemux-integrated TaskX commands with automatic path detection",
+    help="Dopemux-integrated dopeTask commands with automatic path detection",
     no_args_is_help=True,
 )
 cli.add_typer(dopemux_app, name="dopemux")
@@ -3036,7 +3036,7 @@ def dopemux_loop(
     _use_compat_options(project_root)
 
     if not LOOP_AVAILABLE:
-        console.print("[bold red]Error:[/bold red] loop module not installed in this TaskX build")
+        console.print("[bold red]Error:[/bold red] loop module not installed in this dopeTask build")
         raise typer.Exit(1)
 
     _require_module(run_loop, "loop")
@@ -3078,7 +3078,7 @@ def dopemux_loop(
 @cli.command(name="doctor")
 def doctor_cmd(
     out: Path = typer.Option(
-        Path("./out/taskx_doctor"),
+        Path("./out/dopetask_doctor"),
         "--out",
         "-o",
         help="Output directory for doctor reports"
@@ -3106,7 +3106,7 @@ def doctor_cmd(
 ) -> None:
     """Run installation integrity checks and generate DOCTOR_REPORT.
 
-    Validates that TaskX is correctly installed with all required schemas
+    Validates that dopeTask is correctly installed with all required schemas
     bundled and accessible. Useful for diagnosing packaging issues.
 
     Exit codes:
@@ -3126,7 +3126,7 @@ def doctor_cmd(
         )
 
         # Print summary
-        typer.echo("\nTaskX Doctor Report")
+        typer.echo("\ndopeTask Doctor Report")
         typer.echo(f"Status: {report.status.upper()}")
         typer.echo("\nChecks:")
         typer.echo(f"  Passed: {report.checks['passed']}")
@@ -3174,10 +3174,10 @@ def upgrade(
         help="Force re-installation",
     ),
 ) -> None:
-    """Upgrade TaskX in the current repository."""
+    """Upgrade dopeTask in the current repository."""
     from dopetask.utils.repo import detect_repo_root
 
-    console.print("[cyan]TaskX Upgrade[/cyan]")
+    console.print("[cyan]dopeTask Upgrade[/cyan]")
 
     try:
         # Detect repo root
@@ -3185,14 +3185,14 @@ def upgrade(
             repo_info = detect_repo_root(Path.cwd())
             repo_root = repo_info.root
         except RuntimeError:
-            # Fallback for when we are not in a recognizable repo but might have .taskx-pin
+            # Fallback for when we are not in a recognizable repo but might have .dopetask-pin
             # This mimics the bash script behavior
             repo_root = Path.cwd()
             console.print("[yellow]Warning: Could not detect repository root. Using current directory.[/yellow]")
 
-        pin_file = repo_root / ".taskx-pin"
+        pin_file = repo_root / ".dopetask-pin"
         if not pin_file.exists():
-            console.print(f"[bold red]Error:[/bold red] No .taskx-pin found at {repo_root}")
+            console.print(f"[bold red]Error:[/bold red] No .dopetask-pin found at {repo_root}")
             console.print("This command requires an existing installation managed by a pin file.")
             raise typer.Exit(1)
 
@@ -3306,7 +3306,7 @@ def upgrade(
         try:
             # We can't easily reload the module in-process to check version,
             # but we can spawn a check.
-            verify_cmd = [sys.executable, "-c", "import dopetask; print(f'TaskX Version: {dopetask.__version__}')"]
+            verify_cmd = [sys.executable, "-c", "import dopetask; print(f'dopeTask Version: {dopetask.__version__}')"]
             subprocess.check_call(verify_cmd)
         except subprocess.CalledProcessError:
              console.print("[yellow]Warning: Post-install verification failed[/yellow]")
@@ -3371,7 +3371,7 @@ def ci_gate_cmd(
     no_repo_guard: bool = typer.Option(
         False,
         "--no-repo-guard",
-        help="Skip TaskX repo detection (use with caution)",
+        help="Skip dopeTask repo detection (use with caution)",
     ),
     manifest: bool = typer.Option(
         False,
@@ -3386,7 +3386,7 @@ def ci_gate_cmd(
 ) -> None:
     """Run CI gate checks (doctor + promotion validation).
 
-    Combines TaskX installation health checks with run promotion validation
+    Combines dopeTask installation health checks with run promotion validation
     for use in CI/CD pipelines. Ensures both the environment is sane and
     that runs have valid promotion tokens.
 
@@ -3439,7 +3439,7 @@ def ci_gate_cmd(
         )
 
         # Print summary
-        typer.echo("\nTaskX CI Gate Report")
+        typer.echo("\ndopeTask CI Gate Report")
         typer.echo(f"Status: {report.status.upper()}")
         typer.echo(f"\nDoctor: {report.doctor['status']}")
         manifest_stdout.append(f"CI gate status: {report.status}")
@@ -3507,7 +3507,7 @@ def ci_gate_cmd(
 class ProjectPreset(StrEnum):
     """Supported directive presets for project init."""
 
-    TASKX = "taskx"
+    DOPETASK = "dopetask"
     CHATX = "chatx"
     BOTH = "both"
     NONE = "none"
@@ -3516,14 +3516,14 @@ class ProjectPreset(StrEnum):
 class ProjectPack(StrEnum):
     """Supported directive packs for project toggles."""
 
-    TASKX = "taskx"
+    DOPETASK = "dopetask"
     CHATX = "chatx"
 
 
 class ProjectMode(StrEnum):
     """Supported master modes."""
 
-    TASKX = "taskx"
+    DOPETASK = "dopetask"
     CHATX = "chatx"
     BOTH = "both"
     NONE = "none"
@@ -3538,7 +3538,7 @@ cli.add_typer(project_app, name="project")
 
 project_mode_app = typer.Typer(
     name="mode",
-    help="Master mode operations across TaskX/ChatX packs",
+    help="Master mode operations across dopeTask/ChatX packs",
     no_args_is_help=True,
 )
 project_app.add_typer(project_mode_app, name="mode")
@@ -3559,7 +3559,7 @@ def project_init(
         help="Project directory to initialize/update",
     ),
     preset: ProjectPreset = typer.Option(
-        ProjectPreset.TASKX,
+        ProjectPreset.DOPETASK,
         "--preset",
         help="Directive pack preset to apply",
     ),
@@ -3649,9 +3649,9 @@ def project_status_cmd(
         if not file_info["exists"]:
             console.print(f"[yellow]- {file_name}: missing[/yellow]")
             continue
-        taskx_state = "enabled" if file_info["packs"]["taskx"] else "disabled"
+        dopetask_state = "enabled" if file_info["packs"]["dopetask"] else "disabled"
         chatx_state = "enabled" if file_info["packs"]["chatx"] else "disabled"
-        console.print(f"- {file_name}: taskx={taskx_state}, chatx={chatx_state}")
+        console.print(f"- {file_name}: dopetask={dopetask_state}, chatx={chatx_state}")
 
 
 @project_mode_app.command(name="set")
@@ -3664,7 +3664,7 @@ def project_mode_set(
     mode: ProjectMode = typer.Option(
         ...,
         "--mode",
-        help="Master mode: taskx, chatx, both, or none",
+        help="Master mode: dopetask, chatx, both, or none",
     ),
 ) -> None:
     """Set both directive packs in a single idempotent operation."""
@@ -3682,7 +3682,7 @@ def project_mode_set(
     console.print(f"[green]✓ Applied mode '{result['mode']}'[/green] for {path}")
     for filename in sorted(result["per_file_status"]):
         state = result["per_file_status"][filename]
-        console.print(f"- {filename}: taskx={state['taskx']}, chatx={state['chatx']}")
+        console.print(f"- {filename}: dopetask={state['dopetask']}, chatx={state['chatx']}")
     console.print(f"[cyan]Files changed:[/cyan] {len(result['changed_files'])}")
     console.print(f"[cyan]Report:[/cyan] {result['report_path']}")
 
@@ -3705,7 +3705,7 @@ def project_doctor_cmd(
         help="Override target mode used by --fix",
     ),
 ) -> None:
-    """Check (and optionally fix) TaskX/ChatX project readiness."""
+    """Check (and optionally fix) dopeTask/ChatX project readiness."""
     from dopetask.project.doctor import (
         check_project,
         fix_project,
@@ -3741,14 +3741,14 @@ def project_upgrade_cmd(
         help="Repository root to upgrade/stabilize",
     ),
     instructions_path: Path = typer.Option(
-        Path(".taskx/instructions"),
+        Path(".dopetask/instructions"),
         "--instructions-path",
         help="Instruction directory for project doctor --fix",
     ),
     mode: ProjectMode = typer.Option(
         ProjectMode.BOTH,
         "--mode",
-        help="Master mode: taskx, chatx, both, or none",
+        help="Master mode: dopetask, chatx, both, or none",
     ),
     shell: bool = typer.Option(
         True,
@@ -3763,12 +3763,12 @@ def project_upgrade_cmd(
     doctor: bool = typer.Option(
         True,
         "--doctor/--no-doctor",
-        help="Run taskx doctor after upgrade actions",
+        help="Run dopetask doctor after upgrade actions",
     ),
     allow_init_rails: bool = typer.Option(
         False,
         "--allow-init-rails",
-        help="Initialize missing .taskxroot/.taskx/project.json rails",
+        help="Initialize missing .dopetaskroot/.dopetask/project.json rails",
     ),
     require_project_id: str | None = typer.Option(
         None,
@@ -3834,7 +3834,7 @@ def project_shell_init_cmd(
         help="Repository root to initialize",
     ),
 ) -> None:
-    """Initialize repo-local shell wiring (.envrc + scripts/taskx shims)."""
+    """Initialize repo-local shell wiring (.envrc + scripts/dopetask shims)."""
     from dopetask.project.shell import init_shell
 
     try:

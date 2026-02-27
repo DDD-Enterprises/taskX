@@ -1,4 +1,4 @@
-"""Canonical run artifact helpers for stateful TaskX commands."""
+"""Canonical run artifact helpers for stateful dopeTask commands."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from dopetask.utils.repo import find_taskx_repo_root
+from dopetask.utils.repo import find_dopetask_repo_root
 
 CanonicalTimestampMode = Literal["deterministic", "now"]
 
-TASKX_RUN_ROOT_ENV = "TASKX_RUN_ROOT"
-PROJECT_IDENTITY_PATH = ".taskx/project.json"
+DOPETASK_RUN_ROOT_ENV = "DOPETASK_RUN_ROOT"
+PROJECT_IDENTITY_PATH = ".dopetask/project.json"
 
 RUN_ENVELOPE_FILENAME = "RUN_ENVELOPE.json"
 RUN_IDENTITY_FILENAME = "RUN_IDENTITY.json"
@@ -57,12 +57,12 @@ def get_default_run_root(
     if cli_run_root is not None:
         return cli_run_root.expanduser().resolve()
 
-    env_root = os.getenv(TASKX_RUN_ROOT_ENV, "").strip()
+    env_root = os.getenv(DOPETASK_RUN_ROOT_ENV, "").strip()
     if env_root:
         return Path(env_root).expanduser().resolve()
 
     effective_cwd = (cwd or Path.cwd()).resolve()
-    repo_root = find_taskx_repo_root(effective_cwd)
+    repo_root = find_dopetask_repo_root(effective_cwd)
     if repo_root is not None:
         return (repo_root / "out" / "runs").resolve()
 

@@ -1,4 +1,4 @@
-name: TaskX CI
+name: dopeTask CI
 
 on:
   push:
@@ -11,8 +11,8 @@ jobs:
     name: Lint, Check, Test & Build (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     env:
-      TASKX_NEON: "0"
-      TASKX_STRICT: "1"
+      DOPETASK_NEON: "0"
+      DOPETASK_STRICT: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +41,7 @@ jobs:
       - name: Fail on Poetry references
         run: |
           if rg -n -i '\bpoetry\b' . \
-            --glob '!.github/workflows/taskx_ci.yml' \
+            --glob '!.github/workflows/dopetask_ci.yml' \
             --glob '!uv.lock'; then
             echo "Poetry references are disallowed."
             exit 1
@@ -49,11 +49,11 @@ jobs:
       
       - name: Lint (ruff)
         run: |
-          uv run --extra dev ruff check src/taskx
+          uv run --extra dev ruff check src/dopetask
       
       - name: Typecheck (mypy)
         run: |
-          uv run --extra dev mypy src/taskx
+          uv run --extra dev mypy src/dopetask
       
       - name: Run unit tests
         run: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Doctor sanity
         run: |
-          uv run taskx doctor --timestamp-mode deterministic
+          uv run dopetask doctor --timestamp-mode deterministic
       
       - name: Build distribution packages
         if: matrix.python-version == '3.11'
@@ -80,13 +80,13 @@ jobs:
           source .venv-smoke/bin/activate
           python -m pip install --upgrade pip
           pip install dist/*.whl
-          taskx doctor --timestamp-mode deterministic
+          dopetask doctor --timestamp-mode deterministic
           deactivate
 
       - name: Upload build artifacts
         if: always() && matrix.python-version == '3.11'
         uses: actions/upload-artifact@v6
         with:
-          name: taskx-dist
+          name: dopetask-dist
           path: dist/
           retention-days: 7

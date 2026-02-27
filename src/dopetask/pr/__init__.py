@@ -1,4 +1,4 @@
-"""TaskX assisted PR flow package."""
+"""dopeTask assisted PR flow package."""
 
 from dopetask.pr.open import PrOpenRefusal, run_pr_open
 

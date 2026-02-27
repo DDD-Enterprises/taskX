@@ -1,4 +1,4 @@
-"""Worktree lifecycle helpers for taskx tp git commands."""
+"""Worktree lifecycle helpers for dopetask tp git commands."""
 
 from __future__ import annotations
 

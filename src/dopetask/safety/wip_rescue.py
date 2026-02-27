@@ -12,7 +12,7 @@ def _resolve_rescue_patch_path(cwd: Path, rescue_patch: str) -> Path:
     """Resolve explicit path or 'auto' destination for rescue patch output."""
     if rescue_patch == "auto":
         timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-        return cwd / "out" / "taskx_rescue" / timestamp / "rescue.patch"
+        return cwd / "out" / "dopetask_rescue" / timestamp / "rescue.patch"
 
     candidate = Path(rescue_patch).expanduser()
     if not candidate.is_absolute():

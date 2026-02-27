@@ -3,7 +3,7 @@ set -euo pipefail
 
 export LC_ALL=C
 
-tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/taskx-determinism.XXXXXX")"
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/dopetask-determinism.XXXXXX")"
 cleanup() {
   rm -rf "$tmpdir"
 }

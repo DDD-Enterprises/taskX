@@ -1,4 +1,4 @@
-"""Types for taskx tp git workflow."""
+"""Types for dopetask tp git workflow."""
 
 from __future__ import annotations
 

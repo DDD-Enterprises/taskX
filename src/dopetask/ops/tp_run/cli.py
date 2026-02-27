@@ -1,4 +1,4 @@
-"""CLI registration for taskx tp run commands."""
+"""CLI registration for dopetask tp run commands."""
 
 from __future__ import annotations
 

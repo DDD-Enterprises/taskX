@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# TaskX build script - Builds sdist + wheel and validates with twine
+# dopeTask build script - Builds sdist + wheel and validates with twine
 
 set -euo pipefail
 
-echo "=== TaskX Build Script ==="
+echo "=== dopeTask Build Script ==="
 echo "Building distribution packages..."
 
 # Ensure clean dist directory

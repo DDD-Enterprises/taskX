@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# A16_MIN.12 — Repo Discovery (Find TaskX-Pinned Repos + Emit Repo List)
+# A16_MIN.12 — Repo Discovery (Find dopeTask-Pinned Repos + Emit Repo List)
 #
-# Discovers repositories containing TASKX_VERSION.lock under a given root directory
-# and emits a deterministic repo list file usable by taskx_upgrade_many.sh and taskx_pin_audit.sh.
+# Discovers repositories containing DOPETASK_VERSION.lock under a given root directory
+# and emits a deterministic repo list file usable by dopetask_upgrade_many.sh and dopetask_pin_audit.sh.
 #
 # Usage:
-#   bash scripts/taskx_discover_repos.sh --root /path/to/search [options]
+#   bash scripts/dopetask_discover_repos.sh --root /path/to/search [options]
 
 set -euo pipefail
 
@@ -14,7 +14,7 @@ set -euo pipefail
 # ================================================================================
 
 ROOT_DIR=""
-OUT_DIR="./out/taskx_repo_discovery"
+OUT_DIR="./out/dopetask_repo_discovery"
 DEPTH=6
 MAX_REPOS=200
 INCLUDE_NON_GIT=true
@@ -114,14 +114,14 @@ mkdir -p "$OUT_DIR"
 # Build find command
 FIND_OPTS=()
 FIND_OPTS+=("-maxdepth" "$DEPTH")
-FIND_OPTS+=("-name" "TASKX_VERSION.lock")
+FIND_OPTS+=("-name" "DOPETASK_VERSION.lock")
 FIND_OPTS+=("-type" "f")
 
 if [[ "$FOLLOW_SYMLINKS" == "false" ]]; then
   FIND_OPTS=("-P" "${FIND_OPTS[@]}")  # Don't follow symlinks
 fi
 
-log "Scanning for TASKX_VERSION.lock files..."
+log "Scanning for DOPETASK_VERSION.lock files..."
 
 # Find all lockfiles and extract parent directories (repo roots)
 TEMP_REPOS=$(mktemp)
@@ -135,7 +135,7 @@ find "$ROOT_DIR" "${FIND_OPTS[@]}" 2>/dev/null | while IFS= read -r lockfile; do
 done | sort -u > "$TEMP_REPOS"
 
 REPOS_FOUND=$(wc -l < "$TEMP_REPOS" | tr -d ' ')
-log "Found $REPOS_FOUND repos with TASKX_VERSION.lock"
+log "Found $REPOS_FOUND repos with DOPETASK_VERSION.lock"
 
 # ================================================================================
 # TRUNCATION & REPO LIST
@@ -237,7 +237,7 @@ if ! command -v "$PYTHON_CMD" &> /dev/null; then
   exit 1
 fi
 
-"$PYTHON_CMD" scripts/taskx_discover_repos_report.py \
+"$PYTHON_CMD" scripts/dopetask_discover_repos_report.py \
   --in "$OUT_DIR/discovery_raw.json" \
   --out "$OUT_DIR" \
   --timestamp-mode "$TIMESTAMP_MODE"
@@ -263,7 +263,7 @@ log "  # Review discovered repos"
 log "  cat $OUT_DIR/DISCOVERY_REPORT.md"
 log ""
 log "  # Audit version drift"
-log "  bash scripts/taskx_pin_audit.sh --target-version X.Y.Z --repo-list $OUT_DIR/REPOS.txt"
+log "  bash scripts/dopetask_pin_audit.sh --target-version X.Y.Z --repo-list $OUT_DIR/REPOS.txt"
 log ""
 log "  # Upgrade repos"
-log "  bash scripts/taskx_upgrade_many.sh --version X.Y.Z --repo-list $OUT_DIR/REPOS.txt --apply"
+log "  bash scripts/dopetask_upgrade_many.sh --version X.Y.Z --repo-list $OUT_DIR/REPOS.txt --apply"

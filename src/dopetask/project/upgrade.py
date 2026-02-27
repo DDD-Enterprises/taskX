@@ -13,7 +13,7 @@ from dopetask.project.doctor import fix_project, write_doctor_reports
 from dopetask.project.mode import normalize_mode
 from dopetask.project.shell import init_shell
 
-UPGRADE_REPORT_DIR = Path("out/taskx_project_upgrade")
+UPGRADE_REPORT_DIR = Path("out/dopetask_project_upgrade")
 UPGRADE_REPORT_JSON = "PROJECT_UPGRADE_REPORT.json"
 UPGRADE_REPORT_MD = "PROJECT_UPGRADE_REPORT.md"
 
@@ -63,7 +63,7 @@ def run_project_upgrade(
 
     doctor_result: dict[str, Any] | None = None
     if doctor:
-        doctor_out = resolved_repo_root / "out" / "taskx_doctor"
+        doctor_out = resolved_repo_root / "out" / "dopetask_doctor"
         doctor_report = run_doctor(
             out_dir=doctor_out,
             timestamp_mode="deterministic",
@@ -97,18 +97,18 @@ def run_project_upgrade(
 
 
 def ensure_rails(repo_root: Path, *, allow_init_rails: bool) -> dict[str, Any]:
-    """Ensure .taskxroot and .taskx/project.json exist (optionally initialize)."""
-    taskxroot_path = repo_root / ".taskxroot"
-    project_identity_path = repo_root / ".taskx" / "project.json"
+    """Ensure .dopetaskroot and .dopetask/project.json exist (optionally initialize)."""
+    dopetaskroot_path = repo_root / ".dopetaskroot"
+    project_identity_path = repo_root / ".dopetask" / "project.json"
 
-    taskxroot_present_before = taskxroot_path.exists()
+    dopetaskroot_present_before = dopetaskroot_path.exists()
     project_identity_present_before = project_identity_path.exists()
 
     missing: list[str] = []
-    if not taskxroot_present_before:
-        missing.append(".taskxroot")
+    if not dopetaskroot_present_before:
+        missing.append(".dopetaskroot")
     if not project_identity_present_before:
-        missing.append(".taskx/project.json")
+        missing.append(".dopetask/project.json")
 
     created: list[str] = []
     auto_derived_project_id = False
@@ -120,9 +120,9 @@ def ensure_rails(repo_root: Path, *, allow_init_rails: bool) -> dict[str, Any]:
             "Re-run with --allow-init-rails to initialize rails."
         )
 
-    if not taskxroot_present_before:
-        taskxroot_path.touch(exist_ok=True)
-        created.append(".taskxroot")
+    if not dopetaskroot_present_before:
+        dopetaskroot_path.touch(exist_ok=True)
+        created.append(".dopetaskroot")
 
     if not project_identity_present_before:
         project_identity_path.parent.mkdir(parents=True, exist_ok=True)
@@ -137,7 +137,7 @@ def ensure_rails(repo_root: Path, *, allow_init_rails: bool) -> dict[str, Any]:
             json.dumps(payload, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        created.append(".taskx/project.json")
+        created.append(".dopetask/project.json")
         auto_derived_project_id = True
 
     try:
@@ -146,7 +146,7 @@ def ensure_rails(repo_root: Path, *, allow_init_rails: bool) -> dict[str, Any]:
         raise ProjectUpgradeRefusalError(f"ERROR: Invalid identity rails: {exc}") from exc
 
     return {
-        "taskxroot_present_before": taskxroot_present_before,
+        "dopetaskroot_present_before": dopetaskroot_present_before,
         "project_identity_present_before": project_identity_present_before,
         "missing_before": missing,
         "created": created,
@@ -201,11 +201,11 @@ def _resolve_instructions_path(repo_root: Path, instructions_path: Path) -> Path
 
 def _snapshot_targets(repo_root: Path, instructions_path: Path) -> list[Path]:
     return [
-        repo_root / ".taskxroot",
-        repo_root / ".taskx" / "project.json",
+        repo_root / ".dopetaskroot",
+        repo_root / ".dopetask" / "project.json",
         repo_root / ".envrc",
-        repo_root / "scripts" / "taskx",
-        repo_root / "scripts" / "taskx-local",
+        repo_root / "scripts" / "dopetask",
+        repo_root / "scripts" / "dopetask-local",
         instructions_path,
     ]
 

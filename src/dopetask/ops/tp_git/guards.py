@@ -1,4 +1,4 @@
-"""Fail-closed guards for taskx tp git commands."""
+"""Fail-closed guards for dopetask tp git commands."""
 
 from __future__ import annotations
 

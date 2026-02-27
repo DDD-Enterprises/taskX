@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# TaskX Pin Audit
-# Read-only scanner for TASKX_VERSION.lock version drift
+# dopeTask Pin Audit
+# Read-only scanner for DOPETASK_VERSION.lock version drift
 
 set -euo pipefail
 
@@ -12,7 +12,7 @@ TARGET_VERSION=""
 TARGET_REF=""
 REPOS=""
 REPO_LIST=""
-OUT_DIR="./out/taskx_pin_audit"
+OUT_DIR="./out/dopetask_pin_audit"
 TIMESTAMP_MODE="deterministic"
 INCLUDE_MISSING_LOCK=false
 
@@ -188,7 +188,7 @@ compare_versions() {
 
 audit_repo() {
   local repo_path="$1"
-  local lockfile="$repo_path/TASKX_VERSION.lock"
+  local lockfile="$repo_path/DOPETASK_VERSION.lock"
   
   local pinned_version=""
   local pinned_ref=""
@@ -306,7 +306,7 @@ EOF
       case "$cmp_result" in
         -1)
           status="behind"
-          suggested_action="upgrade to target via taskx_upgrade_many"
+          suggested_action="upgrade to target via dopetask_upgrade_many"
           ;;
         0)
           status="match"
@@ -377,7 +377,7 @@ EOF
 # ============================================================================
 
 main() {
-  log_info "TaskX Pin Audit"
+  log_info "dopeTask Pin Audit"
   log_info "==============="
   log_info "Target version: $TARGET_VERSION"
   log_info "Target ref: $TARGET_REF"
@@ -452,7 +452,7 @@ main() {
   
   # Generate reports
   if command -v python3 &> /dev/null; then
-    python3 scripts/taskx_pin_audit_report.py \
+    python3 scripts/dopetask_pin_audit_report.py \
       --audit-file "$audit_raw" \
       --target-version "$TARGET_VERSION" \
       --target-ref "$TARGET_REF" \
@@ -465,7 +465,7 @@ main() {
   else
     log_warn "python3 not found - skipping report generation"
     log_warn "To generate report manually, run:"
-    log_warn "  python3 scripts/taskx_pin_audit_report.py --audit-file $audit_raw --target-version $TARGET_VERSION --target-ref $TARGET_REF --out-dir $OUT_DIR --timestamp-mode $TIMESTAMP_MODE"
+    log_warn "  python3 scripts/dopetask_pin_audit_report.py --audit-file $audit_raw --target-version $TARGET_VERSION --target-ref $TARGET_REF --out-dir $OUT_DIR --timestamp-mode $TIMESTAMP_MODE"
   fi
   
   log_info ""

@@ -1,10 +1,10 @@
-# GitHub Copilot Instructions for TaskX
+# GitHub Copilot Instructions for dopeTask
 
 ## Project Overview
 
-TaskX is a deterministic task-packet lifecycle engine designed for operator-grade environments. It's built around strict compliance, offline-first execution, and reproducible builds.
+dopeTask is a deterministic task-packet lifecycle engine designed for operator-grade environments. It's built around strict compliance, offline-first execution, and reproducible builds.
 
-**Core Philosophy**: Deterministic, auditable, and uncompromising. TaskX assumes the internet is down, mocks system time for reproducibility, and enforces strict allowlists for all file changes.
+**Core Philosophy**: Deterministic, auditable, and uncompromising. dopeTask assumes the internet is down, mocks system time for reproducibility, and enforces strict allowlists for all file changes.
 
 ## Tech Stack
 
@@ -44,7 +44,7 @@ ruff format --check .
 # Build distribution
 python -m build
 # or
-scripts/taskx_build.sh
+scripts/dopetask_build.sh
 
 # Run pre-commit checks
 pre-commit run --all-files
@@ -53,15 +53,15 @@ pre-commit run --all-files
 ## Project Structure
 
 ```
-src/taskx/          # Core task packet engine
+src/dopetask/          # Core task packet engine
 ├── cli.py          # Main CLI entry point (Typer-based)
 ├── doctor.py       # Diagnostic tool implementation
 ├── ci_gate.py      # Allowlist gate checking
 ├── pipeline/       # Task compilation, execution, promotion
 └── project/        # Project initialization and mode management
 
-src/taskx_adapters/ # Dopemux integration
-taskx_schemas/      # JSON schemas packaged with distribution
+src/dopetask_adapters/ # Dopemux integration
+dopetask_schemas/      # JSON schemas packaged with distribution
 schemas/            # Schema definitions for validation
 scripts/            # Build and installation automation
 docs/               # User documentation (numbered spine: 00_*, 01_*, etc.)
@@ -91,10 +91,10 @@ def load_task_packet(path: Path) -> TaskPacket:
     return TaskPacket.from_dict(data)
 
 # Good: Environment variable handling with defaults
-neon_mode = os.getenv("TASKX_NEON", "0") == "1"
+neon_mode = os.getenv("DOPETASK_NEON", "0") == "1"
 
 # Good: Boolean flags use "0" and "1" string comparisons
-if os.getenv("TASKX_OFFLINE", "1") == "1":
+if os.getenv("DOPETASK_OFFLINE", "1") == "1":
     # offline mode
     pass
 ```
@@ -114,7 +114,7 @@ def test_doctor_command():
     runner = CliRunner()
     result = runner.invoke(cli, ["doctor"])
     assert result.exit_code == 0
-    assert "TaskX Doctor" in result.output
+    assert "dopeTask Doctor" in result.output
 ```
 
 ### Documentation Standards
@@ -135,7 +135,7 @@ def test_doctor_command():
 - Reference issue numbers where applicable
 
 ### CI Requirements
-- CI runs `ruff check src/taskx` and `mypy src/taskx`
+- CI runs `ruff check src/dopetask` and `mypy src/dopetask`
 - Type checking enforces `disallow_untyped_defs = true`
 - All tests must pass
 - Coverage must meet threshold
@@ -144,8 +144,8 @@ def test_doctor_command():
 
 ### What You MUST NOT Do
 - **Never commit secrets**: No API keys, tokens, or credentials in code
-- **Never bypass allowlists**: Respect TaskX's file change allowlist enforcement
-- **Never use network calls during runs**: TaskX is offline-first by design
+- **Never bypass allowlists**: Respect dopeTask's file change allowlist enforcement
+- **Never use network calls during runs**: dopeTask is offline-first by design
 - **Never use `datetime.now()` directly**: Use deterministic time mocking for builds
 - **Never modify production config without explicit approval**
 
@@ -175,7 +175,7 @@ else:
     print(f"Error: {error_msg}")
 ```
 
-## TaskX-Specific Patterns
+## dopeTask-Specific Patterns
 
 ### Entry Points API
 - Use `entry_points(group="...")` directly (Python 3.11+)
@@ -197,19 +197,19 @@ else:
 
 ## Key Development Gotchas
 
-1. **Deterministic Time**: TaskX mocks `datetime.now()` for reproducible builds
+1. **Deterministic Time**: dopeTask mocks `datetime.now()` for reproducible builds
 2. **Allowlist Enforcement**: Gate rejects any file changes not in allowlist
 3. **Offline-First Design**: All dependencies must be pre-installed; no network access during runs
 4. **Strict Typing**: Project uses `mypy --strict` - all functions must be typed
 5. **Pre-commit Required**: Changes must pass `pre-commit run --all-files` before commit
 6. **Token-gated commits**: Cannot commit without a promotion token from gate-allowlist pass
 
-## When Working on TaskX
+## When Working on dopeTask
 
 ### Before You Start
 1. Read the relevant documentation in `docs/`
 2. Check `AGENTS.md` and `CLAUDE.md` for project-specific agent instructions
-3. Run `taskx doctor` to verify your environment
+3. Run `dopetask doctor` to verify your environment
 
 ### During Development
 1. Write tests alongside code changes
@@ -223,31 +223,31 @@ else:
 3. Verify type checking: `mypy src/`
 4. Check coverage is acceptable
 
-### Common TaskX Commands
+### Common dopeTask Commands
 ```bash
 # Diagnostic health check
-taskx doctor
+dopetask doctor
 
 # Basic task lifecycle
-taskx compile-tasks --mode mvp --max-packets 5
-taskx run-task --task-id T001
-taskx gate-allowlist --run ./out/runs/RUN_..._T001
-taskx promote-run --run ./out/runs/RUN_..._T001
+dopetask compile-tasks --mode mvp --max-packets 5
+dopetask run-task --task-id T001
+dopetask gate-allowlist --run ./out/runs/RUN_..._T001
+dopetask promote-run --run ./out/runs/RUN_..._T001
 
 # Dopemux namespace
-taskx dopemux compile
-taskx dopemux run --task-id T002
-taskx dopemux gate
+dopetask dopemux compile
+dopetask dopemux run --task-id T002
+dopetask dopemux gate
 
 # Project management
-taskx project init
-taskx project status
-taskx project upgrade
+dopetask project init
+dopetask project status
+dopetask project upgrade
 
 # Routing
-taskx route init
-taskx route plan
-taskx route handoff
+dopetask route init
+dopetask route plan
+dopetask route handoff
 ```
 
 ## Questions to Ask Before Coding
@@ -264,5 +264,5 @@ taskx route handoff
 
 - Check `docs/` for detailed documentation
 - Review `AGENTS.md` for contribution guidelines
-- Run `taskx doctor` for environment diagnostics
+- Run `dopetask doctor` for environment diagnostics
 - Look at existing code for patterns and examples

@@ -1,15 +1,15 @@
-# TaskX is a deterministic task-packet execution kernel that plans one path or refuses with evidence.
+# dopeTask is a deterministic task-packet execution kernel that plans one path or refuses with evidence.
 
 ## Guarantees
 
 - Artifact-first: if it did not write an artifact, it did not happen.
 - Refusal-first: invalid or unsafe inputs produce a structured refusal with a stable exit code.
-- Deterministic: identical packet + declared inputs + TaskX version yields identical outputs.
+- Deterministic: identical packet + declared inputs + dopeTask version yields identical outputs.
 - Single-path: no hidden retries, no fallback runners, no background execution.
 
 ## Kernel Manifesto
 
-TaskX is strict by design:
+dopeTask is strict by design:
 
 - one packet, one scoped objective
 - one path, or explicit refusal with evidence
@@ -19,7 +19,7 @@ The goal is operational trust, not convenience theater.
 
 ## Anti-Features
 
-TaskX intentionally does not provide:
+dopeTask intentionally does not provide:
 
 - hidden retries
 - silent fallbacks to alternate runners
@@ -28,7 +28,7 @@ TaskX intentionally does not provide:
 
 ## Kernel FAQ
 
-**Why does TaskX refuse so often?**  
+**Why does dopeTask refuse so often?**  
 Because refusal protects determinism and keeps artifacts trustworthy.
 
 **Why require proof bundles?**  
@@ -50,24 +50,24 @@ If outputs differ, treat it as a bug and capture evidence before retrying.
 
 ---
 
-## 🦾 What is TaskX?
+## 🦾 What is dopeTask?
 
-Imagine a task runner that doesn't trust the internet, doesn't trust your system clock, and definitely doesn't trust random file mutations. That's **TaskX**.
+Imagine a task runner that doesn't trust the internet, doesn't trust your system clock, and definitely doesn't trust random file mutations. That's **dopeTask**.
 
-TaskX is a rigorous system for managing the lifecycle of **"Task Packets"**—self-contained units of work. It is built for environments where "it works on my machine" is considered an admission of guilt.
+dopeTask is a rigorous system for managing the lifecycle of **"Task Packets"**—self-contained units of work. It is built for environments where "it works on my machine" is considered an admission of guilt.
 
 ### 🌟 Why You'll Love It (Or Fear It)
 
 - **🔮 Deterministic Time Travel**: We mock time. Literal time. Your builds will produce the exact same artifacts today, tomorrow, and in 2050.
 - **🛡️ The Great Allowlist**: Files don't just "change." They apply for a visa. Our `AllowlistDiff` system catches unauthorized mutations before they even think about becoming a commit.
-- **🔌 Offline by Design**: TaskX assumes the internet is down. If your build needs `npm install` to run, go back to square one.
+- **🔌 Offline by Design**: dopeTask assumes the internet is down. If your build needs `npm install` to run, go back to square one.
 - **🧬 Audit Trails**: Every run produces a forensic verification trail. Who ran it? When? with what inputs? It's all in the JSON.
 
 ---
 
 ## 🔄 The Lifecycle
 
-TaskX treats code changes as a manufacturing pipeline.
+dopeTask treats code changes as a manufacturing pipeline.
 
 ```mermaid
 graph LR
@@ -96,7 +96,7 @@ graph LR
 
 ## Deterministic Task Execution
 
-TaskX uses isolated git worktrees and commit plans to ensure:
+dopeTask uses isolated git worktrees and commit plans to ensure:
 
 - linear `main` history
 - one packet = one commit stack
@@ -104,7 +104,7 @@ TaskX uses isolated git worktrees and commit plans to ensure:
 - zero accidental commits on `main`
 
 See `docs/WORKTREES_COMMIT_SEQUENCING.md` for details.
-If a packet includes a `COMMIT PLAN`, execute it with `taskx commit-sequence`; manual commits can break determinism guarantees. See `docs/TASK_PACKET_FORMAT.md`.
+If a packet includes a `COMMIT PLAN`, execute it with `dopetask commit-sequence`; manual commits can break determinism guarantees. See `docs/TASK_PACKET_FORMAT.md`.
 
 ---
 
@@ -114,13 +114,13 @@ Get up and running faster than you can say "idempotency."
 
 ### 1. Installation
 
-You can install TaskX via `pip`, `uv`, or our unified installer script.
+You can install dopeTask via `pip`, `uv`, or our unified installer script.
 
 **Using uv (Recommended):**
 
 ```bash
 uv tool install dopetask
-taskx --version
+dopetask --version
 ```
 
 **Using pip:**
@@ -135,7 +135,7 @@ The installer script sets up a pinned environment and repository integration:
 
 ```bash
 # Latest stable version
-curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hu3mann/dopeTask/main/scripts/install.sh | bash
 ```
 
 *Need manual installation or wheel support? Check the [Detailed Installation Guide](docs/INSTALL.md).*
@@ -145,7 +145,7 @@ curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.
 Let's run a loop. A loop creates tasks, runs them, checks them, and promotes them.
 
 ```bash
-taskx --help
+dopetask --help
 ```
 
 See `docs/01_INSTALL.md` for developer workflows and testing.
@@ -153,21 +153,21 @@ See `docs/01_INSTALL.md` for developer workflows and testing.
 ## 60-second example
 
 ```bash
-taskx route init --repo-root .
+dopetask route init --repo-root .
 cat > PACKET.md <<'EOF'
 # Packet
 ROUTER_HINTS:
   risk: low
 EOF
-taskx route plan --repo-root . --packet PACKET.md
-ls -1 out/taskx_route/
+dopetask route plan --repo-root . --packet PACKET.md
+ls -1 out/dopetask_route/
 ```
 
 Expected outputs:
 
-- `out/taskx_route/ROUTE_PLAN.json`
-- `out/taskx_route/ROUTE_PLAN.md`
-- `out/taskx_route/HANDOFF.md` (for handoff flows)
+- `out/dopetask_route/ROUTE_PLAN.json`
+- `out/dopetask_route/ROUTE_PLAN.md`
+- `out/dopetask_route/HANDOFF.md` (for handoff flows)
 
 ## Docs
 
@@ -185,6 +185,6 @@ Expected outputs:
 
 ## Kernel vs ecosystem
 
-TaskX (kernel) validates packets, plans deterministically, executes one path (or emits a manual handoff), and writes canonical artifacts.
+dopeTask (kernel) validates packets, plans deterministically, executes one path (or emits a manual handoff), and writes canonical artifacts.
 
 Everything else (scheduling, orchestration, memory, UX) belongs in the ecosystem above the kernel.

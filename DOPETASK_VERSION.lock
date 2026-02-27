@@ -1,12 +1,12 @@
-# TaskX install pin for this repo
+# dopeTask install pin for this repo
 # Required:
 version = 0.0.0
 
 # Optional:
 # mode = auto
 # owner = YOUR_GH_OWNER
-# repo = YOUR_TASKX_REPO
+# repo = YOUR_DOPETASK_REPO
 # ref = v0.0.0
-# git_url = git+ssh://git@github.com/YOUR_GH_OWNER/YOUR_TASKX_REPO.git
+# git_url = git+ssh://git@github.com/YOUR_GH_OWNER/YOUR_DOPETASK_REPO.git
 # index_url = https://pip.pkg.github.com/YOUR_GH_OWNER/simple
 # extra_index_url = https://pypi.org/simple

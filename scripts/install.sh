@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# TaskX Unified Installer and Upgrader
-# Installs or upgrades TaskX in a repository.
-# Can be run via: curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.sh | bash
+# dopeTask Unified Installer and Upgrader
+# Installs or upgrades dopeTask in a repository.
+# Can be run via: curl -fsSL https://raw.githubusercontent.com/hu3mann/dopeTask/main/scripts/install.sh | bash
 
 set -euo pipefail
 
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Default Configuration
-DEFAULT_REPO_URL="https://github.com/hu3mann/taskX.git"
+DEFAULT_REPO_URL="https://github.com/hu3mann/dopeTask.git"
 DEFAULT_REF="main"
 FORCE_REINSTALL=false
 TARGET_VERSION=""
@@ -93,7 +93,7 @@ find_repo_root() {
     return 0
 }
 
-# Parse .taskx-pin file into global variables
+# Parse .dopetask-pin file into global variables
 parse_pin_file() {
     local pin_file="$1"
 
@@ -150,14 +150,14 @@ EOF
 }
 
 main() {
-    log_info "TaskX Installer/Upgrader"
+    log_info "dopeTask Installer/Upgrader"
     echo ""
 
     # Find repository root
     REPO_ROOT=$(find_repo_root)
     log_info "Target Directory: $REPO_ROOT"
 
-    PIN_FILE="$REPO_ROOT/.taskx-pin"
+    PIN_FILE="$REPO_ROOT/.dopetask-pin"
 
     # Initialize variables with defaults or existing pin values
     INSTALL_METHOD="git"
@@ -175,7 +175,7 @@ main() {
         REF="${PIN_REF:-$REF}"
         WHEEL_PATH="${PIN_WHEEL_PATH:-}"
     else
-        log_info "No .taskx-pin found. Creating new configuration."
+        log_info "No .dopetask-pin found. Creating new configuration."
     fi
 
     # Handle --pypi
@@ -224,7 +224,7 @@ main() {
         VENV_PATH="$REPO_ROOT/.venv"
         log_info "Using existing venv: $VENV_PATH"
     else
-        VENV_PATH="$REPO_ROOT/.taskx_venv"
+        VENV_PATH="$REPO_ROOT/.dopetask_venv"
         log_info "Creating venv: $VENV_PATH"
         python3 -m venv "$VENV_PATH"
     fi
@@ -240,9 +240,9 @@ main() {
     pip install --quiet --upgrade pip
     echo ""
 
-    # Install TaskX
+    # Install dopeTask
     if [ "$INSTALL_METHOD" = "git" ]; then
-        log_info "Installing TaskX from git:"
+        log_info "Installing dopeTask from git:"
         log_info "  Repository: $REPO_URL"
         log_info "  Reference: $REF"
 
@@ -261,7 +261,7 @@ main() {
             WHEEL_PATH="$REPO_ROOT/$WHEEL_PATH"
         fi
 
-        log_info "Installing TaskX from wheel:"
+        log_info "Installing dopeTask from wheel:"
         log_info "  Path: $WHEEL_PATH"
 
         if [ ! -f "$WHEEL_PATH" ]; then
@@ -324,7 +324,7 @@ except Exception as e:
     if [ $? -eq 0 ]; then
         echo "$VERIFICATION_OUTPUT"
         echo ""
-        log_info "✅ TaskX installation/upgrade successful!"
+        log_info "✅ dopeTask installation/upgrade successful!"
         echo ""
         log_info "To activate this environment:"
         log_info "  source $VENV_PATH/bin/activate"

@@ -1,4 +1,4 @@
-"""Deterministic naming helpers for taskx tp git workflows."""
+"""Deterministic naming helpers for dopetask tp git workflows."""
 
 from __future__ import annotations
 

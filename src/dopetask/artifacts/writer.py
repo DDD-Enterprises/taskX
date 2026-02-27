@@ -9,7 +9,7 @@ from dopetask.artifacts.canonical_json import sha256_file, write_json
 if TYPE_CHECKING:
     from pathlib import Path
 
-ARTIFACT_INDEX_SCHEMA_VERSION = "taskx.orchestrator.v0"
+ARTIFACT_INDEX_SCHEMA_VERSION = "dopetask.orchestrator.v0"
 
 
 def write_run_artifacts(

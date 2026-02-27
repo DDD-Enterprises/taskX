@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible bug in TaskX
+description: Report a reproducible bug in dopeTask
 title: "bug: "
 labels:
   - bug

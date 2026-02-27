@@ -29,7 +29,7 @@ class BundleExporter:
             }
         }
 
-        path = config_path or (self.repo_root / "taskx_bundle.yaml")
+        path = config_path or (self.repo_root / "dopetask_bundle.yaml")
         if path.exists():
             try:
                 with open(path) as f:
@@ -42,19 +42,19 @@ class BundleExporter:
 
         return defaults
 
-    def collect_taskx_artifacts(self, last_n: int, temp_dir: Path) -> list[str]:
+    def collect_dopetask_artifacts(self, last_n: int, temp_dir: Path) -> list[str]:
         """Collect last N runs and task packets."""
-        taskx_dir = temp_dir / "taskx"
-        taskx_dir.mkdir(parents=True, exist_ok=True)
+        dopetask_dir = temp_dir / "dopetask"
+        dopetask_dir.mkdir(parents=True, exist_ok=True)
 
         manifest_entries = []
 
         # 1. Task Queue
         queue_path = self.repo_root / "out" / "tasks" / "task_queue.json"
         if queue_path.exists():
-            dest = taskx_dir / "task_queue.json"
+            dest = dopetask_dir / "task_queue.json"
             shutil.copy2(queue_path, dest)
-            manifest_entries.append("taskx/task_queue.json")
+            manifest_entries.append("dopetask/task_queue.json")
 
         # 2. Packets (simplified: verify existence, but complex logic omitted for brevity)
         # 3. Runs (simplified: copy last N folders)
@@ -64,7 +64,7 @@ class BundleExporter:
             for run in all_runs[:last_n]:
                 if not run.is_dir():
                     continue
-                dest_run = taskx_dir / "runs" / run.name
+                dest_run = dopetask_dir / "runs" / run.name
                 shutil.copytree(run, dest_run)
                 # Walk and add to manifest
                 for root, _, files in os.walk(dest_run):
@@ -185,14 +185,14 @@ class BundleExporter:
     def _classify_path(self, rel_path: str) -> str:
         """Classify a bundled file deterministically by path."""
         normalized = rel_path.replace("\\", "/")
-        if normalized == "taskx/task_queue.json":
-            return "taskx_task_queue"
-        if normalized.startswith("taskx/packets/") or (
-            normalized.startswith("taskx/runs/") and normalized.endswith("/TASK_PACKET.md")
+        if normalized == "dopetask/task_queue.json":
+            return "dopetask_task_queue"
+        if normalized.startswith("dopetask/packets/") or (
+            normalized.startswith("dopetask/runs/") and normalized.endswith("/TASK_PACKET.md")
         ):
-            return "taskx_packet"
-        if normalized.startswith("taskx/runs/"):
-            return "taskx_run_artifact"
+            return "dopetask_packet"
+        if normalized.startswith("dopetask/runs/"):
+            return "dopetask_run_artifact"
         if normalized == "repo/REPO_SNAPSHOT.json":
             return "repo_snapshot"
         if normalized.startswith("repo/logs/") or normalized == "repo/LOG_INDEX.json":
@@ -234,11 +234,11 @@ class BundleExporter:
             "generated_at": datetime.now(UTC).isoformat(),
             "bundle_manifest": {
                 "sha256": manifest_hash,
-                "source_label": "taskx-export",
+                "source_label": "dopetask-export",
                 "created_at": datetime.now(UTC).isoformat(),
             },
             "contents": {
-                "task_queue": "taskx/task_queue.json",
+                "task_queue": "dopetask/task_queue.json",
                 "repo_snapshot": "repo/REPO_SNAPSHOT.json",
                 "logs_index": "repo/LOG_INDEX.json",
             },
@@ -262,7 +262,7 @@ class BundleExporter:
             temp_path = Path(td)
 
             # 1. Artifacts
-            self.collect_taskx_artifacts(last_n, temp_path)
+            self.collect_dopetask_artifacts(last_n, temp_path)
 
             # 2. Snapshot
             self.collect_repo_snapshot(temp_path)

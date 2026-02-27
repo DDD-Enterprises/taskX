@@ -1,7 +1,7 @@
-"""TaskX CI gate - Combines doctor checks with promotion validation.
+"""dopeTask CI gate - Combines doctor checks with promotion validation.
 
 Provides a single deterministic gate for CI/CD pipelines that enforces:
-1. TaskX installation is healthy (via doctor checks)
+1. dopeTask installation is healthy (via doctor checks)
 2. Run has valid promotion token (if required)
 """
 
@@ -237,7 +237,7 @@ def run_ci_gate(
             id="doctor",
             status="fail",
             message=f"Doctor run failed: {e}",
-            remediation=["Check TaskX installation"]
+            remediation=["Check dopeTask installation"]
         ))
 
     # ========================================
@@ -287,7 +287,7 @@ def run_ci_gate(
                     f"Run directory: {selected_run_dir or 'not found'}",
                     f"Expected promotion file: {promotion_filename}",
                     "Ensure run has completed promotion gate successfully",
-                    "Run: taskx promote-run --run <run_dir>"
+                    "Run: dopetask promote-run --run <run_dir>"
                 ]
             ))
 
@@ -335,7 +335,7 @@ def run_ci_gate(
 
 def _write_markdown_report(f: TextIO, report: CiGateReport, checks: list[CheckItem]) -> None:
     """Write human-readable markdown report."""
-    f.write("# TaskX CI Gate Report\n\n")
+    f.write("# dopeTask CI Gate Report\n\n")
 
     # Status
     status_emoji = "✅" if report.status == "passed" else "❌"

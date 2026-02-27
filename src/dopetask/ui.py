@@ -71,20 +71,20 @@ THEMES: dict[str, list[str]] = {
     ],
 }
 
-NEON_RC_MARKER_BEGIN = "# >>> TASKX NEON BEGIN >>>"
-NEON_RC_MARKER_END = "# <<< TASKX NEON END <<<"
+NEON_RC_MARKER_BEGIN = "# >>> DOPETASK NEON BEGIN >>>"
+NEON_RC_MARKER_END = "# <<< DOPETASK NEON END <<<"
 
 
 def neon_enabled() -> bool:
-    return os.getenv("TASKX_NEON", "1") == "1"
+    return os.getenv("DOPETASK_NEON", "1") == "1"
 
 
 def strict_enabled() -> bool:
-    return os.getenv("TASKX_STRICT", "0") == "1"
+    return os.getenv("DOPETASK_STRICT", "0") == "1"
 
 
 def get_theme_name() -> str:
-    return os.getenv("TASKX_THEME", "mintwave")
+    return os.getenv("DOPETASK_THEME", "mintwave")
 
 
 def get_theme_palette(theme: str | None = None) -> list[str]:
@@ -118,7 +118,7 @@ def render_banner(theme: str | None = None) -> None:
     console.print(Text("DETERMINISTIC TASK EXECUTION KERNEL", style="bold bright_white on magenta"))
     console.print(Text("NO FALLBACKS. NO RETRIES. NO GHOST BEHAVIOR.", style="bold bright_yellow on red"))
     console.print(Text("ONE INVOCATION. ONE PATH. ONE OUTCOME.", style="bold bright_cyan on blue"))
-    console.print(Text(f"Theme: {theme or get_theme_name()}  Toggle: TASKX_NEON=0", style="dim"))
+    console.print(Text(f"Theme: {theme or get_theme_name()}  Toggle: DOPETASK_NEON=0", style="dim"))
     console.print()
 
 
@@ -177,8 +177,8 @@ def render_neon_rc_block(*, theme: str) -> str:
         raise ValueError(f"Unknown theme: {theme!r}. Valid themes: {', '.join(sorted(THEMES))}")
     lines = [
         NEON_RC_MARKER_BEGIN,
-        "export TASKX_NEON=1",
-        f'export TASKX_THEME="{theme}"',
+        "export DOPETASK_NEON=1",
+        f'export DOPETASK_THEME="{theme}"',
         NEON_RC_MARKER_END,
         "",
     ]
@@ -190,18 +190,18 @@ def _locate_single_neon_block(contents: str) -> tuple[int, int] | None:
     end_idx = contents.find(NEON_RC_MARKER_END)
 
     if begin_idx != -1 and contents.find(NEON_RC_MARKER_BEGIN, begin_idx + 1) != -1:
-        raise ValueError("Multiple TASKX NEON begin markers found.")
+        raise ValueError("Multiple DOPETASK NEON begin markers found.")
     if end_idx != -1 and contents.find(NEON_RC_MARKER_END, end_idx + 1) != -1:
-        raise ValueError("Multiple TASKX NEON end markers found.")
+        raise ValueError("Multiple DOPETASK NEON end markers found.")
 
     if begin_idx == -1 and end_idx == -1:
         return None
     if begin_idx == -1:
-        raise ValueError("Malformed TASKX NEON markers: begin marker missing.")
+        raise ValueError("Malformed DOPETASK NEON markers: begin marker missing.")
     if end_idx == -1:
-        raise ValueError("Malformed TASKX NEON markers: end marker missing.")
+        raise ValueError("Malformed DOPETASK NEON markers: end marker missing.")
     if end_idx < begin_idx:
-        raise ValueError("Malformed TASKX NEON markers: end marker appears before begin marker.")
+        raise ValueError("Malformed DOPETASK NEON markers: end marker appears before begin marker.")
 
     start = contents.rfind("\n", 0, begin_idx)
     start = 0 if start == -1 else start + 1
@@ -256,7 +256,7 @@ def _atomic_write(path: Path, content: str) -> None:
             dir=path.parent,
             delete=False,
             prefix=f".{path.name}.",
-            suffix=".taskx.tmp",
+            suffix=".dopetask.tmp",
         ) as tmp_file:
             tmp_file.write(content)
             tmp_path = Path(tmp_file.name)
@@ -297,7 +297,7 @@ def persist_neon_rc_file(
     if dry_run or not changed:
         return NeonRcPersistResult(path=path, changed=changed, diff=diff, backup_path=None)
 
-    backup_path = path.with_name(f"{path.name}.taskx.bak")
+    backup_path = path.with_name(f"{path.name}.dopetask.bak")
     try:
         _atomic_write(backup_path, old)
     except OSError as exc:

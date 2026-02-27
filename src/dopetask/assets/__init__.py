@@ -1,1 +1,1 @@
-"""TaskX package assets."""
+"""dopeTask package assets."""

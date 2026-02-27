@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# TaskX Installer for Consumer Repos
-# Installs TaskX into another repository based on .taskx-pin configuration
+# dopeTask Installer for Consumer Repos
+# Installs dopeTask into another repository based on .dopetask-pin configuration
 
 set -euo pipefail
 
@@ -38,12 +38,12 @@ find_repo_root() {
     return 1
 }
 
-# Parse .taskx-pin file
+# Parse .dopetask-pin file
 parse_pin_file() {
     local pin_file="$1"
 
     if [ ! -f "$pin_file" ]; then
-        log_error ".taskx-pin file not found at: $pin_file"
+        log_error ".dopetask-pin file not found at: $pin_file"
         log_error "Create one with:"
         log_error "  install=git"
         log_error "  repo=https://github.com/owner/repo.git"
@@ -66,13 +66,13 @@ parse_pin_file() {
             repo) REPO_URL="$value" ;;
             ref) REF="$value" ;;
             path) WHEEL_PATH="$value" ;;
-            *) log_warn "Unknown key in .taskx-pin: $key" ;;
+            *) log_warn "Unknown key in .dopetask-pin: $key" ;;
         esac
     done < "$pin_file"
 
     # Validate required fields
     if [ -z "${INSTALL_METHOD:-}" ]; then
-        log_error "Missing 'install' field in .taskx-pin"
+        log_error "Missing 'install' field in .dopetask-pin"
         exit 1
     fi
 
@@ -98,7 +98,7 @@ parse_pin_file() {
 
 # Main installation logic
 main() {
-    log_info "TaskX Consumer Repo Installer"
+    log_info "dopeTask Consumer Repo Installer"
     echo ""
 
     # Find repository root
@@ -107,8 +107,8 @@ main() {
     log_info "Repository root: $REPO_ROOT"
     echo ""
 
-    # Check for .taskx-pin
-    PIN_FILE="$REPO_ROOT/.taskx-pin"
+    # Check for .dopetask-pin
+    PIN_FILE="$REPO_ROOT/.dopetask-pin"
     log_info "Reading pin configuration from: $PIN_FILE"
     parse_pin_file "$PIN_FILE"
     echo ""
@@ -118,7 +118,7 @@ main() {
         VENV_PATH="$REPO_ROOT/.venv"
         log_info "Using existing venv: $VENV_PATH"
     else
-        VENV_PATH="$REPO_ROOT/.taskx_venv"
+        VENV_PATH="$REPO_ROOT/.dopetask_venv"
         log_info "Creating venv: $VENV_PATH"
         python3 -m venv "$VENV_PATH"
     fi
@@ -133,9 +133,9 @@ main() {
     pip install --quiet --upgrade pip
     echo ""
 
-    # Install TaskX based on method
+    # Install dopeTask based on method
     if [ "$INSTALL_METHOD" = "git" ]; then
-        log_info "Installing TaskX from git:"
+        log_info "Installing dopeTask from git:"
         log_info "  Repository: $REPO_URL"
         log_info "  Reference: $REF"
 
@@ -148,7 +148,7 @@ main() {
             WHEEL_PATH="$REPO_ROOT/$WHEEL_PATH"
         fi
 
-        log_info "Installing TaskX from wheel:"
+        log_info "Installing dopeTask from wheel:"
         log_info "  Path: $WHEEL_PATH"
 
         if [ ! -f "$WHEEL_PATH" ]; then
@@ -161,16 +161,16 @@ main() {
     echo ""
 
     # Verify installation
-    log_info "Verifying TaskX installation..."
+    log_info "Verifying dopeTask installation..."
 
     VERIFICATION_OUTPUT=$(python -c "
 import sys
-import taskx
-print(f'Version: {taskx.__version__}')
-print(f'Location: {taskx.__file__}')
+import dopetask
+print(f'Version: {dopetask.__version__}')
+print(f'Location: {dopetask.__file__}')
 
 # Test schema loading
-from taskx.utils.schema_registry import SchemaRegistry
+from dopetask.utils.schema_registry import SchemaRegistry
 registry = SchemaRegistry()
 schema = registry.get('allowlist_diff')
 print(f'Schema loading: OK (loaded allowlist_diff)')
@@ -179,13 +179,13 @@ print(f'Schema loading: OK (loaded allowlist_diff)')
     if [ $? -eq 0 ]; then
         echo "$VERIFICATION_OUTPUT"
         echo ""
-        log_info "✅ TaskX installation successful!"
+        log_info "✅ dopeTask installation successful!"
         echo ""
         log_info "To activate this environment:"
         log_info "  source $VENV_PATH/bin/activate"
         echo ""
-        log_info "To verify TaskX:"
-        log_info "  taskx doctor --timestamp-mode deterministic"
+        log_info "To verify dopeTask:"
+        log_info "  dopetask doctor --timestamp-mode deterministic"
     else
         log_error "Verification failed!"
         echo "$VERIFICATION_OUTPUT"

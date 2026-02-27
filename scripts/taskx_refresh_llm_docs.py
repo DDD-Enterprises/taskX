@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wrapper script for TaskX LLM docs refresh."""
+"""Wrapper script for dopeTask LLM docs refresh."""
 
 from __future__ import annotations
 

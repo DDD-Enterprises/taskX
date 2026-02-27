@@ -1,4 +1,4 @@
-"""Worktree lifecycle helpers for deterministic TaskX commit sequencing."""
+"""Worktree lifecycle helpers for deterministic dopeTask commit sequencing."""
 
 from __future__ import annotations
 
@@ -382,7 +382,7 @@ def start_worktree(
     dirty_policy: str,
     cwd: Path | None = None,
 ) -> dict[str, Any]:
-    """Create TaskX worktree + branch and write WORKTREE.json."""
+    """Create dopeTask worktree + branch and write WORKTREE.json."""
     invoke_cwd = (cwd or Path.cwd()).resolve()
     repo_root = _git_repo_root(invoke_cwd)
     run_dir = run_dir.resolve()
@@ -392,7 +392,7 @@ def start_worktree(
         repo_root=repo_root,
         run_dir=run_dir,
         dirty_policy=dirty_policy,
-        stash_message=f"taskx:wt-start:{run_dir.name}",
+        stash_message=f"dopetask:wt-start:{run_dir.name}",
         location="repo_root",
     )
 
@@ -458,7 +458,7 @@ def commit_sequence(
     if branch == "main":
         raise RuntimeError(
             "ERROR: commit-sequence cannot run on 'main'.\n"
-            "Use taskx wt start to create a worktree."
+            "Use dopetask wt start to create a worktree."
         )
 
     preflight_status = _git_status_porcelain(repo_root)
@@ -489,7 +489,7 @@ def commit_sequence(
                 "Use --dirty-policy stash or clean manually."
             )
 
-        stash_message = f"taskx:commit-sequence:{run_dir.name}"
+        stash_message = f"dopetask:commit-sequence:{run_dir.name}"
         stash_ref = _stash_changes(
             repo_root=repo_root,
             message=stash_message,
@@ -605,7 +605,7 @@ def finish_run(
         repo_root=repo_root,
         run_dir=run_dir,
         dirty_policy=dirty_policy,
-        stash_message=f"taskx:finish:{run_dir.name}",
+        stash_message=f"dopetask:finish:{run_dir.name}",
         location="worktree",
     )
 
@@ -617,13 +617,13 @@ def finish_run(
         _run_git(["rebase", "--abort"], cwd=repo_root, check=False)
         raise RuntimeError(
             "ERROR: rebase onto origin/main failed.\n"
-            "Resolve conflicts manually and re-run taskx finish."
+            "Resolve conflicts manually and re-run dopetask finish."
         )
     post_rebase_head = _git_output(["rev-parse", "HEAD"], cwd=repo_root)
 
     merge_worktree = _find_worktree_for_branch(repo_root, base_branch)
     temp_worktree_created = False
-    temp_worktree_path = run_dir / ".taskx_finish_main"
+    temp_worktree_path = run_dir / ".dopetask_finish_main"
     if merge_worktree is None:
         temp_worktree_path.mkdir(parents=True, exist_ok=True)
         _run_git(

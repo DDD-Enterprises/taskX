@@ -11,9 +11,9 @@ class Conflict(NamedTuple):
 
 
 CONFLICT_PATTERNS = [
-    (r"Always choose speed over correctness", "TaskX values correctness. Remove or qualify this instruction."),
-    (r"You are the implementer", "TaskX defines the operator role as supervisor. Ensure role alignment."),
-    (r"Ignore task packets", "Task packets are the source of truth for TaskX operations."),
+    (r"Always choose speed over correctness", "dopeTask values correctness. Remove or qualify this instruction."),
+    (r"You are the implementer", "dopeTask defines the operator role as supervisor. Ensure role alignment."),
+    (r"Ignore task packets", "Task packets are the source of truth for dopeTask operations."),
 ]
 
 

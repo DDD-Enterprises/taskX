@@ -1,4 +1,4 @@
-"""Git commit operations for TaskX runs with allowlist enforcement."""
+"""Git commit operations for dopeTask runs with allowlist enforcement."""
 
 import json
 import subprocess
@@ -46,7 +46,7 @@ def commit_run(
     allow_unpromoted: bool = False,
     timestamp_mode: str = "deterministic",
 ) -> dict[str, Any]:
-    """Create a git commit for a completed TaskX run.
+    """Create a git commit for a completed dopeTask run.
 
     Only stages files that are:
     1. In the allowlist (from ALLOWLIST_DIFF.json)
@@ -108,7 +108,7 @@ def commit_run(
     allowlist_path = run_dir / "ALLOWLIST_DIFF.json"
     if not allowlist_path.exists():
         errors.append(f"Allowlist report not found: {allowlist_path}")
-        errors.append("Run 'taskx gate-allowlist' first to generate allowlist report")
+        errors.append("Run 'dopetask gate-allowlist' first to generate allowlist report")
         return report
 
     try:
@@ -148,7 +148,7 @@ def commit_run(
 
     if not report["promotion"]["found"] and not allow_unpromoted:
         errors.append("Run is not promoted (no PROMOTION.json found)")
-        errors.append("Either run 'taskx promote-run' or use --allow-unpromoted")
+        errors.append("Either run 'dopetask promote-run' or use --allow-unpromoted")
         return report
 
     # 5. Confirm we're in a git repo
@@ -230,7 +230,7 @@ def commit_run(
     if message is None:
         run_name = run_dir.name
         promo_token = report["promotion"].get("token_id", "NONE")
-        message = f"TASKX commit-run | run={run_name} | promo={promo_token}"
+        message = f"DOPETASK commit-run | run={run_name} | promo={promo_token}"
 
     report["git"]["commit_message"] = message
 

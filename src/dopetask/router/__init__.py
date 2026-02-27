@@ -1,4 +1,4 @@
-"""TaskX assisted routing subsystem."""
+"""dopeTask assisted routing subsystem."""
 
 from dopetask.router.availability import ensure_default_availability, load_availability
 from dopetask.router.handoff import render_handoff_markdown

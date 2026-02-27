@@ -1,4 +1,4 @@
-"""Finish workflow for worktree-based TaskX runs."""
+"""Finish workflow for worktree-based dopeTask runs."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _clean_or_stash(
             "Use --dirty-policy stash to stash and continue."
         )
 
-    stash_message = f"taskx:finish:{run_dir.name}:{scope}"
+    stash_message = f"dopetask:finish:{run_dir.name}:{scope}"
     stash_output = stash_changes(
         cwd=cwd,
         message=stash_message,

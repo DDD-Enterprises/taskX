@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TaskX Local Release Script
+# dopeTask Local Release Script
 # Prepares for release by verifying clean state, running tests, and building artifacts.
 # Does NOT automatically tag or push - operator controls those steps.
 
@@ -32,7 +32,7 @@ log_step() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-log_info "TaskX Local Release Preparation"
+log_info "dopeTask Local Release Preparation"
 log_info "Repo root: $REPO_ROOT"
 echo ""
 
@@ -66,7 +66,7 @@ echo ""
 
 # Step 4: Build distribution
 log_step "4/5 Building distribution packages..."
-if ! bash scripts/taskx_build.sh; then
+if ! bash scripts/dopetask_build.sh; then
     log_error "Build failed. Check build output above."
     exit 1
 fi
@@ -75,7 +75,7 @@ echo ""
 
 # Step 5: Verify clean venv installation
 log_step "5/5 Verifying wheel installation in clean environment..."
-if ! bash scripts/taskx_verify_clean_venv.sh; then
+if ! bash scripts/dopetask_verify_clean_venv.sh; then
     log_error "Clean venv verification failed. Build may be broken."
     exit 1
 fi

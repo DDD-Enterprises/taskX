@@ -7,9 +7,9 @@ Reads discovery_raw.json and generates:
   - DISCOVERY_REPORT.md (human-readable report)
 
 Usage:
-    python scripts/taskx_discover_repos_report.py \\
-        --in out/taskx_repo_discovery/discovery_raw.json \\
-        --out out/taskx_repo_discovery \\
+    python scripts/dopetask_discover_repos_report.py \\
+        --in out/dopetask_repo_discovery/discovery_raw.json \\
+        --out out/dopetask_repo_discovery \\
         --timestamp-mode deterministic
 """
 
@@ -65,7 +65,7 @@ def generate_discovery_report_md(discovery_data):
     lines = []
     
     # Title
-    lines.append("# TaskX Repository Discovery Report")
+    lines.append("# dopeTask Repository Discovery Report")
     lines.append("")
     
     # Metadata
@@ -163,30 +163,30 @@ def generate_discovery_report_md(discovery_data):
     lines.append("### 1. Review Discovered Repositories")
     lines.append("")
     lines.append("```bash")
-    lines.append("cat out/taskx_repo_discovery/REPOS.txt")
+    lines.append("cat out/dopetask_repo_discovery/REPOS.txt")
     lines.append("```")
     lines.append("")
     
     lines.append("### 2. Audit Version Drift")
     lines.append("")
     lines.append("```bash")
-    lines.append("bash scripts/taskx_pin_audit.sh \\")
+    lines.append("bash scripts/dopetask_pin_audit.sh \\")
     lines.append("  --target-version X.Y.Z \\")
-    lines.append("  --repo-list out/taskx_repo_discovery/REPOS.txt")
+    lines.append("  --repo-list out/dopetask_repo_discovery/REPOS.txt")
     lines.append("")
-    lines.append("cat out/taskx_pin_audit/PIN_AUDIT.md")
+    lines.append("cat out/dopetask_pin_audit/PIN_AUDIT.md")
     lines.append("```")
     lines.append("")
     
     lines.append("### 3. Upgrade Behind Repositories")
     lines.append("")
     lines.append("```bash")
-    lines.append("bash scripts/taskx_upgrade_many.sh \\")
+    lines.append("bash scripts/dopetask_upgrade_many.sh \\")
     lines.append("  --version X.Y.Z \\")
-    lines.append("  --repo-list out/taskx_repo_discovery/REPOS.txt \\")
+    lines.append("  --repo-list out/dopetask_repo_discovery/REPOS.txt \\")
     lines.append("  --apply")
     lines.append("")
-    lines.append("cat out/taskx_upgrade_many/ROLLUP.md")
+    lines.append("cat out/dopetask_upgrade_many/ROLLUP.md")
     lines.append("```")
     lines.append("")
     
@@ -196,7 +196,7 @@ def generate_discovery_report_md(discovery_data):
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate TaskX repo discovery reports from discovery_raw.json"
+        description="Generate dopeTask repo discovery reports from discovery_raw.json"
     )
     parser.add_argument(
         "--in",

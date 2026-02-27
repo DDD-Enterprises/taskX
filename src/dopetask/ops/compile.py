@@ -1,8 +1,8 @@
 """Compatibility surface for ops prompt compilation.
 
 Historically, the ops toolchain exposed hashing/compilation helpers via
-``taskx.ops.compile``. The implementation has since moved to
-``taskx.ops.export`` but the import surface remains for stability.
+``dopetask.ops.compile``. The implementation has since moved to
+``dopetask.ops.export`` but the import surface remains for stability.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def compile_prompt(
     platform_override: str | None = None,
     model_override: str | None = None,
     *,
-    taskx_version: str = "UNKNOWN",
+    dopetask_version: str = "UNKNOWN",
     git_hash: str = "UNKNOWN",
 ) -> str:
     """Compile a unified operator system prompt from profile + templates."""
@@ -51,6 +51,6 @@ def compile_prompt(
         templates_dir,
         platform_override=platform_override,
         model_override=model_override,
-        taskx_version=taskx_version,
+        dopetask_version=dopetask_version,
         git_hash=git_hash,
     )

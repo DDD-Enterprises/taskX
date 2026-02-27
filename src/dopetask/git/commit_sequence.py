@@ -137,7 +137,7 @@ def _stash_outside_changes(
             "Use --dirty-policy stash to stash them and continue."
         )
 
-    stash_message = f"taskx:commit-sequence:{run_dir.name}"
+    stash_message = f"dopetask:commit-sequence:{run_dir.name}"
     stash_output = stash_changes(
         cwd=worktree_path,
         message=stash_message,

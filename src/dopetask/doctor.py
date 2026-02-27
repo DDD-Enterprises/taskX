@@ -1,6 +1,6 @@
-"""TaskX installation integrity checker (doctor command).
+"""dopeTask installation integrity checker (doctor command).
 
-Validates that TaskX is correctly installed and can access all required
+Validates that dopeTask is correctly installed and can access all required
 package data, with special attention to schema bundling issues.
 """
 
@@ -37,8 +37,8 @@ class DoctorReport:
     # Environment info
     environment: dict = field(default_factory=dict)
 
-    # TaskX info
-    taskx: dict = field(default_factory=dict)
+    # dopeTask info
+    dopetask: dict = field(default_factory=dict)
 
     # Schema info
     schemas: dict = field(default_factory=dict)
@@ -66,25 +66,25 @@ def _get_wallclock_timestamp() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def _check_taskx_import() -> CheckItem:
-    """Check A: TaskX import sanity."""
+def _check_dopetask_import() -> CheckItem:
+    """Check A: dopeTask import sanity."""
     try:
         import dopetask
         version = getattr(dopetask, "__version__", None)
 
         return CheckItem(
-            id="taskx_import",
+            id="dopetask_import",
             status="pass",
-            message=f"TaskX imports successfully (version: {version or 'unknown'})",
+            message=f"dopeTask imports successfully (version: {version or 'unknown'})",
             remediation=[]
         )
     except Exception as e:
         return CheckItem(
-            id="taskx_import",
+            id="dopetask_import",
             status="fail",
-            message=f"Failed to import TaskX: {e}",
+            message=f"Failed to import dopeTask: {e}",
             remediation=[
-                "Ensure TaskX is installed: pip install -e . or pip install taskx",
+                "Ensure dopeTask is installed: pip install -e . or pip install dopetask",
                 "Check Python version is 3.11+",
                 "Verify virtual environment is activated if using one"
             ]
@@ -113,12 +113,12 @@ def _check_schema_registry() -> CheckItem:
                 message=f"Missing required schemas: {sorted(missing)}. Found: {len(available)} schemas",
                 remediation=[
                     "Schema bundling is broken in wheel packaging.",
-                    "Fix pyproject.toml to include taskx_schemas as a package:",
+                    "Fix pyproject.toml to include dopetask_schemas as a package:",
                     "",
                     "[tool.hatch.build.targets.wheel]",
-                    'packages = ["src/taskx", "taskx_schemas"]',
+                    'packages = ["src/dopetask", "dopetask_schemas"]',
                     "",
-                    "Ensure taskx_schemas/__init__.py exists to make it a proper package.",
+                    "Ensure dopetask_schemas/__init__.py exists to make it a proper package.",
                     "Then reinstall: pip install --force-reinstall -e ."
                 ]
             )
@@ -137,9 +137,9 @@ def _check_schema_registry() -> CheckItem:
             message=f"Schema registry failure: {e}",
             remediation=[
                 "Critical failure accessing schema registry.",
-                "This indicates a broken TaskX installation.",
+                "This indicates a broken dopeTask installation.",
                 "Try: pip install --force-reinstall -e .",
-                "If problem persists, check that taskx_schemas/ exists with __init__.py"
+                "If problem persists, check that dopetask_schemas/ exists with __init__.py"
             ]
         )
 
@@ -160,7 +160,7 @@ def _check_schema_load() -> CheckItem:
                 message=f"Schema loaded but is not a dict: {type(schema)}",
                 remediation=[
                     "Schema file may be corrupted.",
-                    "Reinstall TaskX: pip install --force-reinstall -e ."
+                    "Reinstall dopeTask: pip install --force-reinstall -e ."
                 ]
             )
 
@@ -199,7 +199,7 @@ def _check_schema_load() -> CheckItem:
             message=f"Failed to load schema: {e}",
             remediation=[
                 "Schema loading infrastructure may be broken.",
-                "Reinstall TaskX: pip install --force-reinstall -e ."
+                "Reinstall dopeTask: pip install --force-reinstall -e ."
             ]
         )
 
@@ -234,7 +234,7 @@ def _check_repo_detection(repo_root: Path | None, project_root: Path | None) -> 
         return CheckItem(
             id="repo_detection",
             status="warn",
-            message="No repository detected (not required for TaskX operation)",
+            message="No repository detected (not required for dopeTask operation)",
             remediation=[]
         )
 
@@ -324,7 +324,7 @@ def run_doctor(
     repo_root: Path | None = None,
     project_root: Path | None = None
 ) -> DoctorReport:
-    """Run TaskX installation integrity checks.
+    """Run dopeTask installation integrity checks.
 
     Args:
         out_dir: Directory to write report files
@@ -355,20 +355,20 @@ def run_doctor(
     # Run checks
     checks: list[CheckItem] = []
 
-    # Check A: TaskX import
-    check_a = _check_taskx_import()
+    # Check A: dopeTask import
+    check_a = _check_dopetask_import()
     checks.append(check_a)
 
-    # Extract TaskX version for report
+    # Extract dopeTask version for report
     try:
         import dopetask
         version = getattr(dopetask, "__version__", None)
-        report.taskx = {
+        report.dopetask = {
             "import_ok": check_a.status == "pass",
             "version": version
         }
     except Exception:
-        report.taskx = {
+        report.dopetask = {
             "import_ok": False,
             "version": None
         }
@@ -478,7 +478,7 @@ def run_doctor(
 
 def _write_markdown_report(f: TextIO, report: DoctorReport, checks: list[CheckItem]) -> None:
     """Write human-readable markdown report."""
-    f.write("# TaskX Doctor Report\n\n")
+    f.write("# dopeTask Doctor Report\n\n")
 
     # Status
     status_emoji = "✅" if report.status == "passed" else "❌"
@@ -497,10 +497,10 @@ def _write_markdown_report(f: TextIO, report: DoctorReport, checks: list[CheckIt
     f.write(f"- Platform: {report.environment['platform']}\n")
     f.write(f"- Working Directory: `{report.environment['cwd']}`\n\n")
 
-    # TaskX
-    f.write("## TaskX\n\n")
-    f.write(f"- Import OK: {report.taskx['import_ok']}\n")
-    f.write(f"- Version: {report.taskx['version'] or 'unknown'}\n\n")
+    # dopeTask
+    f.write("## dopeTask\n\n")
+    f.write(f"- Import OK: {report.dopetask['import_ok']}\n")
+    f.write(f"- Version: {report.dopetask['version'] or 'unknown'}\n\n")
 
     # Schemas
     f.write("## Schemas\n\n")

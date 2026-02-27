@@ -6,7 +6,6 @@ from dopetask.cli import cli
 from dopetask.project.common import SENTINELS
 from dopetask.project.toggles import project_status
 
-
 RUNNER = CliRunner()
 INSTRUCTION_FILES = (
     "PROJECT_INSTRUCTIONS.md",
@@ -38,20 +37,20 @@ def _init_none(project_dir: Path) -> None:
     assert result.exit_code == 0, result.output
 
 
-def test_enable_taskx_idempotent(tmp_path: Path) -> None:
+def test_enable_dopetask_idempotent(tmp_path: Path) -> None:
     project_dir = tmp_path / "project"
     _init_none(project_dir)
 
     first_enable = RUNNER.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
     assert first_enable.exit_code == 0, first_enable.output
     snapshot_after_first = _read_instruction_snapshots(project_dir)
 
     second_enable = RUNNER.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
     assert second_enable.exit_code == 0, second_enable.output
     snapshot_after_second = _read_instruction_snapshots(project_dir)
@@ -59,26 +58,26 @@ def test_enable_taskx_idempotent(tmp_path: Path) -> None:
     assert snapshot_after_first == snapshot_after_second
 
 
-def test_disable_taskx_idempotent(tmp_path: Path) -> None:
+def test_disable_dopetask_idempotent(tmp_path: Path) -> None:
     project_dir = tmp_path / "project"
     _init_none(project_dir)
 
     enable_result = RUNNER.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
     assert enable_result.exit_code == 0, enable_result.output
 
     first_disable = RUNNER.invoke(
         cli,
-        ["project", "disable", "taskx", "--path", str(project_dir)],
+        ["project", "disable", "dopetask", "--path", str(project_dir)],
     )
     assert first_disable.exit_code == 0, first_disable.output
     snapshot_after_first = _read_instruction_snapshots(project_dir)
 
     second_disable = RUNNER.invoke(
         cli,
-        ["project", "disable", "taskx", "--path", str(project_dir)],
+        ["project", "disable", "dopetask", "--path", str(project_dir)],
     )
     assert second_disable.exit_code == 0, second_disable.output
     snapshot_after_second = _read_instruction_snapshots(project_dir)
@@ -86,19 +85,19 @@ def test_disable_taskx_idempotent(tmp_path: Path) -> None:
     assert snapshot_after_first == snapshot_after_second
 
 
-def test_enable_chatx_does_not_remove_taskx(tmp_path: Path) -> None:
+def test_enable_chatx_does_not_remove_dopetask(tmp_path: Path) -> None:
     project_dir = tmp_path / "project"
     _init_none(project_dir)
 
-    enable_taskx = RUNNER.invoke(
+    enable_dopetask = RUNNER.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
-    assert enable_taskx.exit_code == 0, enable_taskx.output
+    assert enable_dopetask.exit_code == 0, enable_dopetask.output
 
     before_chatx = _read_instruction_snapshots(project_dir)
-    before_taskx_blocks = {
-        filename: _extract_block(content, "taskx")
+    before_dopetask_blocks = {
+        filename: _extract_block(content, "dopetask")
         for filename, content in before_chatx.items()
     }
 
@@ -109,13 +108,13 @@ def test_enable_chatx_does_not_remove_taskx(tmp_path: Path) -> None:
     assert enable_chatx.exit_code == 0, enable_chatx.output
 
     after_chatx = _read_instruction_snapshots(project_dir)
-    after_taskx_blocks = {
-        filename: _extract_block(content, "taskx")
+    after_dopetask_blocks = {
+        filename: _extract_block(content, "dopetask")
         for filename, content in after_chatx.items()
     }
 
-    assert before_taskx_blocks == after_taskx_blocks
-    assert all("Task packets are law" in block for block in after_taskx_blocks.values())
+    assert before_dopetask_blocks == after_dopetask_blocks
+    assert all("Task packets are law" in block for block in after_dopetask_blocks.values())
 
 
 def test_project_status_reports_correctly(tmp_path: Path) -> None:
@@ -124,14 +123,14 @@ def test_project_status_reports_correctly(tmp_path: Path) -> None:
 
     initial_status = project_status(project_dir)
     assert len(initial_status["files"]) == 4
-    assert all(not item["packs"]["taskx"] for item in initial_status["files"])
+    assert all(not item["packs"]["dopetask"] for item in initial_status["files"])
     assert all(not item["packs"]["chatx"] for item in initial_status["files"])
 
-    enable_taskx = RUNNER.invoke(
+    enable_dopetask = RUNNER.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
-    assert enable_taskx.exit_code == 0, enable_taskx.output
+    assert enable_dopetask.exit_code == 0, enable_dopetask.output
     enable_chatx = RUNNER.invoke(
         cli,
         ["project", "enable", "chatx", "--path", str(project_dir)],
@@ -140,5 +139,5 @@ def test_project_status_reports_correctly(tmp_path: Path) -> None:
 
     final_status = project_status(project_dir)
     assert len(final_status["files"]) == 4
-    assert all(item["packs"]["taskx"] for item in final_status["files"])
+    assert all(item["packs"]["dopetask"] for item in final_status["files"])
     assert all(item["packs"]["chatx"] for item in final_status["files"])

@@ -21,15 +21,15 @@ def _init_repo(path: Path) -> None:
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=path, check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=path, check=True, capture_output=True)
     (path / "README.md").write_text("# repo\n", encoding="utf-8")
-    (path / ".taskxroot").write_text("", encoding="utf-8")
-    (path / ".taskx").mkdir(parents=True, exist_ok=True)
-    (path / ".taskx" / "project.json").write_text(
-        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+    (path / ".dopetaskroot").write_text("", encoding="utf-8")
+    (path / ".dopetask").mkdir(parents=True, exist_ok=True)
+    (path / ".dopetask" / "project.json").write_text(
+        json.dumps({"project_id": "dopetask.core"}, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
     )
     (path / ".gitignore").write_text("out/\n", encoding="utf-8")
     subprocess.run(
-        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        ["git", "add", "README.md", ".gitignore", ".dopetaskroot", ".dopetask/project.json"],
         cwd=path,
         check=True,
         capture_output=True,
@@ -62,7 +62,7 @@ def _write_task_packet_with_commit_plan(run_dir: Path) -> None:
 
 
 def test_wt_start_refuses_dirty_repo(tmp_path: Path, monkeypatch) -> None:
-    """`taskx wt start` should hard-refuse dirty repo by default."""
+    """`dopetask wt start` should hard-refuse dirty repo by default."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "dirty.txt").write_text("dirty\n", encoding="utf-8")
@@ -79,7 +79,7 @@ def test_wt_start_refuses_dirty_repo(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_wt_start_refuses_existing_branch(tmp_path: Path, monkeypatch) -> None:
-    """`taskx wt start` should refuse branch reuse for deterministic execution."""
+    """`dopetask wt start` should refuse branch reuse for deterministic execution."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     subprocess.run(["git", "branch", "tp/0123-feature"], cwd=repo, check=True, capture_output=True)
@@ -105,7 +105,7 @@ def test_wt_start_refuses_existing_branch(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_commit_sequence_refuses_on_main(tmp_path: Path, monkeypatch) -> None:
-    """`taskx commit-sequence` should refuse execution on main."""
+    """`dopetask commit-sequence` should refuse execution on main."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     run_dir = repo / "out" / "runs" / "RUN_0123"
@@ -125,14 +125,14 @@ def test_commit_sequence_refuses_on_main(tmp_path: Path, monkeypatch) -> None:
 
     assert result.exit_code == 1
     assert "ERROR: commit-sequence cannot run on 'main'." in result.stdout
-    assert "Use taskx wt start to create a worktree." in result.stdout
+    assert "Use dopetask wt start to create a worktree." in result.stdout
 
 
 def test_commit_sequence_refuses_with_staged_files(tmp_path: Path, monkeypatch) -> None:
-    """`taskx commit-sequence` should refuse when index is pre-staged."""
+    """`dopetask commit-sequence` should refuse when index is pre-staged."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/dopetask.core/test"], cwd=repo, check=True, capture_output=True)
 
     src_dir = repo / "src"
     src_dir.mkdir(parents=True, exist_ok=True)
@@ -160,10 +160,10 @@ def test_commit_sequence_refuses_with_staged_files(tmp_path: Path, monkeypatch) 
 
 
 def test_commit_sequence_refuses_empty_step(tmp_path: Path, monkeypatch) -> None:
-    """`taskx commit-sequence` should refuse empty commits per step."""
+    """`dopetask commit-sequence` should refuse empty commits per step."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/dopetask.core/test"], cwd=repo, check=True, capture_output=True)
     run_dir = tmp_path / "RUN_0123"
     _write_task_packet_with_commit_plan(run_dir)
 
@@ -188,7 +188,7 @@ def test_commit_sequence_accepts_unstaged_allowlisted_changes(tmp_path: Path, mo
     """Unstaged allowlisted edits should be committed by commit-sequence."""
     repo = tmp_path / "repo"
     _init_repo(repo)
-    subprocess.run(["git", "checkout", "-b", "tp/taskx.core/test"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "tp/dopetask.core/test"], cwd=repo, check=True, capture_output=True)
 
     src_dir = repo / "src"
     src_dir.mkdir(parents=True, exist_ok=True)

@@ -98,14 +98,14 @@ def test_replace_existing_block(tmp_path: Path) -> None:
         backup_suffix_fn=lambda: "TEST",
     )
     new = rc.read_text(encoding="utf-8")
-    assert 'export TASKX_NEON="1"' in new
-    assert 'export TASKX_THEME="mintwave"' in new
-    assert 'export TASKX_STRICT="0"' in new
+    assert 'export DOPETASK_NEON="1"' in new
+    assert 'export DOPETASK_THEME="mintwave"' in new
+    assert 'export DOPETASK_STRICT="0"' in new
 
 
 def test_malformed_markers_refuse(tmp_path: Path) -> None:
     rc = tmp_path / "rc"
-    rc.write_text(f"{MARKER_BEGIN}\nexport TASKX_NEON=\"1\"\n", encoding="utf-8")
+    rc.write_text(f"{MARKER_BEGIN}\nexport DOPETASK_NEON=\"1\"\n", encoding="utf-8")
 
     with pytest.raises(ValueError) as exc_info:
         persist_rc_file(

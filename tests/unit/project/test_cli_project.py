@@ -8,7 +8,7 @@ from dopetask.cli import cli
 
 
 def test_project_init_command(tmp_path: Path) -> None:
-    """`taskx project init` should create expected files."""
+    """`dopetask project init` should create expected files."""
     runner = CliRunner()
     project_dir = tmp_path / "cli-project"
 
@@ -35,7 +35,7 @@ def test_project_enable_disable_status_commands(tmp_path: Path) -> None:
 
     enable_result = runner.invoke(
         cli,
-        ["project", "enable", "taskx", "--path", str(project_dir)],
+        ["project", "enable", "dopetask", "--path", str(project_dir)],
     )
     assert enable_result.exit_code == 0
     assert (project_dir / "PROJECT_PATCH_REPORT.md").exists()
@@ -45,11 +45,11 @@ def test_project_enable_disable_status_commands(tmp_path: Path) -> None:
         ["project", "status", "--path", str(project_dir)],
     )
     assert status_result.exit_code == 0
-    assert "taskx=enabled" in status_result.stdout
+    assert "dopetask=enabled" in status_result.stdout
 
     disable_result = runner.invoke(
         cli,
-        ["project", "disable", "taskx", "--path", str(project_dir)],
+        ["project", "disable", "dopetask", "--path", str(project_dir)],
     )
     assert disable_result.exit_code == 0
 

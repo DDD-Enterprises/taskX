@@ -3,25 +3,25 @@
 Evergreen: DO NOT edit per task. Task packets change; this file stays stable.
 
 <!-- TASKX_TP_GIT_WORKFLOW_START -->
-## Mandatory Git Workflow for All Task Packets (TaskX)
+## Mandatory Git Workflow for All Task Packets (dopeTask)
 
 - Never work directly on `main`. `main` must remain clean.
 - Stashes are forbidden. If `git stash list` is non-empty, STOP and clean it.
-- Every TP must use a dedicated worktree + branch created by TaskX:
-  - `taskx tp git doctor`
-  - `taskx tp git start <TP_ID> <slug>`
+- Every TP must use a dedicated worktree + branch created by dopeTask:
+  - `dopetask tp git doctor`
+  - `dopetask tp git start <TP_ID> <slug>`
 - Work must be performed inside `.worktrees/<TP_ID>`.
 - Commits must follow the TP’s commit plan.
 - Integration must happen via PR:
-  - `taskx tp git pr <TP_ID> --title "TP-XXXX: ..." --body-file ...`
-  - `taskx tp git merge <TP_ID>` (auto-merge when available; fail-closed otherwise)
+  - `dopetask tp git pr <TP_ID> --title "TP-XXXX: ..." --body-file ...`
+  - `dopetask tp git merge <TP_ID>` (auto-merge when available; fail-closed otherwise)
 - After merge (confirmed), sync and cleanup:
-  - `taskx tp git sync-main`
-  - `taskx tp git cleanup <TP_ID>`
+  - `dopetask tp git sync-main`
+  - `dopetask tp git cleanup <TP_ID>`
 
 ### One-command mode (preferred)
 Use:
-- `taskx tp run <TP_ID> <slug> [--test-cmd "..."] [--wait-merge]`
+- `dopetask tp run <TP_ID> <slug> [--test-cmd "..."] [--wait-merge]`
 
 This command must emit a proof pack under `runs/tp/...` and must not claim merge/cleanup success unless verified.
 <!-- TASKX_TP_GIT_WORKFLOW_END -->
@@ -75,46 +75,46 @@ ruff format --check .
 # Build distribution packages
 python -m build
 # or
-scripts/taskx_build.sh
+scripts/dopetask_build.sh
 ```
 
-### TaskX CLI Usage
+### dopeTask CLI Usage
 ```bash
 # Diagnostic health check
-taskx doctor
+dopetask doctor
 
 # Basic task lifecycle
-taskx compile-tasks --mode mvp --max-packets 5
-taskx run-task --task-id T001
-taskx gate-allowlist --run ./out/runs/RUN_..._T001
-taskx promote-run --run ./out/runs/RUN_..._T001
+dopetask compile-tasks --mode mvp --max-packets 5
+dopetask run-task --task-id T001
+dopetask gate-allowlist --run ./out/runs/RUN_..._T001
+dopetask promote-run --run ./out/runs/RUN_..._T001
 
 # Dopemux namespace (auto-discovery)
-taskx dopemux compile
-taskx dopemux run --task-id T002
-taskx dopemux gate
+dopetask dopemux compile
+dopetask dopemux run --task-id T002
+dopetask dopemux gate
 ```
 
 ## 4) Project Structure
 
 ```
-src/taskx/          # Core task packet engine
+src/dopetask/          # Core task packet engine
 ├── cli.py          # Main CLI entry point (Typer-based)
 ├── doctor.py       # Diagnostic tool implementation
 ├── ci_gate.py      # Allowlist gate checking
 ├── pipeline/       # Task compilation, execution, promotion
 └── project/        # Project initialization and mode management
 
-src/taskx_adapters/ # Dopemux integration
+src/dopetask_adapters/ # Dopemux integration
 └── dopemux.py      # Auto-discovery of Dopemux paths
 
-taskx_schemas/      # JSON schemas packaged with distribution
+dopetask_schemas/      # JSON schemas packaged with distribution
 schemas/            # Schema definitions for validation
 
 scripts/            # Build and installation automation
-├── taskx_build.sh          # Build sdist + wheel
+├── dopetask_build.sh          # Build sdist + wheel
 ├── install-git-hooks.sh    # Install pre-commit hooks
-└── taskx_install_into_repo.sh  # Install TaskX into other repos
+└── dopetask_install_into_repo.sh  # Install dopeTask into other repos
 
 docs/               # User documentation
 ├── INSTALL.md      # Installation guide
@@ -147,14 +147,14 @@ REVIEW / COMMIT:
 ## 7) Key Files
 
 - `pyproject.toml` - Project metadata, dependencies, tool configuration (Hatchling build, Ruff lint, pytest, mypy)
-- `TASKX_VERSION.lock` - Version pinning for deterministic builds
-- `.taskxroot` - Marks TaskX project root
-- `taskx_bundle.yaml` - Task bundle configuration
+- `DOPETASK_VERSION.lock` - Version pinning for deterministic builds
+- `.dopetaskroot` - Marks dopeTask project root
+- `dopetask_bundle.yaml` - Task bundle configuration
 - `README.md` - User-facing project overview and quick start
 
 ## 8) Development Gotchas
 
-- **Deterministic time**: TaskX mocks `datetime.now()` for reproducible builds
+- **Deterministic time**: dopeTask mocks `datetime.now()` for reproducible builds
 - **Allowlist enforcement**: Gate rejects any file changes not in allowlist
 - **Offline-first design**: All dependencies must be pre-installed; no network access during runs
 - **Strict typing**: Project uses `mypy --strict` - all functions must be typed
@@ -165,13 +165,13 @@ REVIEW / COMMIT:
 
 ## 9) New Command Surfaces
 
-- `taskx project shell init|status`
-- `taskx project upgrade`
-- `taskx route init|plan|handoff|explain`
-- `taskx pr open`
+- `dopetask project shell init|status`
+- `dopetask project upgrade`
+- `dopetask route init|plan|handoff|explain`
+- `dopetask pr open`
 
 Branch restore contract:
-- If a TaskX command switches branches, it must restore original branch/HEAD unless explicitly disabled.
+- If a dopeTask command switches branches, it must restore original branch/HEAD unless explicitly disabled.
 
 ## 10) Response format (mandatory)
 A) MODE + attention state
@@ -181,70 +181,70 @@ D) COMMANDS RUN + RESULTS
 E) CONPORT LOGGING
 F) NEXT ACTION or CHECKPOINT STOP
 
-<!-- TASKX:AUTOGEN:START -->
-## TaskX Command Surface (Autogenerated)
+<!-- DOPETASK:AUTOGEN:START -->
+## dopeTask Command Surface (Autogenerated)
 
 ### Command Tree
-- taskx bundle
-  - taskx bundle export
-  - taskx bundle ingest
-- taskx case
-  - taskx case audit
-- taskx ci-gate
-- taskx collect-evidence
-- taskx commit-run
-- taskx commit-sequence
-- taskx compile-tasks
-- taskx docs
-  - taskx docs refresh-llm
-- taskx doctor
-- taskx dopemux
-  - taskx dopemux collect
-  - taskx dopemux compile
-  - taskx dopemux feedback
-  - taskx dopemux gate
-  - taskx dopemux loop
-  - taskx dopemux promote
-  - taskx dopemux run
-- taskx finish
-- taskx gate-allowlist
-- taskx loop
-- taskx manifest
-  - taskx manifest check
-  - taskx manifest finalize
-  - taskx manifest init
-- taskx orchestrate
-- taskx pr
-  - taskx pr open
-- taskx project
-  - taskx project disable
-  - taskx project doctor
-  - taskx project enable
-  - taskx project init
-  - taskx project mode
-    - taskx project mode set
-  - taskx project shell
-    - taskx project shell init
-    - taskx project shell status
-  - taskx project status
-  - taskx project upgrade
-- taskx promote-run
-- taskx route
-  - taskx route explain
-  - taskx route handoff
-  - taskx route init
-  - taskx route plan
-- taskx run-task
-- taskx spec-feedback
-- taskx wt
-  - taskx wt start
+- dopetask bundle
+  - dopetask bundle export
+  - dopetask bundle ingest
+- dopetask case
+  - dopetask case audit
+- dopetask ci-gate
+- dopetask collect-evidence
+- dopetask commit-run
+- dopetask commit-sequence
+- dopetask compile-tasks
+- dopetask docs
+  - dopetask docs refresh-llm
+- dopetask doctor
+- dopetask dopemux
+  - dopetask dopemux collect
+  - dopetask dopemux compile
+  - dopetask dopemux feedback
+  - dopetask dopemux gate
+  - dopetask dopemux loop
+  - dopetask dopemux promote
+  - dopetask dopemux run
+- dopetask finish
+- dopetask gate-allowlist
+- dopetask loop
+- dopetask manifest
+  - dopetask manifest check
+  - dopetask manifest finalize
+  - dopetask manifest init
+- dopetask orchestrate
+- dopetask pr
+  - dopetask pr open
+- dopetask project
+  - dopetask project disable
+  - dopetask project doctor
+  - dopetask project enable
+  - dopetask project init
+  - dopetask project mode
+    - dopetask project mode set
+  - dopetask project shell
+    - dopetask project shell init
+    - dopetask project shell status
+  - dopetask project status
+  - dopetask project upgrade
+- dopetask promote-run
+- dopetask route
+  - dopetask route explain
+  - dopetask route handoff
+  - dopetask route init
+  - dopetask route plan
+- dopetask run-task
+- dopetask spec-feedback
+- dopetask wt
+  - dopetask wt start
 
-### Assisted Routing (taskx route)
-- Config: `.taskx/runtime/availability.yaml`
+### Assisted Routing (dopetask route)
+- Config: `.dopetask/runtime/availability.yaml`
 - Artifacts:
-  - `out/taskx_route/ROUTE_PLAN.json`
-  - `out/taskx_route/ROUTE_PLAN.md`
-  - `out/taskx_route/HANDOFF.md`
+  - `out/dopetask_route/ROUTE_PLAN.json`
+  - `out/dopetask_route/ROUTE_PLAN.md`
+  - `out/dopetask_route/HANDOFF.md`
 - Execution: assisted-only (prints handoffs; does not invoke external runners)
 
 ### Availability Summary (deterministic)
@@ -274,17 +274,17 @@ policy:
   escalation_ladder: [gpt-5.1-mini, haiku-4.5, sonnet-4.55, gpt-5.3-codex]
 ```
 
-Generated by: taskx docs refresh-llm
-<!-- TASKX:AUTOGEN:END -->
+Generated by: dopetask docs refresh-llm
+<!-- DOPETASK:AUTOGEN:END -->
 
 <!-- TASKX:BEGIN operator_system v=1 platform=chatgpt model=gpt-5.2-thinking hash=8b84e46d1c68ff884983949ec74f9f7aa98b9d4318d3f91055f8852d24eae8da -->
 # OPERATOR SYSTEM PROMPT
-# Project: taskX
+# Project: dopeTask
 # Platform: chatgpt
 # Model: gpt-5.2-thinking
-# Repo Root: /Users/hue/code/taskX
+# Repo Root: /Users/hue/code/dopeTask
 # Timezone: America/Vancouver
-# TaskX Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
+# dopeTask Pin: git_commit=50548e9c079fb86245d8580f25cf7d11485be528
 # CLI Min Version: 0.1.2
 
 # BASE SUPERVISOR (Canonical Minimal Baseline v1)
@@ -383,7 +383,7 @@ Specifics for chatgpt
 
 ## Handoff contract
 - Follow all instructions provided in this prompt.
-- Use TaskX CLI for all task management.
+- Use dopeTask CLI for all task management.
 - Ensure all outputs conform to the project spec.
 
 <!-- TASKX:END operator_system -->

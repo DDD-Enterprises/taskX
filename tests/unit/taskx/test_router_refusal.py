@@ -1,4 +1,4 @@
-"""Refusal contract tests for TaskX route planning."""
+"""Refusal contract tests for dopeTask route planning."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def test_route_plan_refuses_when_no_runners_available(tmp_path: Path, monkeypatc
     packet = repo / "PACKET.md"
     packet.write_text("# Packet\n", encoding="utf-8")
 
-    availability_path = repo / ".taskx" / "runtime" / "availability.yaml"
+    availability_path = repo / ".dopetask" / "runtime" / "availability.yaml"
     availability_path.parent.mkdir(parents=True, exist_ok=True)
     availability_path.write_text(
         """
@@ -51,7 +51,7 @@ policy:
     result = runner.invoke(cli, ["route", "plan", "--repo-root", str(repo), "--packet", str(packet)])
     assert result.exit_code == 2
 
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
     payload = json.loads(plan_path.read_text(encoding="utf-8"))
     assert payload["status"] == "refused"
     assert payload["refusal_reasons"]

@@ -1,4 +1,4 @@
-"""Tests for TaskX identity banner output."""
+"""Tests for dopeTask identity banner output."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ def test_banner_prints_single_line_when_origin_matches_hint(capsys, monkeypatch)
     monkeypatch.setenv("NO_COLOR", "1")
 
     ctx = BannerContext(
-        project_id="taskx",
-        project_slug="taskX",
-        branch="tp/taskx/tp-0111-demo",
+        project_id="dopetask",
+        project_slug="dopeTask",
+        branch="tp/dopetask/tp-0111-demo",
         run_id="RUN_0111",
-        origin_url="git@github.com:example/taskX.git",
-        repo_remote_hint="taskX",
+        origin_url="git@github.com:example/dopeTask.git",
+        repo_remote_hint="dopeTask",
     )
 
     print_identity_banner(ctx)
@@ -23,7 +23,7 @@ def test_banner_prints_single_line_when_origin_matches_hint(capsys, monkeypatch)
 
     assert captured.out == ""
     assert captured.err.splitlines() == [
-        "[taskx] project=taskx repo=taskX branch=tp/taskx/tp-0111-demo run=RUN_0111"
+        "[dopetask] project=dopetask repo=dopeTask branch=tp/dopetask/tp-0111-demo run=RUN_0111"
     ]
 
 
@@ -32,12 +32,12 @@ def test_banner_prints_warning_when_origin_missing_hint(capsys, monkeypatch) -> 
     monkeypatch.setenv("NO_COLOR", "1")
 
     ctx = BannerContext(
-        project_id="taskx",
-        project_slug="taskX",
+        project_id="dopetask",
+        project_slug="dopeTask",
         branch="main",
         run_id="RUN_X",
         origin_url="git@github.com:example/other.git",
-        repo_remote_hint="taskX",
+        repo_remote_hint="dopeTask",
     )
 
     print_identity_banner(ctx)
@@ -45,8 +45,8 @@ def test_banner_prints_warning_when_origin_missing_hint(capsys, monkeypatch) -> 
 
     assert captured.out == ""
     assert captured.err.splitlines() == [
-        "[taskx] project=taskx repo=taskX branch=main run=RUN_X",
-        "[taskx][WARNING] origin URL does not match repo_remote_hint='taskX' (origin='git@github.com:example/other.git')",
+        "[dopetask] project=dopetask repo=dopeTask branch=main run=RUN_X",
+        "[dopetask][WARNING] origin URL does not match repo_remote_hint='dopeTask' (origin='git@github.com:example/other.git')",
     ]
 
 
@@ -55,12 +55,12 @@ def test_banner_prints_warning_when_origin_unavailable(capsys, monkeypatch) -> N
     monkeypatch.setenv("NO_COLOR", "1")
 
     ctx = BannerContext(
-        project_id="taskx",
-        project_slug="taskX",
+        project_id="dopetask",
+        project_slug="dopeTask",
         branch="main",
         run_id=None,
         origin_url=None,
-        repo_remote_hint="taskX",
+        repo_remote_hint="dopeTask",
     )
 
     print_identity_banner(ctx)
@@ -68,6 +68,6 @@ def test_banner_prints_warning_when_origin_unavailable(capsys, monkeypatch) -> N
 
     assert captured.out == ""
     assert captured.err.splitlines() == [
-        "[taskx] project=taskx repo=taskX branch=main run=none",
-        "[taskx][WARNING] origin URL not available",
+        "[dopetask] project=dopetask repo=dopeTask branch=main run=none",
+        "[dopetask][WARNING] origin URL not available",
     ]

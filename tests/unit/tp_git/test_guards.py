@@ -1,4 +1,4 @@
-"""Unit tests for taskx tp git doctor guard behavior."""
+"""Unit tests for dopetask tp git doctor guard behavior."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ class _GitStub:
 
 
 def _result(args: list[str], stdout: str = "", stderr: str = "", code: int = 0) -> ExecResult:
-    return ExecResult(argv=tuple(["git", *args]), cwd=Path("/repo"), returncode=code, stdout=stdout, stderr=stderr)
+    return ExecResult(argv=("git", *args), cwd=Path("/repo"), returncode=code, stdout=stdout, stderr=stderr)
 
 
 def test_doctor_passes_when_main_clean_no_stash(monkeypatch: pytest.MonkeyPatch) -> None:

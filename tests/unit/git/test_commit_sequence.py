@@ -133,7 +133,7 @@ def test_commit_sequence_creates_commit_stack_from_plan(repo_with_origin: Path) 
     start_report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-seq-pass",
+        branch="dopetask/run-seq-pass",
         worktree_path=repo / "out" / "worktrees" / "RUN_SEQ_PASS",
         dirty_policy="refuse",
     )
@@ -218,7 +218,7 @@ def test_commit_sequence_refuses_when_index_already_staged(repo_with_origin: Pat
     start_report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-seq-staged",
+        branch="dopetask/run-seq-staged",
         worktree_path=repo / "out" / "worktrees" / "RUN_SEQ_STAGED",
         dirty_policy="refuse",
     )
@@ -257,7 +257,7 @@ def test_commit_sequence_refuses_empty_step(repo_with_origin: Path) -> None:
     start_report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-seq-empty",
+        branch="dopetask/run-seq-empty",
         worktree_path=repo / "out" / "worktrees" / "RUN_SEQ_EMPTY",
         dirty_policy="refuse",
     )

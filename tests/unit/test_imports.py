@@ -1,17 +1,17 @@
 """Smoke-test that core packages are importable."""
 
 
-def test_import_taskx():
+def test_import_dopetask():
     import dopetask
 
     assert hasattr(dopetask, "__version__")
 
 
-def test_import_taskx_schemas():
-    import taskx_schemas
+def test_import_dopetask_schemas():
+    import dopetask_schemas
 
-    assert hasattr(taskx_schemas, "__version__")
+    assert hasattr(dopetask_schemas, "__version__")
 
 
-def test_import_taskx_adapters():
+def test_import_dopetask_adapters():
     import dopetask_adapters  # noqa: F401

@@ -17,24 +17,24 @@ if TYPE_CHECKING:
 RUNNER = CliRunner()
 
 EXPECTED_ENVRC = 'export PATH="$(pwd)/scripts:$PATH"\n'
-EXPECTED_TASKX_SHIM = (
+EXPECTED_DOPETASK_SHIM = (
     "#!/usr/bin/env bash\n"
     "set -euo pipefail\n"
-    "exec \"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/taskx-local\" \"$@\"\n"
+    "exec \"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/dopetask-local\" \"$@\"\n"
 )
-EXPECTED_TASKX_LOCAL = (
+EXPECTED_DOPETASK_LOCAL = (
     "#!/usr/bin/env bash\n"
     "set -euo pipefail\n"
     "\n"
     "SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n"
     "REPO_ROOT=\"$(cd \"$SCRIPT_DIR/..\" && pwd)\"\n"
-    "LOCAL_TASKX=\"$REPO_ROOT/.venv-taskx/bin/taskx\"\n"
+    "LOCAL_DOPETASK=\"$REPO_ROOT/.venv-dopetask/bin/dopetask\"\n"
     "\n"
-    "if [[ -x \"$LOCAL_TASKX\" ]]; then\n"
-    "  exec \"$LOCAL_TASKX\" \"$@\"\n"
+    "if [[ -x \"$LOCAL_DOPETASK\" ]]; then\n"
+    "  exec \"$LOCAL_DOPETASK\" \"$@\"\n"
     "fi\n"
     "\n"
-    "echo \"WARNING: repo-local TaskX not found at $LOCAL_TASKX; falling back to taskx on PATH\" >&2\n"
+    "echo \"WARNING: repo-local dopeTask not found at $LOCAL_DOPETASK; falling back to dopetask on PATH\" >&2\n"
     "\n"
     "PATH_NO_LOCAL=\"\"\n"
     "IFS=':' read -r -a PATH_PARTS <<< \"$PATH\"\n"
@@ -49,12 +49,12 @@ EXPECTED_TASKX_LOCAL = (
     "  fi\n"
     "done\n"
     "\n"
-    "GLOBAL_TASKX=\"$(PATH=\"$PATH_NO_LOCAL\" command -v taskx || true)\"\n"
-    "if [[ -n \"$GLOBAL_TASKX\" ]]; then\n"
-    "  exec \"$GLOBAL_TASKX\" \"$@\"\n"
+    "GLOBAL_DOPETASK=\"$(PATH=\"$PATH_NO_LOCAL\" command -v dopetask || true)\"\n"
+    "if [[ -n \"$GLOBAL_DOPETASK\" ]]; then\n"
+    "  exec \"$GLOBAL_DOPETASK\" \"$@\"\n"
     "fi\n"
     "\n"
-    "echo \"ERROR: could not find TaskX executable. Create .venv-taskx/bin/taskx or install taskx on PATH.\" >&2\n"
+    "echo \"ERROR: could not find dopeTask executable. Create .venv-dopetask/bin/dopetask or install dopetask on PATH.\" >&2\n"
     "exit 2\n"
 )
 
@@ -66,23 +66,23 @@ def test_shell_init_creates_files(tmp_path: Path) -> None:
 
     assert report["created_files"] == [
         ".envrc",
-        "scripts/taskx",
-        "scripts/taskx-local",
+        "scripts/dopetask",
+        "scripts/dopetask-local",
     ]
     assert report["skipped_files"] == []
 
     envrc_path = repo_root / ".envrc"
-    shim_path = repo_root / "scripts" / "taskx"
-    local_path = repo_root / "scripts" / "taskx-local"
+    shim_path = repo_root / "scripts" / "dopetask"
+    local_path = repo_root / "scripts" / "dopetask-local"
 
     assert envrc_path.read_text(encoding="utf-8") == EXPECTED_ENVRC
-    assert shim_path.read_text(encoding="utf-8") == EXPECTED_TASKX_SHIM
-    assert local_path.read_text(encoding="utf-8") == EXPECTED_TASKX_LOCAL
+    assert shim_path.read_text(encoding="utf-8") == EXPECTED_DOPETASK_SHIM
+    assert local_path.read_text(encoding="utf-8") == EXPECTED_DOPETASK_LOCAL
 
     assert shim_path.exists() and local_path.exists()
 
-    json_report_path = repo_root / "out" / "taskx_project_shell" / "PROJECT_SHELL_REPORT.json"
-    md_report_path = repo_root / "out" / "taskx_project_shell" / "PROJECT_SHELL_REPORT.md"
+    json_report_path = repo_root / "out" / "dopetask_project_shell" / "PROJECT_SHELL_REPORT.json"
+    md_report_path = repo_root / "out" / "dopetask_project_shell" / "PROJECT_SHELL_REPORT.md"
     assert json_report_path.exists()
     assert md_report_path.exists()
 
@@ -90,8 +90,8 @@ def test_shell_init_creates_files(tmp_path: Path) -> None:
     assert payload["repo_root"] == str(repo_root.resolve())
     assert payload["created_files"] == [
         ".envrc",
-        "scripts/taskx",
-        "scripts/taskx-local",
+        "scripts/dopetask",
+        "scripts/dopetask-local",
     ]
 
 
@@ -101,8 +101,8 @@ def test_shell_init_is_idempotent(tmp_path: Path) -> None:
 
     files = [
         repo_root / ".envrc",
-        repo_root / "scripts" / "taskx",
-        repo_root / "scripts" / "taskx-local",
+        repo_root / "scripts" / "dopetask",
+        repo_root / "scripts" / "dopetask-local",
     ]
     before_snapshot = {str(path): path.read_text(encoding="utf-8") for path in files}
     before_mtimes = {str(path): path.stat().st_mtime_ns for path in files}
@@ -112,8 +112,8 @@ def test_shell_init_is_idempotent(tmp_path: Path) -> None:
     assert second["created_files"] == []
     assert second["skipped_files"] == [
         ".envrc",
-        "scripts/taskx",
-        "scripts/taskx-local",
+        "scripts/dopetask",
+        "scripts/dopetask-local",
     ]
 
     after_snapshot = {str(path): path.read_text(encoding="utf-8") for path in files}

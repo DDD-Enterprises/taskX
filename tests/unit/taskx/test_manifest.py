@@ -30,14 +30,14 @@ def test_manifest_generation_is_schema_valid(tmp_path: Path) -> None:
     run_dir = tmp_path / "RUN_DETERMINISTIC"
     init_manifest(
         run_dir=run_dir,
-        task_packet_id="TASKX_A24",
+        task_packet_id="DOPETASK_A24",
         mode="ACT",
         timestamp_mode="deterministic",
     )
 
     appended = append_command_record(
         run_dir=run_dir,
-        cmd=["taskx", "gate-allowlist", "--token", "super-secret-token"],
+        cmd=["dopetask", "gate-allowlist", "--token", "super-secret-token"],
         cwd=tmp_path,
         exit_code=0,
         stdout_text="gate passed",
@@ -60,7 +60,7 @@ def test_manifest_command_ordering_is_deterministic(tmp_path: Path) -> None:
     run_dir = tmp_path / "RUN_ORDER"
     init_manifest(
         run_dir=run_dir,
-        task_packet_id="TASKX_A24",
+        task_packet_id="DOPETASK_A24",
         mode="ACT",
         timestamp_mode="deterministic",
     )
@@ -71,7 +71,7 @@ def test_manifest_command_ordering_is_deterministic(tmp_path: Path) -> None:
     manifest["commands"] = [
         {
             "idx": 2,
-            "cmd": "taskx promote-run --run /tmp/RUN_ORDER",
+            "cmd": "dopetask promote-run --run /tmp/RUN_ORDER",
             "cwd": str(tmp_path),
             "started_at": "1970-01-01T00:00:00Z",
             "ended_at": "1970-01-01T00:00:00Z",
@@ -82,7 +82,7 @@ def test_manifest_command_ordering_is_deterministic(tmp_path: Path) -> None:
         },
         {
             "idx": 1,
-            "cmd": "taskx gate-allowlist --run /tmp/RUN_ORDER",
+            "cmd": "dopetask gate-allowlist --run /tmp/RUN_ORDER",
             "cwd": str(tmp_path),
             "started_at": "1970-01-01T00:00:00Z",
             "ended_at": "1970-01-01T00:00:00Z",
@@ -114,7 +114,7 @@ def test_manifest_check_detects_missing_artifacts(tmp_path: Path) -> None:
     run_dir = tmp_path / "RUN_CHECK"
     init_manifest(
         run_dir=run_dir,
-        task_packet_id="TASKX_A24",
+        task_packet_id="DOPETASK_A24",
         mode="ACT",
         timestamp_mode="deterministic",
     )

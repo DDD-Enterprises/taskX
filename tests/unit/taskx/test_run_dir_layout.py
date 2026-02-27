@@ -29,10 +29,10 @@ def test_deterministic_mode_uses_stable_run_id_and_path(tmp_path: Path) -> None:
     assert resolved == (run_root / "RUN_DETERMINISTIC").resolve()
 
 
-def test_taskx_run_root_env_is_respected(tmp_path: Path, monkeypatch) -> None:
-    """TASKX_RUN_ROOT should override repo/cwd defaults."""
+def test_dopetask_run_root_env_is_respected(tmp_path: Path, monkeypatch) -> None:
+    """DOPETASK_RUN_ROOT should override repo/cwd defaults."""
     env_root = tmp_path / "env-runs"
-    monkeypatch.setenv("TASKX_RUN_ROOT", str(env_root))
+    monkeypatch.setenv("DOPETASK_RUN_ROOT", str(env_root))
 
     resolved = get_default_run_root(cwd=tmp_path / "work")
     assert resolved == env_root.resolve()

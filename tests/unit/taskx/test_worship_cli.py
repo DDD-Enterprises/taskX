@@ -1,4 +1,4 @@
-"""Tests for taskx worship easter egg command."""
+"""Tests for dopetask worship easter egg command."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ runner = CliRunner()
 
 
 def test_worship_command_neon_enabled(monkeypatch) -> None:
-    """worship command outputs formatted text when TASKX_NEON=1."""
-    monkeypatch.setenv("TASKX_NEON", "1")
+    """worship command outputs formatted text when DOPETASK_NEON=1."""
+    monkeypatch.setenv("DOPETASK_NEON", "1")
 
     result = runner.invoke(cli, ["worship"])
     assert result.exit_code == 0
@@ -25,8 +25,8 @@ def test_worship_command_neon_enabled(monkeypatch) -> None:
 
 
 def test_worship_command_neon_disabled(monkeypatch) -> None:
-    """worship command outputs plain text when TASKX_NEON=0."""
-    monkeypatch.setenv("TASKX_NEON", "0")
+    """worship command outputs plain text when DOPETASK_NEON=0."""
+    monkeypatch.setenv("DOPETASK_NEON", "0")
 
     result = runner.invoke(cli, ["worship"])
     assert result.exit_code == 0
@@ -41,7 +41,7 @@ def test_worship_command_neon_disabled(monkeypatch) -> None:
 
 def test_worship_command_is_reproducible(monkeypatch) -> None:
     """worship command produces same output on repeated calls."""
-    monkeypatch.setenv("TASKX_NEON", "1")
+    monkeypatch.setenv("DOPETASK_NEON", "1")
 
     result1 = runner.invoke(cli, ["worship"])
     result2 = runner.invoke(cli, ["worship"])

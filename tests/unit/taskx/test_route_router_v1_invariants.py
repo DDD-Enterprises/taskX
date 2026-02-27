@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 from subprocess import CompletedProcess
 
 import pytest
+
 from dopetask.router.availability import AVAILABILITY_CONFIG_TEMPLATE
 
 DEFAULT_LADDER = AVAILABILITY_CONFIG_TEMPLATE["policy"]["escalation_ladder"]
@@ -18,11 +18,11 @@ REFUSAL_STEPS = ["alpha", "beta"]
 
 
 def _bootstrap_identity(repo_root: Path) -> None:
-    taskx_dir = repo_root / ".taskx"
-    taskx_dir.mkdir(parents=True, exist_ok=True)
-    (repo_root / ".taskxroot").write_text("", encoding="utf-8")
-    (taskx_dir / "project.json").write_text(
-        json.dumps({"project_id": "taskx.core"}, sort_keys=True)
+    dopetask_dir = repo_root / ".dopetask"
+    dopetask_dir.mkdir(parents=True, exist_ok=True)
+    (repo_root / ".dopetaskroot").write_text("", encoding="utf-8")
+    (dopetask_dir / "project.json").write_text(
+        json.dumps({"project_id": "dopetask.core"}, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -51,13 +51,13 @@ def _init_route(repo_root: Path) -> CompletedProcess:
 
 
 def _load_plan(repo_root: Path) -> dict:
-    plan_path = repo_root / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo_root / "out" / "dopetask_route" / "ROUTE_PLAN.json"
     return json.loads(plan_path.read_text(encoding="utf-8"))
 
 
 def _ensure_plan_artifacts(repo_root: Path, *, require: bool = True) -> None:
-    plan_path = repo_root / "out" / "taskx_route" / "ROUTE_PLAN.json"
-    md_path = repo_root / "out" / "taskx_route" / "ROUTE_PLAN.md"
+    plan_path = repo_root / "out" / "dopetask_route" / "ROUTE_PLAN.json"
+    md_path = repo_root / "out" / "dopetask_route" / "ROUTE_PLAN.md"
     if require:
         assert plan_path.exists()
         assert md_path.exists()
@@ -122,7 +122,7 @@ def test_route_plan_refusal_writes_artifacts_and_is_deterministic(repo: Path) ->
 
 def test_route_plan_preserves_declared_ladder_order(repo: Path) -> None:
     _init_route(repo)
-    availability_path = repo / ".taskx" / "runtime" / "availability.yaml"
+    availability_path = repo / ".dopetask" / "runtime" / "availability.yaml"
     assert availability_path.exists()
     text = availability_path.read_text()
     ladder_section = "escalation_ladder"
@@ -145,7 +145,7 @@ def test_route_plan_preserves_declared_ladder_order(repo: Path) -> None:
 
 def test_route_plan_missing_availability_refuses_and_writes_plan(repo: Path) -> None:
     _init_route(repo)
-    availability_path = repo / ".taskx" / "runtime" / "availability.yaml"
+    availability_path = repo / ".dopetask" / "runtime" / "availability.yaml"
     assert availability_path.exists()
     availability_path.unlink()
 
@@ -159,7 +159,7 @@ def test_route_plan_missing_availability_refuses_and_writes_plan(repo: Path) -> 
 
 def test_route_plan_invalid_availability_refuses_and_writes_plan(repo: Path) -> None:
     _init_route(repo)
-    availability_path = repo / ".taskx" / "runtime" / "availability.yaml"
+    availability_path = repo / ".dopetask" / "runtime" / "availability.yaml"
     availability_path.write_text(":- not yaml\n", encoding="utf-8")
 
     result = _run_route_plan(repo)
@@ -172,7 +172,7 @@ def test_route_plan_invalid_availability_refuses_and_writes_plan(repo: Path) -> 
 
 def test_route_plan_availability_missing_required_keys_refuses_and_writes_plan(repo: Path) -> None:
     _init_route(repo)
-    availability_path = repo / ".taskx" / "runtime" / "availability.yaml"
+    availability_path = repo / ".dopetask" / "runtime" / "availability.yaml"
     availability_path.write_text("models:\n", encoding="utf-8")
 
     result = _run_route_plan(repo)
@@ -188,7 +188,7 @@ def test_route_handoff_and_explain_are_deterministic(repo: Path) -> None:
     plan_result = _run_route_plan(repo)
     assert plan_result.returncode == 2
     _ensure_plan_artifacts(repo)
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
 
     def handoff_stdout() -> str:
         process = _run(

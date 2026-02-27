@@ -54,13 +54,13 @@ def test_parse_task_packet_commit_plan_happy_path(tmp_path: Path) -> None:
     {
       "step_id": "C1",
       "message": "implement parser support",
-      "allowlist": ["src/taskx/pipeline/task_runner/parser.py"],
+      "allowlist": ["src/dopetask/pipeline/task_runner/parser.py"],
       "verify": ["ruff check .", "pytest -q"]
     },
     {
       "step_id": "C2",
       "message": "wire cli",
-      "allowlist": ["src/taskx/cli.py"]
+      "allowlist": ["src/dopetask/cli.py"]
     }
   ]
 }
@@ -97,7 +97,7 @@ def test_parse_task_packet_commit_plan_missing_required_keys(tmp_path: Path) -> 
   "commit_plan": [
     {
       "message": "missing step_id",
-      "allowlist": ["src/taskx/cli.py"]
+      "allowlist": ["src/dopetask/cli.py"]
     }
   ]
 }

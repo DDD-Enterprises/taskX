@@ -36,17 +36,17 @@ def _init_repo_with_origin(tmp_path: Path) -> tuple[Path, Path]:
     _run(["git", "checkout", "-b", "main"], cwd=repo)
 
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
-    (repo / ".taskxroot").write_text("", encoding="utf-8")
-    (repo / ".taskx").mkdir(parents=True, exist_ok=True)
-    (repo / ".taskx" / "project.json").write_text(
-        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+    (repo / ".dopetaskroot").write_text("", encoding="utf-8")
+    (repo / ".dopetask").mkdir(parents=True, exist_ok=True)
+    (repo / ".dopetask" / "project.json").write_text(
+        json.dumps({"project_id": "dopetask.core"}, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     (repo / "src").mkdir(parents=True, exist_ok=True)
     (repo / "src" / "file.py").write_text("print('base')\n", encoding="utf-8")
     _run(
-        ["git", "add", "README.md", "src/file.py", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        ["git", "add", "README.md", "src/file.py", ".gitignore", ".dopetaskroot", ".dopetask/project.json"],
         cwd=repo,
     )
     _run(["git", "commit", "-m", "init"], cwd=repo)
@@ -117,7 +117,7 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
             "--run",
             str(run_dir),
             "--branch",
-            "tp/taskx.core/0101-feature",
+            "tp/dopetask.core/0101-feature",
             "--dirty-policy",
             "stash",
         ],
@@ -128,7 +128,7 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
     actual_path = Path(worktree["worktree_path"])
     assert actual_path.exists()
     assert actual_path.parent == (tmp_path / "workspace" / "repo" / "out" / "worktrees")
-    assert actual_path.name in {"tp_taskx.core_0101_feature", "tp_taskx_core_0101_feature"}
+    assert actual_path.name in {"tp_dopetask.core_0101_feature", "tp_dopetask_core_0101_feature"}
     dirty_state = _load_dirty_state(run_dir)
     assert len(dirty_state) == 1
     entry = dirty_state[0]
@@ -138,7 +138,7 @@ def test_wt_start_stash_logs_repo_root_dirt(tmp_path: Path, monkeypatch) -> None
     assert entry["status_porcelain"] == sorted(entry["status_porcelain"])
     assert any("README.md" in line for line in entry["status_porcelain"])
     assert any("notes.txt" in line for line in entry["status_porcelain"])
-    assert worktree["branch"] == "tp/taskx.core/0101-feature"
+    assert worktree["branch"] == "tp/dopetask.core/0101-feature"
 
 
 def test_commit_sequence_stash_only_disallowed_changes(tmp_path: Path, monkeypatch) -> None:
@@ -151,7 +151,7 @@ def test_commit_sequence_stash_only_disallowed_changes(tmp_path: Path, monkeypat
     monkeypatch.chdir(repo)
     start = runner.invoke(
         cli,
-        ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0102-feature"],
+        ["wt", "start", "--run", str(run_dir), "--branch", "tp/dopetask.core/0102-feature"],
     )
     assert start.exit_code == 0
 
@@ -162,13 +162,13 @@ def test_commit_sequence_stash_only_disallowed_changes(tmp_path: Path, monkeypat
     )
     assert (
         "tp_0102_feature" in worktree_path
-        or "tp_taskx.core_0102_feature" in worktree_path
-        or "tp_taskx_core_0102_feature" in worktree_path
+        or "tp_dopetask.core_0102_feature" in worktree_path
+        or "tp_dopetask_core_0102_feature" in worktree_path
     )
     wt = _resolve_worktree_dir(
         repo,
-        "tp_taskx.core_0102_feature",
-        "tp_taskx_core_0102_feature",
+        "tp_dopetask.core_0102_feature",
+        "tp_dopetask_core_0102_feature",
         "tp_0102_feature",
     )
 
@@ -210,12 +210,12 @@ def test_finish_stash_cleans_up_and_appends_dirty_state(tmp_path: Path, monkeypa
 
     runner = CliRunner()
     monkeypatch.chdir(repo)
-    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0103-feature"]).exit_code == 0
+    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/dopetask.core/0103-feature"]).exit_code == 0
 
     wt = _resolve_worktree_dir(
         repo,
-        "tp_taskx.core_0103_feature",
-        "tp_taskx_core_0103_feature",
+        "tp_dopetask.core_0103_feature",
+        "tp_dopetask_core_0103_feature",
         "tp_0103_feature",
     )
     (wt / "src" / "file.py").write_text("print('commit me')\n", encoding="utf-8")
@@ -258,7 +258,7 @@ def test_dirty_state_is_append_only_across_stash_phases(tmp_path: Path, monkeypa
     assert (
         runner.invoke(
             cli,
-            ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0104-feature", "--dirty-policy", "stash"],
+            ["wt", "start", "--run", str(run_dir), "--branch", "tp/dopetask.core/0104-feature", "--dirty-policy", "stash"],
         ).exit_code
         == 0
     )
@@ -270,8 +270,8 @@ def test_dirty_state_is_append_only_across_stash_phases(tmp_path: Path, monkeypa
     # Phase 2: stash at finish (worktree dirt).
     wt = _resolve_worktree_dir(
         repo,
-        "tp_taskx.core_0104_feature",
-        "tp_taskx_core_0104_feature",
+        "tp_dopetask.core_0104_feature",
+        "tp_dopetask_core_0104_feature",
         "tp_0104_feature",
     )
     (wt / "scratch.txt").write_text("dirty worktree\n", encoding="utf-8")
@@ -299,12 +299,12 @@ def test_finish_refuses_when_main_not_fast_forwardable(tmp_path: Path, monkeypat
 
     runner = CliRunner()
     monkeypatch.chdir(repo)
-    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/taskx.core/0105-feature"]).exit_code == 0
+    assert runner.invoke(cli, ["wt", "start", "--run", str(run_dir), "--branch", "tp/dopetask.core/0105-feature"]).exit_code == 0
 
     wt = _resolve_worktree_dir(
         repo,
-        "tp_taskx.core_0105_feature",
-        "tp_taskx_core_0105_feature",
+        "tp_dopetask.core_0105_feature",
+        "tp_dopetask_core_0105_feature",
         "tp_0105_feature",
     )
     (wt / "src" / "file.py").write_text("print('branch change')\n", encoding="utf-8")

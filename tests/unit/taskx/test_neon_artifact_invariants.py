@@ -8,7 +8,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -45,17 +44,17 @@ def _artifact_hashes(out_dir: Path) -> dict[str, str]:
     return hashes
 
 
-def test_taskx_neon_does_not_change_artifact_bytes(tmp_path: Path) -> None:
+def test_dopetask_neon_does_not_change_artifact_bytes(tmp_path: Path) -> None:
     out_a = tmp_path / "neon_off"
     out_b = tmp_path / "neon_on"
-    _run_doctor(out_a, {"TASKX_NEON": "0"})
-    _run_doctor(out_b, {"TASKX_NEON": "1"})
+    _run_doctor(out_a, {"DOPETASK_NEON": "0"})
+    _run_doctor(out_b, {"DOPETASK_NEON": "1"})
     assert _artifact_hashes(out_a) == _artifact_hashes(out_b)
 
 
-def test_taskx_strict_does_not_change_artifact_bytes(tmp_path: Path) -> None:
+def test_dopetask_strict_does_not_change_artifact_bytes(tmp_path: Path) -> None:
     out_a = tmp_path / "strict_off"
     out_b = tmp_path / "strict_on"
-    _run_doctor(out_a, {"TASKX_STRICT": "0", "TASKX_NEON": "0"})
-    _run_doctor(out_b, {"TASKX_STRICT": "1", "TASKX_NEON": "0"})
+    _run_doctor(out_a, {"DOPETASK_STRICT": "0", "DOPETASK_NEON": "0"})
+    _run_doctor(out_b, {"DOPETASK_STRICT": "1", "DOPETASK_NEON": "0"})
     assert _artifact_hashes(out_a) == _artifact_hashes(out_b)

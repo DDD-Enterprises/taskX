@@ -8,8 +8,8 @@ from typer.testing import CliRunner
 
 from dopetask.cli import cli
 from dopetask.router.types import DEFAULT_STEPS
-from tests.unit.taskx.route_test_utils import (
-    create_taskx_repo,
+from tests.unit.dopetask.route_test_utils import (
+    create_dopetask_repo,
     ordered_steps,
     read_route_plan,
     write_availability,
@@ -20,7 +20,7 @@ DEFAULT_ESCALATION_LADDER = ["gpt-5.1-mini", "haiku-4.5", "sonnet-4.55", "gpt-5.
 
 
 def test_route_plan_refusal_writes_expected_artifacts(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "refusal")
+    repo = create_dopetask_repo(tmp_path / "refusal")
     packet = write_packet(repo)
     write_availability(repo, policy_overrides={"min_total_score": 999})
 
@@ -58,7 +58,7 @@ def test_route_plan_refusal_writes_expected_artifacts(tmp_path: Path) -> None:
 
 
 def test_escalation_ladder_order_respects_declaration(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "ladder")
+    repo = create_dopetask_repo(tmp_path / "ladder")
     packet = write_packet(repo)
     custom_ladder = ["sonnet-4.55", "gpt-5.3-codex", "haiku-4.5"]
     write_availability(repo, policy_overrides={"escalation_ladder": custom_ladder, "min_total_score": 10})
@@ -75,7 +75,7 @@ def test_escalation_ladder_order_respects_declaration(tmp_path: Path) -> None:
 
 
 def test_route_plan_refuses_when_availability_missing(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "missing")
+    repo = create_dopetask_repo(tmp_path / "missing")
     packet = write_packet(repo)
 
     runner = CliRunner()
@@ -83,8 +83,8 @@ def test_route_plan_refuses_when_availability_missing(tmp_path: Path) -> None:
         cli,
         ["route", "plan", "--repo-root", str(repo), "--packet", str(packet)],
     )
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
-    plan_md_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.md"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
+    plan_md_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.md"
     assert result.exit_code == 2, result.output
     assert plan_path.exists()
     assert plan_md_path.exists()
@@ -100,9 +100,9 @@ def test_route_plan_refuses_when_availability_missing(tmp_path: Path) -> None:
 
 
 def test_route_plan_refuses_on_invalid_availability_yaml(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "invalid_yaml")
+    repo = create_dopetask_repo(tmp_path / "invalid_yaml")
     packet = write_packet(repo)
-    runtime = repo / ".taskx" / "runtime"
+    runtime = repo / ".dopetask" / "runtime"
     runtime.mkdir(parents=True, exist_ok=True)
     (runtime / "availability.yaml").write_text("models: [broken", encoding="utf-8")
 
@@ -116,9 +116,9 @@ def test_route_plan_refuses_on_invalid_availability_yaml(tmp_path: Path) -> None
 
 
 def test_route_plan_refuses_on_missing_api_keys(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "missing_fields")
+    repo = create_dopetask_repo(tmp_path / "missing_fields")
     packet = write_packet(repo)
-    runtime = repo / ".taskx" / "runtime"
+    runtime = repo / ".dopetask" / "runtime"
     runtime.mkdir(parents=True, exist_ok=True)
     runtime.joinpath("availability.yaml").write_text(
         "models: {}\nrunners: {}\npolicy: {}\n", encoding="utf-8"
@@ -134,7 +134,7 @@ def test_route_plan_refuses_on_missing_api_keys(tmp_path: Path) -> None:
 
 
 def test_route_handoff_reports_step_order_and_packet(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "handoff")
+    repo = create_dopetask_repo(tmp_path / "handoff")
     packet = write_packet(repo)
     write_availability(repo, policy_overrides={"min_total_score": 20})
 
@@ -154,7 +154,7 @@ def test_route_handoff_reports_step_order_and_packet(tmp_path: Path) -> None:
     )
     assert plan_result.exit_code == 0, plan_result.output
 
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
     handoff_result = runner.invoke(
         cli,
         [
@@ -170,14 +170,14 @@ def test_route_handoff_reports_step_order_and_packet(tmp_path: Path) -> None:
     )
     assert handoff_result.exit_code == 0, handoff_result.output
 
-    contents = (repo / "out" / "taskx_route" / "HANDOFF.md").read_text(encoding="utf-8")
+    contents = (repo / "out" / "dopetask_route" / "HANDOFF.md").read_text(encoding="utf-8")
     assert f"- packet_path: {packet}" in contents
     assert contents.index("## Step: alpha") < contents.index("## Step: beta")
     assert "Model: sonnet-4.55" in contents
 
 
 def test_route_explain_is_reproducible(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "explain")
+    repo = create_dopetask_repo(tmp_path / "explain")
     packet = write_packet(repo)
     write_availability(repo, policy_overrides={"min_total_score": 20})
 
@@ -195,7 +195,7 @@ def test_route_explain_is_reproducible(tmp_path: Path) -> None:
             "alpha,beta",
         ],
     )
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
 
     first = runner.invoke(
         cli,

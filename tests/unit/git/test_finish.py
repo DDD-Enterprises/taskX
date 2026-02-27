@@ -56,7 +56,7 @@ def test_finish_run_rebase_ff_push_and_cleanup(repo_with_origin: Path) -> None:
     start_report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-finish",
+        branch="dopetask/run-finish",
         worktree_path=repo / "out" / "worktrees" / "RUN_FINISH",
         dirty_policy="refuse",
     )
@@ -89,5 +89,5 @@ def test_finish_run_rebase_ff_push_and_cleanup(repo_with_origin: Path) -> None:
     assert local_main == origin_main
 
     assert not worktree.exists()
-    assert _git(repo, "branch", "--list", "taskx/run-finish") == ""
+    assert _git(repo, "branch", "--list", "dopetask/run-finish") == ""
     assert "task branch change" in _git(repo, "log", "--pretty=%s", "-n", "5")

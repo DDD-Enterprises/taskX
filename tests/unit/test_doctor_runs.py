@@ -1,4 +1,4 @@
-"""Verify taskx doctor runs to completion in a clean environment."""
+"""Verify dopetask doctor runs to completion in a clean environment."""
 from pathlib import Path
 
 from dopetask.doctor import run_doctor

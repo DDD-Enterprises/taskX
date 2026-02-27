@@ -1,4 +1,4 @@
-"""Pytest configuration and fixtures for TaskX tests."""
+"""Pytest configuration and fixtures for dopeTask tests."""
 import sys
 from pathlib import Path
 
@@ -34,6 +34,6 @@ def pytest_sessionfinish(session, exitstatus):
         pytest.exit(
             "Coverage was enabled but no data was collected. "
             "This suggests tests are not importing/executing package code. "
-            "Check that tests import from 'taskx' (the package) not 'src/taskx' (filesystem path).",
+            "Check that tests import from 'dopetask' (the package) not 'src/dopetask' (filesystem path).",
             returncode=1
         )

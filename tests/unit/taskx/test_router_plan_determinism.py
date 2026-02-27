@@ -1,4 +1,4 @@
-"""Determinism coverage for TaskX route planning."""
+"""Determinism coverage for dopeTask route planning."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def test_route_plan_is_deterministic_for_same_inputs(tmp_path: Path, monkeypatch
     first = runner.invoke(cli, ["route", "plan", "--repo-root", str(repo), "--packet", str(packet)])
     assert first.exit_code == 0, first.output
 
-    plan_path = repo / "out" / "taskx_route" / "ROUTE_PLAN.json"
+    plan_path = repo / "out" / "dopetask_route" / "ROUTE_PLAN.json"
     first_bytes = plan_path.read_bytes()
 
     second = runner.invoke(cli, ["route", "plan", "--repo-root", str(repo), "--packet", str(packet)])

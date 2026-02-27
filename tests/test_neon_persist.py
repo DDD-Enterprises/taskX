@@ -26,8 +26,8 @@ def test_first_insert_block_appears_once(tmp_path: Path) -> None:
     assert content.count(NEON_RC_MARKER_BEGIN) == 1
     assert content.count(NEON_RC_MARKER_END) == 1
     assert "export KEEP=1" in content
-    assert "export TASKX_NEON=1" in content
-    assert 'export TASKX_THEME="mintwave"' in content
+    assert "export DOPETASK_NEON=1" in content
+    assert 'export DOPETASK_THEME="mintwave"' in content
 
 
 def test_second_insert_does_not_duplicate_block(tmp_path: Path) -> None:
@@ -51,8 +51,8 @@ def test_update_theme_replaces_existing_block(tmp_path: Path) -> None:
 
     content = _read(rc)
     assert content.count(NEON_RC_MARKER_BEGIN) == 1
-    assert 'export TASKX_THEME="magma"' in content
-    assert 'export TASKX_THEME="mintwave"' not in content
+    assert 'export DOPETASK_THEME="magma"' in content
+    assert 'export DOPETASK_THEME="mintwave"' not in content
 
 
 def test_dry_run_does_not_mutate_file(tmp_path: Path) -> None:
@@ -65,7 +65,7 @@ def test_dry_run_does_not_mutate_file(tmp_path: Path) -> None:
     assert result.changed is True
     assert _read(rc) == original
     assert result.backup_path is None
-    assert rc.with_name(f"{rc.name}.taskx.bak").exists() is False
+    assert rc.with_name(f"{rc.name}.dopetask.bak").exists() is False
 
 
 def test_remove_removes_only_marker_block(tmp_path: Path) -> None:
@@ -86,7 +86,7 @@ def test_remove_removes_only_marker_block(tmp_path: Path) -> None:
 
 def test_backup_created_only_on_mutation(tmp_path: Path) -> None:
     rc = tmp_path / "shellrc"
-    backup = rc.with_name(f"{rc.name}.taskx.bak")
+    backup = rc.with_name(f"{rc.name}.dopetask.bak")
 
     first = persist_neon_rc_file(path=rc, theme="mintwave", remove=False, dry_run=False)
     assert first.backup_path == backup
@@ -103,7 +103,7 @@ def test_error_on_missing_begin_marker(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError) as exc_info:
         persist_neon_rc_file(path=rc, theme="mintwave", remove=False, dry_run=False)
-    
+
     assert "begin marker missing" in str(exc_info.value)
 
 
@@ -114,7 +114,7 @@ def test_error_on_missing_end_marker(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError) as exc_info:
         persist_neon_rc_file(path=rc, theme="mintwave", remove=False, dry_run=False)
-    
+
     assert "end marker missing" in str(exc_info.value)
 
 
@@ -122,27 +122,27 @@ def test_error_on_multiple_begin_markers(tmp_path: Path) -> None:
     """Test that multiple begin markers raise ValueError."""
     rc = tmp_path / "shellrc"
     rc.write_text(
-        f"{NEON_RC_MARKER_BEGIN}\nexport TASKX_NEON=1\n{NEON_RC_MARKER_END}\n"
-        f"{NEON_RC_MARKER_BEGIN}\nexport TASKX_NEON=1\n{NEON_RC_MARKER_END}\n",
+        f"{NEON_RC_MARKER_BEGIN}\nexport DOPETASK_NEON=1\n{NEON_RC_MARKER_END}\n"
+        f"{NEON_RC_MARKER_BEGIN}\nexport DOPETASK_NEON=1\n{NEON_RC_MARKER_END}\n",
         encoding="utf-8",
     )
 
     with pytest.raises(ValueError) as exc_info:
         persist_neon_rc_file(path=rc, theme="mintwave", remove=False, dry_run=False)
-    
-    assert "Multiple TASKX NEON begin markers found" in str(exc_info.value)
+
+    assert "Multiple DOPETASK NEON begin markers found" in str(exc_info.value)
 
 
 def test_error_on_multiple_end_markers(tmp_path: Path) -> None:
     """Test that multiple end markers raise ValueError."""
     rc = tmp_path / "shellrc"
     rc.write_text(
-        f"{NEON_RC_MARKER_BEGIN}\nexport TASKX_NEON=1\n{NEON_RC_MARKER_END}\n"
+        f"{NEON_RC_MARKER_BEGIN}\nexport DOPETASK_NEON=1\n{NEON_RC_MARKER_END}\n"
         f"{NEON_RC_MARKER_END}\n",
         encoding="utf-8",
     )
 
     with pytest.raises(ValueError) as exc_info:
         persist_neon_rc_file(path=rc, theme="mintwave", remove=False, dry_run=False)
-    
-    assert "Multiple TASKX NEON end markers found" in str(exc_info.value)
+
+    assert "Multiple DOPETASK NEON end markers found" in str(exc_info.value)

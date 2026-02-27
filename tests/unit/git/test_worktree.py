@@ -52,7 +52,7 @@ def test_start_worktree_creates_branch_worktree_and_artifact(repo_with_origin: P
     report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-100",
+        branch="dopetask/run-100",
         worktree_path=target_worktree,
         dirty_policy="refuse",
     )
@@ -62,10 +62,10 @@ def test_start_worktree_creates_branch_worktree_and_artifact(repo_with_origin: P
     assert artifact_path.exists()
 
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
-    assert artifact["branch"] == "taskx/run-100"
+    assert artifact["branch"] == "dopetask/run-100"
     assert Path(artifact["worktree_path"]).resolve() == target_worktree.resolve()
     assert target_worktree.exists()
-    assert "taskx/run-100" in _git(repo, "branch", "--list", "taskx/run-100")
+    assert "dopetask/run-100" in _git(repo, "branch", "--list", "dopetask/run-100")
 
 
 def test_start_worktree_stashes_when_dirty_policy_is_stash(repo_with_origin: Path) -> None:
@@ -78,7 +78,7 @@ def test_start_worktree_stashes_when_dirty_policy_is_stash(repo_with_origin: Pat
     report = start_worktree(
         run_dir=run_dir,
         repo_root=repo,
-        branch="taskx/run-101",
+        branch="dopetask/run-101",
         worktree_path=repo / "out" / "worktrees" / "RUN_101",
         dirty_policy="stash",
     )
@@ -91,4 +91,4 @@ def test_start_worktree_stashes_when_dirty_policy_is_stash(repo_with_origin: Pat
     assert dirty_state["events"]
     assert dirty_state["events"][0]["action"] == "stash"
     assert "dirty.txt" in "\n".join(dirty_state["events"][0]["changed_files"])
-    assert "taskx:wt-start:RUN_101" in _git(repo, "stash", "list")
+    assert "dopetask:wt-start:RUN_101" in _git(repo, "stash", "list")

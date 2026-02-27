@@ -33,7 +33,7 @@ def test_non_destructive_edit(tmp_path):
     original = "# Header\nUser content here.\n"
     target.write_text(original)
 
-    content = "TaskX content"
+    content = "dopeTask content"
     c_hash = calculate_hash(content)
     update_file(target, content, "chatgpt", "gpt-4", c_hash)
 
@@ -71,12 +71,12 @@ def test_create_sidecar(tmp_path):
     repo = tmp_path
     sidecar = get_sidecar_path(repo)
 
-    content = "TaskX content"
+    content = "dopeTask content"
     c_hash = calculate_hash(content)
     update_file(sidecar, content, "chatgpt", "gpt-4", c_hash)
 
     assert sidecar.exists()
-    assert "TaskX content" in sidecar.read_text()
+    assert "dopeTask content" in sidecar.read_text()
 
 def test_ops_init_exports_by_default(tmp_path, monkeypatch):
     monkeypatch.setattr("dopetask.ops.cli.get_repo_root", lambda: tmp_path)
@@ -175,7 +175,7 @@ def test_ops_export_write_on_change(tmp_path, monkeypatch):
 def test_export_determinism(tmp_path):
     profile = {
         "project": {"name": "test", "repo_root": "root", "timezone": "UTC"},
-        "taskx": {"pin_type": "git", "pin_value": "123", "cli_min_version": "1.0.0"},
+        "dopetask": {"pin_type": "git", "pin_value": "123", "cli_min_version": "1.0.0"},
         "platform": {"target": "chatgpt", "model": "gpt-4"}
     }
     templates_dir = tmp_path / "templates"
@@ -184,8 +184,8 @@ def test_export_determinism(tmp_path):
     (templates_dir / "a.md").write_text("A content")
 
     # Run twice
-    prompt1 = export_prompt(profile, templates_dir, taskx_version="1.0.0", git_hash="abc")
-    prompt2 = export_prompt(profile, templates_dir, taskx_version="1.0.0", git_hash="abc")
+    prompt1 = export_prompt(profile, templates_dir, dopetask_version="1.0.0", git_hash="abc")
+    prompt2 = export_prompt(profile, templates_dir, dopetask_version="1.0.0", git_hash="abc")
 
     assert prompt1 == prompt2
     # Check lexicographical order for "a.md" and "b.md"
@@ -242,7 +242,7 @@ def test_dopemux_adapter_compute_paths(tmp_path):
     from dopetask_adapters.dopemux import DopemuxAdapter
     adapter = DopemuxAdapter()
     paths = adapter.compute_paths(tmp_path)
-    assert paths.out_root == tmp_path / "out" / "taskx"
+    assert paths.out_root == tmp_path / "out" / "dopetask"
 
 
 def test_adapter_discovery():
@@ -292,9 +292,9 @@ def test_doctor_config_locations_missing(tmp_path):
     assert locs["compiled_prompt"] is None
 
 
-# --- taskx init top-level command ---
+# --- dopetask init top-level command ---
 
-def test_taskx_init_ops_tier(tmp_path, monkeypatch):
+def test_dopetask_init_ops_tier(tmp_path, monkeypatch):
     from dopetask.cli import cli
     monkeypatch.chdir(tmp_path)
 
@@ -312,7 +312,7 @@ def test_taskx_init_ops_tier(tmp_path, monkeypatch):
     assert (tmp_path / "ops").exists()
 
 
-def test_taskx_init_yes_no_prompts(tmp_path, monkeypatch):
+def test_dopetask_init_yes_no_prompts(tmp_path, monkeypatch):
     """--yes mode should complete without any interactive prompts."""
     from types import SimpleNamespace
 

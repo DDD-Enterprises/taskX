@@ -4,15 +4,15 @@ This document is maintainer-level.
 
 ## CLI UX (Final Wording)
 
-TaskX prints an identity banner to stderr at command start:
-`[taskx] project=... repo=... branch=... run=...`
+dopeTask prints an identity banner to stderr at command start:
+`[dopetask] project=... repo=... branch=... run=...`
 Use it as a quick wrong-repo tripwire before you execute worktree actions.
 Banner uses ANSI color on TTY. Set `NO_COLOR=1` to disable.
 
-### `taskx wt start`
+### `dopetask wt start`
 
 ```bash
-taskx wt start --run <RUN_DIR> \
+dopetask wt start --run <RUN_DIR> \
   [--branch <name>] \
   [--base main] \
   [--remote origin] \
@@ -42,10 +42,10 @@ ERROR: branch 'tp/0123-feature' already exists.
 Refusing to reuse branch for deterministic execution.
 ```
 
-### `taskx commit-sequence`
+### `dopetask commit-sequence`
 
 ```bash
-taskx commit-sequence --run <RUN_DIR> \
+dopetask commit-sequence --run <RUN_DIR> \
   [--allow-unpromoted] \
   [--dirty-policy refuse|stash]
 ```
@@ -63,7 +63,7 @@ Hard refusals:
 
 ```text
 ERROR: commit-sequence cannot run on 'main'.
-Use taskx wt start to create a worktree.
+Use dopetask wt start to create a worktree.
 ```
 
 - Staged changes exist:
@@ -87,10 +87,10 @@ ERROR: changes detected outside commit plan allowlists.
 Use --dirty-policy stash or clean manually.
 ```
 
-### `taskx finish`
+### `dopetask finish`
 
 ```bash
-taskx finish --run <RUN_DIR> \
+dopetask finish --run <RUN_DIR> \
   [--mode rebase-ff] \
   [--cleanup/--no-cleanup] \
   [--dirty-policy refuse|stash]
@@ -114,7 +114,7 @@ Hard refusals:
 
 ```text
 ERROR: rebase onto origin/main failed.
-Resolve conflicts manually and re-run taskx finish.
+Resolve conflicts manually and re-run dopetask finish.
 ```
 
 - `main` not fast-forwardable:
@@ -166,9 +166,9 @@ Append-only list:
     "location": "repo_root|worktree",
     "policy": "stash",
     "stash_ref": "stash@{0}",
-    "message": "taskx:wt-start:RUN_0110",
+    "message": "dopetask:wt-start:RUN_0110",
     "status_porcelain": [
-      " M src/taskx/cli.py",
+      " M src/dopetask/cli.py",
       "?? notes.txt"
     ],
     "timestamp_utc": "2026-02-11T21:58:02Z"
@@ -180,7 +180,7 @@ Never auto-pop stash. Determinism > convenience.
 
 ## Philosophy
 
-TaskX enforces:
+dopeTask enforces:
 
 - No direct commits to `main`
 - One Task Packet = one contiguous commit chain
@@ -192,14 +192,14 @@ All packet work occurs inside an isolated git worktree.
 ## Workflow (Solo Default)
 
 ```bash
-taskx wt start --run out/runs/0123
+dopetask wt start --run out/runs/0123
 cd out/worktrees/tp_0123_feature
 
 # implement changes
 
-taskx commit-sequence --run ../../runs/0123
+dopetask commit-sequence --run ../../runs/0123
 
-taskx finish --run ../../runs/0123
+dopetask finish --run ../../runs/0123
 ```
 
 Finish defaults to:
@@ -220,7 +220,7 @@ Optional:
 
 `--dirty-policy stash`
 
-TaskX will:
+dopeTask will:
 
 - stash with deterministic message
 - log stash reference in `DIRTY_STATE.json`
@@ -263,7 +263,7 @@ Empty steps are refused.
 
 ## Guarantees
 
-After `taskx finish`:
+After `dopetask finish`:
 
 - `main` contains the full packet commit chain
 - `origin/main` matches local `main`

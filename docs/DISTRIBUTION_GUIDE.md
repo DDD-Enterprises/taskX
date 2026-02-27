@@ -1,4 +1,4 @@
-# TaskX Distribution Guide
+# dopeTask Distribution Guide
 
 This guide outlines the steps to distribute DopeTask (package name: `dopetask`) on PyPI using the automated GitHub Actions workflow.
 
@@ -18,11 +18,11 @@ This guide outlines the steps to distribute DopeTask (package name: `dopetask`) 
 
 ## Release Process
 
-To publish a new version of TaskX to PyPI:
+To publish a new version of dopeTask to PyPI:
 
 1.  **Update Version**:
     *   Update the `version` field in `pyproject.toml` (e.g., `0.1.0` -> `0.1.1`).
-    *   Update `src/taskx/__init__.py` version string if it exists and is manually managed (TaskX uses `importlib.metadata` or similar usually, but check consistency).
+    *   Update `src/dopetask/__init__.py` version string if it exists and is manually managed (dopeTask uses `importlib.metadata` or similar usually, but check consistency).
     *   Commit these changes: `git commit -am "chore: bump version to 0.1.1"`
 
 2.  **Tag the Release**:
@@ -63,5 +63,5 @@ pip install dopetask
 
 **Using the Unified Installer:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hu3mann/taskX/main/scripts/install.sh | bash -s -- --pypi
+curl -fsSL https://raw.githubusercontent.com/hu3mann/dopeTask/main/scripts/install.sh | bash -s -- --pypi
 ```

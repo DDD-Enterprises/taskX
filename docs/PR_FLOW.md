@@ -1,11 +1,11 @@
 # PR Flow v1 (Assisted)
 
-TaskX PR flow opens a pull request with refusal rails and branch restore semantics.
+dopeTask PR flow opens a pull request with refusal rails and branch restore semantics.
 
 ## Command
 
 ```bash
-taskx pr open \
+dopetask pr open \
   --repo-root . \
   --title "feat: ..." \
   --body-file ./out/pr_body.md \
@@ -36,14 +36,14 @@ Default behavior refuses when:
 
 ## Restore Contract
 
-When `--restore-branch` is enabled (default), TaskX restores original branch/HEAD in a finally path, on both success and failure.
+When `--restore-branch` is enabled (default), dopeTask restores original branch/HEAD in a finally path, on both success and failure.
 
 Smoke proof requirement for validation:
 - start on `main`
-- run `taskx pr open` from a different branch context
+- run `dopetask pr open` from a different branch context
 - verify final branch is still `main`
 
 ## Deterministic Artifacts
 
-- `out/taskx_pr/PR_OPEN_REPORT.json`
-- `out/taskx_pr/PR_OPEN_REPORT.md`
+- `out/dopetask_pr/PR_OPEN_REPORT.json`
+- `out/dopetask_pr/PR_OPEN_REPORT.md`

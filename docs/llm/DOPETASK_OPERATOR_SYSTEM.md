@@ -104,6 +104,6 @@ Specifics for chatgpt
 
 ## Handoff contract
 - Follow all instructions provided in this prompt.
-- Use TaskX CLI for all task management.
+- Use dopeTask CLI for all task management.
 - Ensure all outputs conform to the project spec.
 <!-- TASKX:END operator_system -->

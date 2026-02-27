@@ -6,7 +6,7 @@ Canonical install and integration instructions live in:
 
 This page is intentionally short to avoid drift. Use the README guide for:
 
-- `.taskx-pin` based installs
+- `.dopetask-pin` based installs
 - `project shell` wiring
 - `project upgrade` stabilization flow
 - `route` assisted routing commands

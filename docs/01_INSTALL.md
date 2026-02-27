@@ -13,7 +13,7 @@ python -m pip install dopetask
 ```bash
 uv lock
 uv sync
-uv run taskx --help
+uv run dopetask --help
 ```
 
 ### Running tests

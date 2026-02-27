@@ -1,6 +1,6 @@
 # Router
 
-TaskX Router v1 selects runner/model pairs deterministically and writes route artifacts.
+dopeTask Router v1 selects runner/model pairs deterministically and writes route artifacts.
 
 See `10_ARCHITECTURE.md` for kernel principles.
 
@@ -20,23 +20,23 @@ flowchart TD
 ## Commands
 
 ```bash
-taskx route init --repo-root .
-taskx route plan --repo-root . --packet PACKET.md
-taskx route handoff --repo-root . --packet PACKET.md
-taskx route explain --repo-root . --packet PACKET.md --step run-task
+dopetask route init --repo-root .
+dopetask route plan --repo-root . --packet PACKET.md
+dopetask route handoff --repo-root . --packet PACKET.md
+dopetask route explain --repo-root . --packet PACKET.md --step run-task
 ```
 
 ## Config
 
-`taskx route init` writes:
+`dopetask route init` writes:
 
-- `.taskx/runtime/availability.yaml`
+- `.dopetask/runtime/availability.yaml`
 
 ## Deterministic artifacts
 
-- `out/taskx_route/ROUTE_PLAN.json`
-- `out/taskx_route/ROUTE_PLAN.md`
-- `out/taskx_route/HANDOFF.md`
+- `out/dopetask_route/ROUTE_PLAN.json`
+- `out/dopetask_route/ROUTE_PLAN.md`
+- `out/dopetask_route/HANDOFF.md`
 
 ## Refusal conditions and artifacts
 

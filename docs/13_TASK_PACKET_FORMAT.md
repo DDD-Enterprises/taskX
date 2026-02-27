@@ -1,6 +1,6 @@
 # Task Packet Format
 
-This document defines what "Task Packet" means for TaskX and what the parser enforces.
+This document defines what "Task Packet" means for dopeTask and what the parser enforces.
 
 ## Header
 
@@ -54,16 +54,16 @@ Some repositories may require this header (see project identity rails).
 ## Compatibility and versioning policy
 
 - Additive changes to the packet format should be backward-compatible.
-- Contract-breaking changes require a major version bump of TaskX.
+- Contract-breaking changes require a major version bump of dopeTask.
 
 ## Git Workflow
 
 Task Packet execution must use the dedicated TP git workflow commands:
 
-1. `taskx tp git doctor`
-2. `taskx tp git start <TP_ID> <slug>`
+1. `dopetask tp git doctor`
+2. `dopetask tp git start <TP_ID> <slug>`
 3. Implement in `.worktrees/<TP_ID>`
-4. `taskx tp git pr <TP_ID> --title "..."`
-5. `taskx tp git merge <TP_ID>`
-6. `taskx tp git sync-main`
-7. `taskx tp git cleanup <TP_ID>`
+4. `dopetask tp git pr <TP_ID> --title "..."`
+5. `dopetask tp git merge <TP_ID>`
+6. `dopetask tp git sync-main`
+7. `dopetask tp git cleanup <TP_ID>`

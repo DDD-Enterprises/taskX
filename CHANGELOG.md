@@ -26,7 +26,7 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ### Changed
 
-- Renamed the PyPI distribution to `dopetask` (previously `taskx-kernel`).
+- Renamed the PyPI distribution to `dopetask` (previously `dopetask-kernel`).
 - Unified package metadata and runtime versioning to `0.1.3`.
 - Hardened tag-driven release workflow with frozen dependency sync and pre-publish lint/type/test gates.
 

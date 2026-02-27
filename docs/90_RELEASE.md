@@ -1,9 +1,9 @@
 # Release Process (Maintainers)
 
-This guide details the release process for TaskX maintainers.
+This guide details the release process for dopeTask maintainers.
 
 PyPI package name: `dopetask`  
-CLI entrypoint after install: `taskx`
+CLI entrypoint after install: `dopetask`
 
 ## Release Process
 
@@ -27,13 +27,13 @@ CLI entrypoint after install: `taskx`
 
 Update the version string in two locations:
 
-1. `src/taskx/__init__.py`
+1. `src/dopetask/__init__.py`
 2. `pyproject.toml`
 
 Commit these changes:
 
 ```bash
-git add src/taskx/__init__.py pyproject.toml
+git add src/dopetask/__init__.py pyproject.toml
 git commit -m "chore: bump version to X.Y.Z"
 ```
 
@@ -75,7 +75,7 @@ After pushing the tag, your GitHub Actions release workflow should:
 3. Run lint (`ruff`) and typecheck (`mypy`)
 4. Run tests in a clean environment
 5. Build sdist and wheel
-6. Smoke test install and `taskx --help`
+6. Smoke test install and `dopetask --help`
 7. Publish artifacts from CI only
 
 ## Security & Provenance Gates

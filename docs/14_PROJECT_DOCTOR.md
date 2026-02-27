@@ -21,7 +21,7 @@ The project doctor inspects a repository and reports integrity status. It does n
 
 ## Operator prompt export policy (Policy A)
 
-Note: `taskx ops doctor` exports the operator prompt by default unless `--no-export` is set.
+Note: `dopetask ops doctor` exports the operator prompt by default unless `--no-export` is set.
 
 This export does not affect packet routing or execution behavior. It exists to make operator context observable.
 

@@ -1,7 +1,7 @@
-"""Base adapter interface for TaskX integration adapters.
+"""Base adapter interface for dopeTask integration adapters.
 
 All adapters must subclass BaseAdapter and implement the required methods.
-Adapters are discovered via the ``taskx.adapters`` entry-point group.
+Adapters are discovered via the ``dopetask.adapters`` entry-point group.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ class AdapterInfo:
 
 
 class BaseAdapter(abc.ABC):
-    """Abstract base for TaskX integration adapters.
+    """Abstract base for dopeTask integration adapters.
 
     Subclasses must implement:
     - ``name``          — short identifier (used in CLI ``--adapter`` flag)

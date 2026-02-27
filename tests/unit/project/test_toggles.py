@@ -11,13 +11,13 @@ def test_apply_pack_creates_missing_file_from_template(tmp_path: Path) -> None:
     """apply_pack should create missing managed file and set requested block."""
     target = tmp_path / "CLAUDE.md"
 
-    result = apply_pack(file_path=target, pack_name="taskx", enabled=True)
+    result = apply_pack(file_path=target, pack_name="dopetask", enabled=True)
 
     assert result["status"] == "created"
     text = target.read_text(encoding="utf-8")
     assert "<!-- TASKX:BEGIN -->" in text
     assert "<!-- CHATX:BEGIN -->" in text
-    assert extract_block_content(text, "taskx") == read_pack_text("taskx")
+    assert extract_block_content(text, "dopetask") == read_pack_text("dopetask")
 
 
 def test_apply_pack_appends_missing_block_without_clobber(tmp_path: Path) -> None:
@@ -39,15 +39,15 @@ def test_enable_disable_toggle_only_block_content(tmp_path: Path) -> None:
     init_project(out_dir=tmp_path, preset="none")
     original = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
 
-    enable_pack(project_dir=tmp_path, pack_name="taskx")
+    enable_pack(project_dir=tmp_path, pack_name="dopetask")
     enabled = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
-    assert _mask_block(original, "taskx") == _mask_block(enabled, "taskx")
-    assert extract_block_content(enabled, "taskx") != "(disabled)"
+    assert _mask_block(original, "dopetask") == _mask_block(enabled, "dopetask")
+    assert extract_block_content(enabled, "dopetask") != "(disabled)"
 
-    disable_pack(project_dir=tmp_path, pack_name="taskx")
+    disable_pack(project_dir=tmp_path, pack_name="dopetask")
     disabled = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
-    assert _mask_block(enabled, "taskx") == _mask_block(disabled, "taskx")
-    assert extract_block_content(disabled, "taskx") == "(disabled)"
+    assert _mask_block(enabled, "dopetask") == _mask_block(disabled, "dopetask")
+    assert extract_block_content(disabled, "dopetask") == "(disabled)"
     assert (tmp_path / "PROJECT_PATCH_REPORT.md").exists()
 
 
@@ -61,12 +61,12 @@ def test_project_status_reports_enabled_and_disabled(tmp_path: Path) -> None:
     assert len(status["files"]) == 4
     for file_status in status["files"]:
         assert file_status["exists"] is True
-        assert file_status["packs"]["taskx"] is False
+        assert file_status["packs"]["dopetask"] is False
         assert file_status["packs"]["chatx"] is True
 
 
 def _mask_block(text: str, pack_name: str) -> str:
-    if pack_name == "taskx":
+    if pack_name == "dopetask":
         begin = "<!-- TASKX:BEGIN -->"
         end = "<!-- TASKX:END -->"
     else:

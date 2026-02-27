@@ -1,7 +1,7 @@
-"""Dopemux adapter for TaskX integration.
+"""Dopemux adapter for dopeTask integration.
 
-Provides path detection and mapping to integrate TaskX into Dopemux
-projects without modifying TaskX core logic.
+Provides path detection and mapping to integrate dopeTask into Dopemux
+projects without modifying dopeTask core logic.
 """
 
 from __future__ import annotations
@@ -15,21 +15,21 @@ from dopetask_adapters.types import DopemuxDetection, DopemuxPaths
 
 def detect_dopemux_root(start: Path | None = None, override: Path | None = None) -> DopemuxDetection:
     """Detect Dopemux root directory.
-    
+
     Detection priority (first match wins):
     1. Override path if provided
     2. .dopemux/ directory
     3. dopemux.toml file
     4. runtime/ AND lab/ directories both present
     5. .git/ AND dopemux/ directory both present
-    
+
     Args:
         start: Starting directory for search (default: cwd)
         override: Explicit root path to use (skips detection)
-        
+
     Returns:
         DopemuxDetection with root and marker used
-        
+
     Raises:
         RuntimeError: If Dopemux root cannot be detected
     """
@@ -85,17 +85,17 @@ def compute_dopemux_paths(
     root: Path,
     out_root_override: Path | None = None,
 ) -> DopemuxPaths:
-    """Compute TaskX paths using Dopemux conventions.
-    
+    """Compute dopeTask paths using Dopemux conventions.
+
     Args:
         root: Dopemux root directory
-        out_root_override: Override for out_root (default: root/out/taskx)
-        
+        out_root_override: Override for out_root (default: root/out/dopetask)
+
     Returns:
         DopemuxPaths with all computed paths
     """
     # Determine out_root
-    out_root = out_root_override or (root / "out" / "taskx")
+    out_root = out_root_override or (root / "out" / "dopetask")
 
     # Compute all output paths
     spec_mine_out = out_root / "spec_mine"
@@ -133,18 +133,18 @@ def compute_dopemux_paths(
 
 def select_run_folder(runs_out: Path, run: Path | None = None) -> Path:
     """Select a run folder deterministically.
-    
+
     If run is provided, uses it directly.
     Otherwise, selects the lexicographically last folder in runs_out
     (most recent by naming convention like RUN_2026-02-03...).
-    
+
     Args:
         runs_out: Directory containing run folders
         run: Explicit run folder path (optional)
-        
+
     Returns:
         Selected run folder path
-        
+
     Raises:
         RuntimeError: If no run folders exist and run not provided
     """

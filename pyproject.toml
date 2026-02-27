@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "dopetask"
 version = "0.1.4"
-description = "TaskX - deterministic task-packet lifecycle + gates"
+description = "dopeTask - deterministic task-packet lifecycle + gates"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
 authors = [{name = "Dopemux Contributors"}]
-keywords = ["taskx", "task-packet", "lifecycle", "deterministic", "cli"]
+keywords = ["dopetask", "task-packet", "lifecycle", "deterministic", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -30,9 +30,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hu3mann/taskX"
-Repository = "https://github.com/hu3mann/taskX"
-Issues = "https://github.com/hu3mann/taskX/issues"
+Homepage = "https://github.com/hu3mann/dopeTask"
+Repository = "https://github.com/hu3mann/dopeTask"
+Issues = "https://github.com/hu3mann/dopeTask/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -45,13 +45,9 @@ dev = [
 ]
 
 [project.scripts]
-taskx = "dopetask.cli:cli"
 dopetask = "dopetask.cli:cli"
 
 [project.entry-points."dopetask.adapters"]
-dopemux = "dopetask_adapters.dopemux:DopemuxAdapter"
-
-[project.entry-points."taskx.adapters"]
 dopemux = "dopetask_adapters.dopemux:DopemuxAdapter"
 
 [tool.hatch.build.targets.wheel]
@@ -64,11 +60,11 @@ include = [
 [tool.hatch.build.targets.sdist]
 include = [
     "src/",
-    "taskx_schemas/",
+    "dopetask_schemas/",
     "tests/",
     "scripts/",
     "pyproject.toml",
-    "README_TASKX_INSTALL.md",
+    "README_DOPETASK_INSTALL.md",
 ]
 
 [tool.ruff]

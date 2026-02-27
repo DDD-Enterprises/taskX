@@ -1,1 +1,1 @@
-"""TaskX documentation automation helpers."""
+"""dopeTask documentation automation helpers."""

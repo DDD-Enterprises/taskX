@@ -56,7 +56,7 @@ def test_pr_open_restores_branch_after_success(tmp_path: Path, monkeypatch) -> N
 
     def _patched_git_output(repo_root, args):  # type: ignore[no-untyped-def]
         if args == ["remote", "get-url", "origin"]:
-            return "https://github.com/acme/taskX.git"
+            return "https://github.com/acme/dopeTask.git"
         return original_git_output(repo_root, args)
 
     monkeypatch.setattr("dopetask.pr.open._git_output", _patched_git_output)
@@ -95,7 +95,7 @@ def test_pr_open_restores_branch_after_failure(tmp_path: Path, monkeypatch) -> N
 
     def _patched_git_output(repo_root, args):  # type: ignore[no-untyped-def]
         if args == ["remote", "get-url", "origin"]:
-            return "https://github.com/acme/taskX.git"
+            return "https://github.com/acme/dopeTask.git"
         return original_git_output(repo_root, args)
 
     monkeypatch.setattr("dopetask.pr.open._git_output", _patched_git_output)

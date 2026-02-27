@@ -11,7 +11,7 @@ def build_handoff_chunks(packet: dict[str, Any], route_plan: dict[str, Any]) -> 
     del packet
     packet_path = str(route_plan.get("packet_path", ""))
     run_dir = str(route_plan.get("run_dir", ""))
-    resume_command = f"taskx orchestrate {packet_path}".strip()
+    resume_command = f"dopetask orchestrate {packet_path}".strip()
 
     chunks: list[dict[str, Any]] = []
     for step in route_plan.get("steps", []):

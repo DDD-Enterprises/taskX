@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# TaskX Multi-Repo Upgrader
-# Updates TASKX_VERSION.lock across multiple repos and verifies/installs TaskX
+# dopeTask Multi-Repo Upgrader
+# Updates DOPETASK_VERSION.lock across multiple repos and verifies/installs dopeTask
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ REPO_LIST=""
 MODE="auto"
 APPLY=false
 INSTALL=false
-OUT_DIR="./out/taskx_upgrade_many"
+OUT_DIR="./out/dopetask_upgrade_many"
 TIMESTAMP_MODE="deterministic"
 
 # Parse arguments
@@ -149,7 +149,7 @@ get_repo_dirname() {
 
 update_lockfile() {
   local repo_path="$1"
-  local lockfile="$repo_path/TASKX_VERSION.lock"
+  local lockfile="$repo_path/DOPETASK_VERSION.lock"
   local dry_run="$2"
   
   if [[ ! -f "$lockfile" ]]; then
@@ -159,8 +159,8 @@ update_lockfile() {
     else
       log_info "  Creating new lockfile"
       cat > "$lockfile" <<EOF
-# TaskX install pin for this repo
-# Created by taskx_upgrade_many.sh on $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+# dopeTask install pin for this repo
+# Created by dopetask_upgrade_many.sh on $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
 version = $VERSION
 ref = $REF
@@ -253,7 +253,7 @@ process_repo() {
   local installer_exit_code=0
   
   # Check if lockfile exists
-  if [[ -f "$repo_path/TASKX_VERSION.lock" ]]; then
+  if [[ -f "$repo_path/DOPETASK_VERSION.lock" ]]; then
     lockfile_found=true
   fi
   
@@ -284,9 +284,9 @@ process_repo() {
   
   if [[ $installer_exit_code -eq 0 ]]; then
     if [[ "$INSTALL" == "true" ]]; then
-      bash scripts/install_taskx.sh > "$install_log" 2>&1 || installer_exit_code=$?
+      bash scripts/install_dopetask.sh > "$install_log" 2>&1 || installer_exit_code=$?
     else
-      bash scripts/install_taskx.sh --verify-only > "$install_log" 2>&1 || installer_exit_code=$?
+      bash scripts/install_dopetask.sh --verify-only > "$install_log" 2>&1 || installer_exit_code=$?
     fi
     
     if [[ $installer_exit_code -eq 0 ]]; then
@@ -333,7 +333,7 @@ EOF
 # ============================================================================
 
 main() {
-  log_info "TaskX Multi-Repo Upgrader"
+  log_info "dopeTask Multi-Repo Upgrader"
   log_info "=========================="
   log_info "Target version: $VERSION"
   log_info "Target ref: $REF"
@@ -392,7 +392,7 @@ main() {
   log_info "Generating rollup report..."
   
   if command -v python3 &> /dev/null; then
-    python3 scripts/taskx_upgrade_many_report.py \
+    python3 scripts/dopetask_upgrade_many_report.py \
       --out-dir "$OUT_DIR" \
       --version "$VERSION" \
       --ref "$REF" \
@@ -404,7 +404,7 @@ main() {
   else
     log_warn "python3 not found - skipping report generation"
     log_warn "To generate report manually, run:"
-    log_warn "  python3 scripts/taskx_upgrade_many_report.py --out-dir $OUT_DIR --version $VERSION --ref $REF --timestamp-mode $TIMESTAMP_MODE"
+    log_warn "  python3 scripts/dopetask_upgrade_many_report.py --out-dir $OUT_DIR --version $VERSION --ref $REF --timestamp-mode $TIMESTAMP_MODE"
   fi
   
   log_info ""

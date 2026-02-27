@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TaskX Multi-Repo Upgrade Report Generator
+dopeTask Multi-Repo Upgrade Report Generator
 Reads per-repo result.json files and generates rollup reports
 """
 
@@ -98,7 +98,7 @@ def generate_rollup_md(
     repos = rollup_json["repos"]
     
     md_lines = [
-        "# TaskX Multi-Repo Upgrade Report",
+        "# dopeTask Multi-Repo Upgrade Report",
         "",
         f"**Target Version:** {rollup_json['target_version']}  ",
         f"**Target Ref:** {rollup_json['target_ref']}  ",
@@ -200,7 +200,7 @@ def generate_rollup_md(
             "",
             "1. Review the install log for each failed repo",
             "2. Common issues:",
-            "   - `taskx doctor` failures → schema bundling issues",
+            "   - `dopetask doctor` failures → schema bundling issues",
             "   - Git authentication failures → check SSH keys",
             "   - Missing dependencies → install required packages",
             "3. Fix issues and re-run upgrade with `--apply --install`",
@@ -221,7 +221,7 @@ def generate_rollup_md(
             "",
             "```bash",
             f"# Re-run verification across all repos",
-            f"bash scripts/taskx_upgrade_many.sh --version {rollup_json['target_version']} \\",
+            f"bash scripts/dopetask_upgrade_many.sh --version {rollup_json['target_version']} \\",
             "  --repo-list repos.txt \\",
             "  --apply",
             "```",
@@ -247,7 +247,7 @@ def generate_rollup_md(
             "EOF",
             "",
             "# Re-run upgrade for failed repos",
-            f"bash scripts/taskx_upgrade_many.sh --version {rollup_json['target_version']} \\",
+            f"bash scripts/dopetask_upgrade_many.sh --version {rollup_json['target_version']} \\",
             "  --repo-list failed_repos.txt \\",
             "  --apply --install",
             "```",
@@ -266,7 +266,7 @@ def generate_rollup_md(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate TaskX multi-repo upgrade rollup report"
+        description="Generate dopeTask multi-repo upgrade rollup report"
     )
     parser.add_argument(
         "--out-dir",
@@ -277,7 +277,7 @@ def main():
     parser.add_argument(
         "--version",
         required=True,
-        help="Target TaskX version"
+        help="Target dopeTask version"
     )
     parser.add_argument(
         "--ref",

@@ -93,7 +93,7 @@ class AvailabilityError(ValueError):
 
 def availability_path_for_repo(repo_root: Path) -> Path:
     """Return canonical availability file path for a repository."""
-    return repo_root.resolve() / ".taskx" / "runtime" / "availability.yaml"
+    return repo_root.resolve() / ".dopetask" / "runtime" / "availability.yaml"
 
 
 def ensure_default_availability(repo_root: Path, *, force: bool = False) -> Path:
@@ -113,7 +113,7 @@ def load_availability(repo_root: Path) -> AvailabilityConfig:
     path = availability_path_for_repo(repo_root)
     if not path.exists():
         raise AvailabilityError(
-            f"Missing availability config at {path}. Run `taskx route init --repo-root {repo_root}` first.",
+            f"Missing availability config at {path}. Run `dopetask route init --repo-root {repo_root}` first.",
             AVAILABILITY_REASON_MISSING,
         )
 

@@ -65,7 +65,7 @@ jobs:
         run: uv run --extra dev mypy src/dopetask
 
       - name: Run tests
-        run: uv pip install pytest && PYTHONPATH="src:taskx_schemas" $(uv run which python) -m pytest
+        run: uv pip install pytest && PYTHONPATH="src:dopetask_schemas" $(uv run which python) -m pytest
 
       - name: Build artifacts
         run: uv build
@@ -81,7 +81,7 @@ jobs:
           source .venv-wheel-smoke/bin/activate
           python -m pip install --upgrade pip
           pip install dist/*.whl
-          INSTALLED_VERSION="$(taskx --version | tail -n 1 | tr -d '\r')"
+          INSTALLED_VERSION="$(dopetask --version | tail -n 1 | tr -d '\r')"
           if [ "$INSTALLED_VERSION" != "$TAG_VERSION" ]; then
             echo "Installed CLI version mismatch: installed=$INSTALLED_VERSION expected=$TAG_VERSION"
             exit 1
@@ -93,7 +93,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: taskx-release-dist-${{ github.ref_name }}
+          name: dopetask-release-dist-${{ github.ref_name }}
           path: dist/
           retention-days: 14
 
@@ -116,7 +116,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: dopeTask v${{ env.TAG_VERSION }}
           body: |
-            ## TaskX Kernel v${{ env.TAG_VERSION }}
+            ## dopeTask Kernel v${{ env.TAG_VERSION }}
             
             **Automated Release** - ${{ github.ref_name }}
             

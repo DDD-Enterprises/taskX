@@ -1,4 +1,4 @@
-"""Identity banner helpers for TaskX commands."""
+"""Identity banner helpers for dopeTask commands."""
 
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def print_identity_banner(ctx: BannerContext, *, quiet: bool = False) -> None:
     branch = ctx.branch or "UNKNOWN"
     run = ctx.run_id or "none"
 
-    banner = f"[taskx] project={ctx.project_id} repo={repo} branch={branch} run={run}"
+    banner = f"[dopetask] project={ctx.project_id} repo={repo} branch={branch} run={run}"
     print(_c(banner, "36"), file=sys.stderr)
 
     warning = origin_hint_warning(ctx.repo_remote_hint, ctx.origin_url)

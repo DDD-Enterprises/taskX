@@ -1,6 +1,6 @@
 
-import pytest
 from dopetask.utils.schema_registry import SchemaRegistry
+
 
 class TestNewSchemaLoading:
     """Test loading of Packet 0001 schemas."""
@@ -9,7 +9,7 @@ class TestNewSchemaLoading:
         """Registry should list the new case bundle schemas."""
         registry = SchemaRegistry()
         available = registry.available
-        
+
         assert "case_bundle" in available
         assert "implementer_report" in available
         assert "supervisor_review" in available

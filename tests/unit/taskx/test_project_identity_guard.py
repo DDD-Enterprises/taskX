@@ -20,9 +20,9 @@ if TYPE_CHECKING:
 def test_packet_project_id_mismatch_refuses_with_exact_message() -> None:
     """Mismatched task packet project_id should hard-fail with exact refusal text."""
     repo_identity = RepoIdentity(
-        project_id="taskx",
-        project_slug="taskX",
-        repo_remote_hint="taskX",
+        project_id="dopetask",
+        project_slug="dopeTask",
+        repo_remote_hint="dopeTask",
         packet_required_header=True,
     )
     packet_identity = ProjectIdentity(project_id="adops", intended_repo="adops")
@@ -31,7 +31,7 @@ def test_packet_project_id_mismatch_refuses_with_exact_message() -> None:
         assert_repo_packet_identity(repo_identity, packet_identity)
 
     assert str(exc_info.value) == (
-        "ERROR: Task Packet project_id 'adops' does not match repo project_id 'taskx'.\n"
+        "ERROR: Task Packet project_id 'adops' does not match repo project_id 'dopetask'.\n"
         "Refusing to run. Use the correct repo or correct packet."
     )
 
@@ -68,19 +68,19 @@ def test_wt_start_refuses_packet_repo_mismatch_with_exact_message(
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo, check=True, capture_output=True)
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
-    (repo / ".taskxroot").write_text("", encoding="utf-8")
-    (repo / ".taskx").mkdir(parents=True, exist_ok=True)
-    (repo / ".taskx" / "project.json").write_text(
+    (repo / ".dopetaskroot").write_text("", encoding="utf-8")
+    (repo / ".dopetask").mkdir(parents=True, exist_ok=True)
+    (repo / ".dopetask" / "project.json").write_text(
         "{\n"
-        '  "project_id": "taskx",\n'
-        '  "project_slug": "taskX",\n'
-        '  "repo_remote_hint": "taskX",\n'
+        '  "project_id": "dopetask",\n'
+        '  "project_slug": "dopeTask",\n'
+        '  "repo_remote_hint": "dopeTask",\n'
         '  "packet_required_header": true\n'
         "}\n",
         encoding="utf-8",
     )
     subprocess.run(
-        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        ["git", "add", "README.md", ".gitignore", ".dopetaskroot", ".dopetask/project.json"],
         cwd=repo,
         check=True,
         capture_output=True,
@@ -103,6 +103,6 @@ def test_wt_start_refuses_packet_repo_mismatch_with_exact_message(
 
     assert result.exit_code == 1
     assert (
-        "ERROR: Task Packet project_id 'adops' does not match repo project_id 'taskx'.\n"
+        "ERROR: Task Packet project_id 'adops' does not match repo project_id 'dopetask'.\n"
         "Refusing to run. Use the correct repo or correct packet."
     ) in result.stdout

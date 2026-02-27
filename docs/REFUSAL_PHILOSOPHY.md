@@ -1,10 +1,10 @@
 # Refusal Philosophy
 
-TaskX does not treat refusal as a failure mode. It treats refusal as an integrity boundary.
+dopeTask does not treat refusal as a failure mode. It treats refusal as an integrity boundary.
 
 ## Why refuse
 
-When required evidence is missing, scope is violated, or policy constraints are incompatible, TaskX must refuse to continue.
+When required evidence is missing, scope is violated, or policy constraints are incompatible, dopeTask must refuse to continue.
 
 Proceeding anyway would break deterministic guarantees and dilute operator trust.
 

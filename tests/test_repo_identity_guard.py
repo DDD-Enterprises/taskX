@@ -9,44 +9,44 @@ from dopetask.guard.identity import RepoIdentityGuardError, assert_repo_identity
 
 
 def _write_project_json(repo_dir: Path, project_id: object) -> None:
-    taskx_dir = repo_dir / ".taskx"
-    taskx_dir.mkdir(parents=True, exist_ok=True)
+    dopetask_dir = repo_dir / ".dopetask"
+    dopetask_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "project_id": project_id,
-        "project_slug": "taskX",
-        "repo_remote_hint": "taskX",
+        "project_slug": "dopeTask",
+        "repo_remote_hint": "dopeTask",
         "packet_required_header": False,
     }
-    (taskx_dir / "project.json").write_text(json.dumps(payload), encoding="utf-8")
+    (dopetask_dir / "project.json").write_text(json.dumps(payload), encoding="utf-8")
 
 
-def _write_taskxroot(repo_dir: Path) -> None:
-    (repo_dir / ".taskxroot").write_text("taskx\n", encoding="utf-8")
+def _write_dopetaskroot(repo_dir: Path) -> None:
+    (repo_dir / ".dopetaskroot").write_text("dopetask\n", encoding="utf-8")
 
 
 def test_assert_repo_identity_pass(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
-    _write_project_json(repo_dir, "taskx.core")
+    _write_dopetaskroot(repo_dir)
+    _write_project_json(repo_dir, "dopetask.core")
 
     identity = assert_repo_identity(repo_dir, expected_project_id=None)
-    assert identity.project_id == "taskx.core"
+    assert identity.project_id == "dopetask.core"
 
 
 def test_assert_repo_identity_missing_project_json(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
+    _write_dopetaskroot(repo_dir)
 
     with pytest.raises(RepoIdentityGuardError):
         assert_repo_identity(repo_dir)
 
 
-def test_assert_repo_identity_missing_taskxroot(tmp_path: Path) -> None:
+def test_assert_repo_identity_missing_dopetaskroot(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_project_json(repo_dir, "taskx.core")
+    _write_project_json(repo_dir, "dopetask.core")
 
     with pytest.raises(RepoIdentityGuardError):
         assert_repo_identity(repo_dir)
@@ -55,10 +55,10 @@ def test_assert_repo_identity_missing_taskxroot(tmp_path: Path) -> None:
 def test_assert_repo_identity_missing_project_id(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
-    taskx_dir = repo_dir / ".taskx"
-    taskx_dir.mkdir(parents=True, exist_ok=True)
-    (taskx_dir / "project.json").write_text("{}", encoding="utf-8")
+    _write_dopetaskroot(repo_dir)
+    dopetask_dir = repo_dir / ".dopetask"
+    dopetask_dir.mkdir(parents=True, exist_ok=True)
+    (dopetask_dir / "project.json").write_text("{}", encoding="utf-8")
 
     with pytest.raises(RuntimeError):
         assert_repo_identity(repo_dir)
@@ -67,10 +67,10 @@ def test_assert_repo_identity_missing_project_id(tmp_path: Path) -> None:
 def test_assert_repo_identity_invalid_json(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
-    taskx_dir = repo_dir / ".taskx"
-    taskx_dir.mkdir(parents=True, exist_ok=True)
-    (taskx_dir / "project.json").write_text("{not-json}", encoding="utf-8")
+    _write_dopetaskroot(repo_dir)
+    dopetask_dir = repo_dir / ".dopetask"
+    dopetask_dir.mkdir(parents=True, exist_ok=True)
+    (dopetask_dir / "project.json").write_text("{not-json}", encoding="utf-8")
 
     with pytest.raises(RuntimeError):
         assert_repo_identity(repo_dir)
@@ -79,7 +79,7 @@ def test_assert_repo_identity_invalid_json(tmp_path: Path) -> None:
 def test_assert_repo_identity_non_string_project_id(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
+    _write_dopetaskroot(repo_dir)
     _write_project_json(repo_dir, ["not", "a", "string"])
 
     with pytest.raises(RuntimeError):
@@ -89,11 +89,11 @@ def test_assert_repo_identity_non_string_project_id(tmp_path: Path) -> None:
 def test_assert_repo_identity_mismatch(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
+    _write_dopetaskroot(repo_dir)
     _write_project_json(repo_dir, "something.else")
 
     with pytest.raises(RepoIdentityGuardError) as exc:
-        assert_repo_identity(repo_dir, expected_project_id="taskx.core")
+        assert_repo_identity(repo_dir, expected_project_id="dopetask.core")
     message = str(exc.value)
     assert "expected_project_id" in message
     assert "observed_project_id" in message
@@ -103,7 +103,7 @@ def test_assert_repo_identity_mismatch(tmp_path: Path) -> None:
 def test_docs_refresh_guard_refuses(tmp_path: Path) -> None:
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir()
-    _write_taskxroot(repo_dir)
+    _write_dopetaskroot(repo_dir)
     _write_project_json(repo_dir, "wrong.id")
 
     runner = CliRunner()
@@ -116,7 +116,7 @@ def test_docs_refresh_guard_refuses(tmp_path: Path) -> None:
             str(repo_dir),
             "--check",
             "--require-project-id",
-            "taskx.core",
+            "dopetask.core",
         ],
     )
 

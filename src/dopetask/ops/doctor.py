@@ -51,7 +51,7 @@ def get_canonical_target(repo_root: Path) -> Path:
     2. CLAUDE.md
     3. claude.md
     4. AGENTS.md
-    5. fallback: docs/llm/TASKX_OPERATOR_SYSTEM.md
+    5. fallback: docs/llm/DOPETASK_OPERATOR_SYSTEM.md
     """
     candidates = [
         ".claude/CLAUDE.md",
@@ -63,7 +63,7 @@ def get_canonical_target(repo_root: Path) -> Path:
         p = repo_root / rel
         if p.exists():
             return p
-    return repo_root / "docs/llm/TASKX_OPERATOR_SYSTEM.md"
+    return repo_root / "docs/llm/DOPETASK_OPERATOR_SYSTEM.md"
 
 def run_doctor(repo_root: Path) -> dict:
     report: dict = {
@@ -106,7 +106,7 @@ def run_doctor(repo_root: Path) -> dict:
         "AGENTS.md",
         "AI.md",
         "README_AI.md",
-        "docs/llm/TASKX_OPERATOR_SYSTEM.md"
+        "docs/llm/DOPETASK_OPERATOR_SYSTEM.md"
     ]
 
     for rel_path in candidates:

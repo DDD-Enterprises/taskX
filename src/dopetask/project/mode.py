@@ -1,4 +1,4 @@
-"""Master project mode toggle for TaskX/ChatX directive packs."""
+"""Master project mode toggle for dopeTask/ChatX directive packs."""
 
 from __future__ import annotations
 
@@ -9,12 +9,12 @@ from typing import Any
 from dopetask.project.common import MANAGED_FILES
 from dopetask.project.toggles import disable_pack, enable_pack, project_status
 
-VALID_MODES: tuple[str, ...] = ("taskx", "chatx", "both", "none")
+VALID_MODES: tuple[str, ...] = ("dopetask", "chatx", "both", "none")
 MODE_TO_PACK_ENABLED: dict[str, dict[str, bool]] = {
-    "taskx": {"taskx": True, "chatx": False},
-    "chatx": {"taskx": False, "chatx": True},
-    "both": {"taskx": True, "chatx": True},
-    "none": {"taskx": False, "chatx": False},
+    "dopetask": {"dopetask": True, "chatx": False},
+    "chatx": {"dopetask": False, "chatx": True},
+    "both": {"dopetask": True, "chatx": True},
+    "none": {"dopetask": False, "chatx": False},
 }
 
 
@@ -28,7 +28,7 @@ def normalize_mode(mode: str) -> str:
 
 
 def set_mode(project_dir: Path, mode: str) -> dict[str, Any]:
-    """Apply one of taskx/chatx/both/none across all managed instruction files."""
+    """Apply one of dopetask/chatx/both/none across all managed instruction files."""
     normalized_mode = normalize_mode(mode)
     before_hashes = _read_instruction_hashes(project_dir)
 
@@ -87,10 +87,10 @@ def _normalize_status(status_result: dict[str, Any]) -> dict[str, dict[str, str]
     for item in status_result["files"]:
         filename = Path(item["file"]).name
         if not item["exists"]:
-            normalized[filename] = {"taskx": "missing", "chatx": "missing"}
+            normalized[filename] = {"dopetask": "missing", "chatx": "missing"}
             continue
         normalized[filename] = {
-            "taskx": "enabled" if item["packs"]["taskx"] else "disabled",
+            "dopetask": "enabled" if item["packs"]["dopetask"] else "disabled",
             "chatx": "enabled" if item["packs"]["chatx"] else "disabled",
         }
     return normalized
@@ -108,7 +108,7 @@ def _render_mode_report(
         "",
         f"- project_dir: {project_dir}",
         f"- selected_mode: {mode}",
-        f"- taskx_changed_files: {pack_changes.get('taskx', 0)}",
+        f"- dopetask_changed_files: {pack_changes.get('dopetask', 0)}",
         f"- chatx_changed_files: {pack_changes.get('chatx', 0)}",
         "",
         "## Per-file Pack Status",
@@ -117,7 +117,7 @@ def _render_mode_report(
 
     for filename in sorted(status):
         lines.append(
-            f"- {filename}: taskx={status[filename]['taskx']} chatx={status[filename]['chatx']}"
+            f"- {filename}: dopetask={status[filename]['dopetask']} chatx={status[filename]['chatx']}"
         )
 
     lines.extend(["", "## Files Changed", ""])

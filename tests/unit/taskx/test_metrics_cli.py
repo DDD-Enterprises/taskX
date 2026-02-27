@@ -1,4 +1,4 @@
-"""Tests for TaskX local opt-in metrics CLI commands."""
+"""Tests for dopeTask local opt-in metrics CLI commands."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ RUNNER = CliRunner()
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def _run_taskx(args: list[str], *, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+def _run_dopetask(args: list[str], *, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     """Run `python -m dopetask ...` and return completed process."""
     run_env = dict(env)
     src_path = str(REPO_ROOT / "src")
@@ -37,7 +37,7 @@ def _run_taskx(args: list[str], *, env: dict[str, str]) -> subprocess.CompletedP
 def test_metrics_status_defaults_to_disabled(tmp_path: Path, monkeypatch) -> None:
     state_home = tmp_path / "state"
     monkeypatch.setenv("XDG_STATE_HOME", str(state_home))
-    monkeypatch.delenv("TASKX_METRICS", raising=False)
+    monkeypatch.delenv("DOPETASK_METRICS", raising=False)
 
     result = RUNNER.invoke(cli, ["metrics", "status"])
     assert result.exit_code == 0, result.output
@@ -53,7 +53,7 @@ def test_metrics_status_defaults_to_disabled(tmp_path: Path, monkeypatch) -> Non
 def test_metrics_enable_disable_show_and_reset(tmp_path: Path, monkeypatch) -> None:
     state_home = tmp_path / "state"
     monkeypatch.setenv("XDG_STATE_HOME", str(state_home))
-    monkeypatch.delenv("TASKX_METRICS", raising=False)
+    monkeypatch.delenv("DOPETASK_METRICS", raising=False)
 
     enabled = RUNNER.invoke(cli, ["metrics", "enable"])
     assert enabled.exit_code == 0, enabled.output
@@ -81,12 +81,12 @@ def test_metrics_enable_disable_show_and_reset(tmp_path: Path, monkeypatch) -> N
     env.update(
         {
             "XDG_STATE_HOME": str(state_home),
-            "TASKX_METRICS": "1",
-            "TASKX_NEON": "0",
-            "TASKX_STRICT": "0",
+            "DOPETASK_METRICS": "1",
+            "DOPETASK_NEON": "0",
+            "DOPETASK_STRICT": "0",
         }
     )
-    help_result = _run_taskx(["--help"], env=env)
+    help_result = _run_dopetask(["--help"], env=env)
     assert help_result.returncode == 0, help_result.stderr
 
     reset = RUNNER.invoke(cli, ["metrics", "reset"])
@@ -112,16 +112,16 @@ def test_metrics_env_opt_in_counts_help_and_version(tmp_path: Path) -> None:
     env.update(
         {
             "XDG_STATE_HOME": str(state_home),
-            "TASKX_METRICS": "1",
-            "TASKX_NEON": "0",
-            "TASKX_STRICT": "0",
+            "DOPETASK_METRICS": "1",
+            "DOPETASK_NEON": "0",
+            "DOPETASK_STRICT": "0",
         }
     )
 
-    help_result = _run_taskx(["--help"], env=env)
+    help_result = _run_dopetask(["--help"], env=env)
     assert help_result.returncode == 0, help_result.stderr
 
-    version_result = _run_taskx(["--version"], env=env)
+    version_result = _run_dopetask(["--version"], env=env)
     assert version_result.returncode == 0, version_result.stderr
 
     metrics_path = resolve_metrics_path(env={"XDG_STATE_HOME": str(state_home)}, home=tmp_path)

@@ -1,4 +1,4 @@
-"""Repo-local shell wiring helpers for TaskX."""
+"""Repo-local shell wiring helpers for dopeTask."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Any
 
 from dopetask.project.common import read_template_text
 
-REPORT_DIR = Path("out/taskx_project_shell")
+REPORT_DIR = Path("out/dopetask_project_shell")
 REPORT_JSON = "PROJECT_SHELL_REPORT.json"
 REPORT_MD = "PROJECT_SHELL_REPORT.md"
 
@@ -32,13 +32,13 @@ SHELL_FILES: tuple[ShellFileSpec, ...] = (
         executable=False,
     ),
     ShellFileSpec(
-        relative_path="scripts/taskx",
-        template_name="shell_taskx_shim.template",
+        relative_path="scripts/dopetask",
+        template_name="shell_dopetask_shim.template",
         executable=True,
     ),
     ShellFileSpec(
-        relative_path="scripts/taskx-local",
-        template_name="shell_taskx_local.template",
+        relative_path="scripts/dopetask-local",
+        template_name="shell_dopetask_local.template",
         executable=True,
     ),
 )
@@ -144,14 +144,14 @@ def _next_steps(direnv_found: bool) -> list[str]:
     if direnv_found:
         return [
             "Run: direnv allow",
-            "Use scripts/taskx (or scripts/taskx-local) for repo-bound TaskX",
+            "Use scripts/dopetask (or scripts/dopetask-local) for repo-bound dopeTask",
         ]
 
     return [
         "Install direnv (macOS): brew install direnv",
         'Enable shell hook (zsh): eval "$(direnv hook zsh)"',
         "Then run: direnv allow",
-        "Use scripts/taskx (or scripts/taskx-local) for repo-bound TaskX",
+        "Use scripts/dopetask (or scripts/dopetask-local) for repo-bound dopeTask",
     ]
 
 

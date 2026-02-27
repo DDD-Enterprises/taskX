@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""TaskX Pin Audit Tool
+"""dopeTask Pin Audit Tool
 
-Reads and validates .taskx-pin configuration files.
+Reads and validates .dopetask-pin configuration files.
 """
 
 import sys
@@ -19,7 +19,7 @@ def find_repo_root(start_dir: Path) -> Path | None:
 
 
 def parse_pin_file(pin_file: Path) -> dict[str, str]:
-    """Parse .taskx-pin file into dictionary."""
+    """Parse .dopetask-pin file into dictionary."""
     config = {}
 
     if not pin_file.exists():
@@ -88,13 +88,13 @@ def validate_config(config: dict[str, str], repo_root: Path) -> bool:
 
 def print_summary(config: dict[str, str], repo_root: Path) -> None:
     """Print normalized summary of pin configuration."""
-    print("TaskX Pin Configuration Summary")
+    print("dopeTask Pin Configuration Summary")
     print("=" * 50)
     print(f"Repository root: {repo_root}")
     print()
 
     if not config:
-        print("Status: ❌ No .taskx-pin file found")
+        print("Status: ❌ No .dopetask-pin file found")
         return
 
     method = config.get('install', 'unknown')
@@ -132,11 +132,11 @@ def main() -> int:
         return 1
 
     # Find and parse pin file
-    pin_file = repo_root / ".taskx-pin"
+    pin_file = repo_root / ".dopetask-pin"
     config = parse_pin_file(pin_file)
 
     if not config:
-        print(f"❌ No .taskx-pin file found at: {pin_file}", file=sys.stderr)
+        print(f"❌ No .dopetask-pin file found at: {pin_file}", file=sys.stderr)
         print("\nCreate one with:", file=sys.stderr)
         print("  install=git", file=sys.stderr)
         print("  repo=https://github.com/owner/repo.git", file=sys.stderr)

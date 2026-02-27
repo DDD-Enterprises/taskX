@@ -1,17 +1,17 @@
 # Public Contract
 
-This document defines TaskX's public, user-visible contract: inputs, outputs, determinism, exit codes, and non-goals.
+This document defines dopeTask's public, user-visible contract: inputs, outputs, determinism, exit codes, and non-goals.
 
 ## Inputs
 
 - Task Packet: see `13_TASK_PACKET_FORMAT.md`
-- Route availability config: `.taskx/runtime/availability.yaml`
+- Route availability config: `.dopetask/runtime/availability.yaml`
 
 ## Outputs
 
-TaskX writes deterministic artifacts for a given invocation:
+dopeTask writes deterministic artifacts for a given invocation:
 
-- Route plan artifacts under `out/taskx_route/`
+- Route plan artifacts under `out/dopetask_route/`
 - Refusal reasons when refusing
 
 Console output is informational. Artifacts are the record.
@@ -22,7 +22,7 @@ For identical:
 
 - Packet
 - Declared inputs
-- TaskX version
+- dopeTask version
 
 Outputs must be byte-stable unless explicitly documented otherwise.
 
@@ -40,7 +40,7 @@ Outputs must be byte-stable unless explicitly documented otherwise.
 
 ## Versioning policy
 
-TaskX follows Semantic Versioning.
+dopeTask follows Semantic Versioning.
 
 - Patch: bug fixes only
 - Minor: additive and backward-compatible

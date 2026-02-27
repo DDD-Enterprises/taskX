@@ -8,7 +8,7 @@ REQUIRED = {"allowlist_diff", "promotion_token", "run_envelope", "run_summary"}
 
 def test_required_schemas_available():
     registry = SchemaRegistry()
-    assert REQUIRED <= set(registry.available)
+    assert set(registry.available) >= REQUIRED
 
 
 def test_schema_loads_as_dict():

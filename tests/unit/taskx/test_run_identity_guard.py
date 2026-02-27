@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 def test_run_identity_mismatch_refuses_with_exact_message() -> None:
     """Run directory from another project should hard-fail."""
     repo_identity = RepoIdentity(
-        project_id="taskx",
-        project_slug="taskX",
-        repo_remote_hint="taskX",
+        project_id="dopetask",
+        project_slug="dopeTask",
+        repo_remote_hint="dopeTask",
         packet_required_header=True,
     )
     run_identity = RunIdentity(
@@ -40,7 +40,7 @@ def test_run_identity_mismatch_refuses_with_exact_message() -> None:
         assert_repo_run_identity(repo_identity, run_identity)
 
     assert str(exc_info.value) == (
-        "ERROR: Run directory project_id 'adops' does not match repo project_id 'taskx'.\n"
+        "ERROR: Run directory project_id 'adops' does not match repo project_id 'dopetask'.\n"
         "Refusing to run."
     )
 
@@ -52,9 +52,9 @@ def test_ensure_run_identity_writes_file_when_missing(tmp_path: Path) -> None:
     run_dir = tmp_path / "out" / "runs" / "RUN_X"
 
     repo_identity = RepoIdentity(
-        project_id="taskx",
-        project_slug="taskX",
-        repo_remote_hint="taskX",
+        project_id="dopetask",
+        project_slug="dopeTask",
+        repo_remote_hint="dopeTask",
         packet_required_header=True,
     )
 
@@ -65,9 +65,9 @@ def test_ensure_run_identity_writes_file_when_missing(tmp_path: Path) -> None:
 
     payload = json.loads(identity_path.read_text(encoding="utf-8"))
     assert payload["schema_version"] == "1.0"
-    assert payload["project_id"] == "taskx"
+    assert payload["project_id"] == "dopetask"
     assert payload["repo_root"] == str(repo_root.resolve())
     assert payload["timestamp_utc"]
 
-    assert written.project_id == "taskx"
+    assert written.project_id == "dopetask"
     assert written.repo_root == str(repo_root.resolve())

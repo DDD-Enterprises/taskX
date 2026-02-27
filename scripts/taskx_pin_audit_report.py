@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TaskX Pin Audit Report Generator
+dopeTask Pin Audit Report Generator
 Reads audit_raw.json and generates PIN_AUDIT.json + PIN_AUDIT.md
 """
 
@@ -75,7 +75,7 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
     repos = pin_audit_json["repos"]
     
     md_lines = [
-        "# TaskX Pin Audit Report",
+        "# dopeTask Pin Audit Report",
         "",
         f"**Target Version:** {target['version']}  ",
         f"**Target Ref:** {target['ref']}  ",
@@ -138,7 +138,7 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
         md_lines.extend([
             "## Missing Lockfile",
             "",
-            "These repositories do not have a `TASKX_VERSION.lock` file:",
+            "These repositories do not have a `DOPETASK_VERSION.lock` file:",
             "",
         ])
         
@@ -245,7 +245,7 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
             "EOF",
             "",
             "# 2. Run upgrader",
-            f"bash scripts/taskx_upgrade_many.sh --version {target['version']} \\",
+            f"bash scripts/dopetask_upgrade_many.sh --version {target['version']} \\",
             "  --repo-list behind_repos.txt \\",
             "  --apply --install",
             "```",
@@ -255,8 +255,8 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
             "For repositories without lockfiles, create them manually:",
             "",
             "```bash",
-            "# For each missing repo, create TASKX_VERSION.lock:",
-            "cat > TASKX_VERSION.lock <<EOF",
+            "# For each missing repo, create DOPETASK_VERSION.lock:",
+            "cat > DOPETASK_VERSION.lock <<EOF",
             f"version = {target['version']}",
             f"ref = {target['ref']}",
             "mode = git",
@@ -290,7 +290,7 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
             "",
             "```bash",
             "# Re-run audit periodically",
-            f"bash scripts/taskx_pin_audit.sh --target-version {target['version']} \\",
+            f"bash scripts/dopetask_pin_audit.sh --target-version {target['version']} \\",
             "  --repo-list your_repos.txt",
             "```",
             "",
@@ -298,11 +298,11 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
     else:
         md_lines.extend([
             "1. **Fix issues** identified in sections above",
-            "2. **Run upgrade** using `taskx_upgrade_many.sh`",
+            "2. **Run upgrade** using `dopetask_upgrade_many.sh`",
             "3. **Re-audit** to verify all repos are updated:",
             "",
             "```bash",
-            f"bash scripts/taskx_pin_audit.sh --target-version {target['version']} \\",
+            f"bash scripts/dopetask_pin_audit.sh --target-version {target['version']} \\",
             "  --repo-list your_repos.txt",
             "```",
             "",
@@ -321,7 +321,7 @@ def generate_pin_audit_md(pin_audit_json: Dict[str, Any], out_dir: Path) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate TaskX pin audit report"
+        description="Generate dopeTask pin audit report"
     )
     parser.add_argument(
         "--audit-file",
@@ -332,7 +332,7 @@ def main():
     parser.add_argument(
         "--target-version",
         required=True,
-        help="Target TaskX version"
+        help="Target dopeTask version"
     )
     parser.add_argument(
         "--target-ref",

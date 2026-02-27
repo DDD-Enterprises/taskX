@@ -14,7 +14,7 @@ from dopetask.artifacts import canonical_dumps, sha256_file
 from dopetask.cli import cli
 from dopetask.orchestrator import kernel
 from dopetask.orchestrator.kernel import orchestrate
-from tests.unit.taskx.route_test_utils import create_taskx_repo, write_availability
+from tests.unit.dopetask.route_test_utils import create_dopetask_repo, write_availability
 
 
 def _write_packet(repo_root: Path, payload: dict[str, Any], name: str = "packet.json") -> Path:
@@ -40,7 +40,7 @@ def _manual_packet() -> dict[str, Any]:
 
 
 def test_orchestrate_refusal_writes_expected_artifacts(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     packet = _write_packet(
         repo,
         {
@@ -68,7 +68,7 @@ def test_orchestrate_refusal_writes_expected_artifacts(tmp_path: Path) -> None:
 
 
 def test_orchestrate_refusal_rerun_is_byte_identical(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     packet = _write_packet(
         repo,
         {
@@ -96,7 +96,7 @@ def test_orchestrate_refusal_rerun_is_byte_identical(tmp_path: Path) -> None:
 
 
 def test_orchestrate_executes_only_selected_runner(monkeypatch, tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     write_availability(
         repo,
         policy_overrides={"min_total_score": 1, "escalation_ladder": ["gpt-5.3-codex"]},
@@ -185,7 +185,7 @@ def test_orchestrate_executes_only_selected_runner(monkeypatch, tmp_path: Path) 
 
 
 def test_refusal_route_plan_preserves_ladder_and_step_order(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     custom_ladder = ["sonnet-4.55", "gpt-5.3-codex", "haiku-4.5"]
     write_availability(
         repo,
@@ -208,7 +208,7 @@ def test_refusal_route_plan_preserves_ladder_and_step_order(tmp_path: Path) -> N
 
 
 def test_refusal_side_effects_do_not_change_git_status(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     packet = _write_packet(
         repo,
         {
@@ -246,7 +246,7 @@ def test_refusal_side_effects_do_not_change_git_status(tmp_path: Path) -> None:
 
 
 def test_manual_mode_emits_chunks_and_artifacts(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     write_availability(repo, policy_overrides={"min_total_score": 1})
     packet = _write_packet(repo, _manual_packet())
 
@@ -268,7 +268,7 @@ def test_manual_mode_emits_chunks_and_artifacts(tmp_path: Path) -> None:
 
 
 def test_manual_mode_rerun_json_artifacts_are_identical(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     write_availability(repo, policy_overrides={"min_total_score": 1})
     packet = _write_packet(repo, _manual_packet())
 
@@ -283,7 +283,7 @@ def test_manual_mode_rerun_json_artifacts_are_identical(tmp_path: Path) -> None:
 
 
 def test_manual_handoff_chunks_do_not_include_timestamps(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     write_availability(repo, policy_overrides={"min_total_score": 1})
     packet = _write_packet(repo, _manual_packet())
 

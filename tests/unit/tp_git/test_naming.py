@@ -1,4 +1,4 @@
-"""Unit tests for taskx tp git naming helpers."""
+"""Unit tests for dopetask tp git naming helpers."""
 
 from __future__ import annotations
 

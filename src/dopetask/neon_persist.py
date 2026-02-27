@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-MARKER_BEGIN = "# >>> TASKX NEON BEGIN >>>"
-MARKER_END = "# <<< TASKX NEON END <<<"
+MARKER_BEGIN = "# >>> DOPETASK NEON BEGIN >>>"
+MARKER_END = "# <<< DOPETASK NEON END <<<"
 
 # Valid theme names for shell rc persistence (must match ui.THEMES keys)
 VALID_THEMES = frozenset({"mintwave", "cyberpunk", "ultraviolet", "magma", "toxic_lime"})
@@ -23,9 +23,9 @@ def render_block(*, neon: str, theme: str, strict: str) -> str:
         )
     lines = [
         MARKER_BEGIN,
-        f'export TASKX_NEON="{neon}"',
-        f'export TASKX_THEME="{theme}"',
-        f'export TASKX_STRICT="{strict}"',
+        f'export DOPETASK_NEON="{neon}"',
+        f'export DOPETASK_THEME="{theme}"',
+        f'export DOPETASK_STRICT="{strict}"',
         MARKER_END,
         "",
     ]
@@ -40,11 +40,11 @@ def apply_managed_block(contents: str, *, block: str, remove: bool) -> tuple[str
     if begin_idx != -1:
         next_begin_idx = contents.find(MARKER_BEGIN, begin_idx + len(MARKER_BEGIN))
         if next_begin_idx != -1:
-            raise ValueError("Multiple TASKX NEON begin markers found.")
+            raise ValueError("Multiple DOPETASK NEON begin markers found.")
     if end_idx != -1:
         next_end_idx = contents.find(MARKER_END, end_idx + len(MARKER_END))
         if next_end_idx != -1:
-            raise ValueError("Multiple TASKX NEON end markers found.")
+            raise ValueError("Multiple DOPETASK NEON end markers found.")
     if begin_idx == -1 and end_idx == -1:
         if remove:
             return contents, False
@@ -53,15 +53,15 @@ def apply_managed_block(contents: str, *, block: str, remove: bool) -> tuple[str
 
     if begin_idx == -1 or end_idx == -1 or end_idx < begin_idx:
         if begin_idx == -1 and end_idx != -1:
-            raise ValueError("Malformed TASKX NEON markers: begin marker missing.")
+            raise ValueError("Malformed DOPETASK NEON markers: begin marker missing.")
         if end_idx == -1 and begin_idx != -1:
-            raise ValueError("Malformed TASKX NEON markers: end marker missing.")
+            raise ValueError("Malformed DOPETASK NEON markers: end marker missing.")
         if end_idx < begin_idx:
             raise ValueError(
-                "Malformed TASKX NEON markers: markers found in wrong order (end before begin)."
+                "Malformed DOPETASK NEON markers: markers found in wrong order (end before begin)."
             )
         # Fallback for any unexpected mismatch.
-        raise ValueError("Malformed TASKX NEON markers (begin/end mismatch).")
+        raise ValueError("Malformed DOPETASK NEON markers (begin/end mismatch).")
 
     end_idx = end_idx + len(MARKER_END)
     while end_idx < len(contents) and contents[end_idx] == "\n":
@@ -101,7 +101,7 @@ def _atomic_write(path: Path, content: str) -> None:
             dir=path.parent,
             delete=False,
             prefix=f".{path.name}.",
-            suffix=".taskx.tmp",
+            suffix=".dopetask.tmp",
         ) as tmp_file:
             tmp_file.write(content)
             tmp_path = Path(tmp_file.name)
@@ -165,7 +165,7 @@ def persist_rc_file(
     if not changed:
         return PersistResult(path=path, changed=False, diff=diff, backup_path=None)
 
-    backup_path = path.with_name(f"{path.name}.taskx.bak.{backup_suffix_fn()}")
+    backup_path = path.with_name(f"{path.name}.dopetask.bak.{backup_suffix_fn()}")
     try:
         _atomic_write(backup_path, old)
     except (OSError, PermissionError) as exc:

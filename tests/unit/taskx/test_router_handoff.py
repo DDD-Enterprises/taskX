@@ -1,4 +1,4 @@
-"""Handoff output coverage for TaskX route artifacts."""
+"""Handoff output coverage for dopeTask route artifacts."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def test_route_handoff_contains_runner_sections(tmp_path: Path, monkeypatch) -> 
     )
     assert handoff_result.exit_code == 0, handoff_result.output
 
-    handoff_path = repo / "out" / "taskx_route" / "HANDOFF.md"
+    handoff_path = repo / "out" / "dopetask_route" / "HANDOFF.md"
     contents = handoff_path.read_text(encoding="utf-8")
 
     assert "Codex Desktop prompt" in contents

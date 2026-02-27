@@ -1,4 +1,4 @@
-"""Local-only, opt-in CLI metrics for TaskX."""
+"""Local-only, opt-in CLI metrics for dopeTask."""
 
 from __future__ import annotations
 
@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-METRICS_ENV_VAR = "TASKX_METRICS"
+METRICS_ENV_VAR = "DOPETASK_METRICS"
 XDG_STATE_HOME_ENV_VAR = "XDG_STATE_HOME"
 _STATE_FALLBACK = Path(".local") / "state"
-_METRICS_RELATIVE_PATH = Path("taskx") / "metrics.json"
+_METRICS_RELATIVE_PATH = Path("dopetask") / "metrics.json"
 
 
 def _default_payload() -> dict[str, Any]:
@@ -126,7 +126,7 @@ def reset_metrics(path: Path) -> dict[str, Any]:
 def infer_command_name(argv: Sequence[str]) -> str:
     """Infer a stable command key from argv for local counting."""
     if len(argv) <= 1:
-        return "taskx"
+        return "dopetask"
 
     tokens = list(argv[1:])
 
@@ -147,7 +147,7 @@ def infer_command_name(argv: Sequence[str]) -> str:
             break
 
     if not names:
-        return "taskx"
+        return "dopetask"
     return " ".join(names)
 
 

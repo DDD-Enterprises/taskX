@@ -52,7 +52,7 @@ def run_export_flow(
         templates_dir,
         platform_override=platform,
         model_override=model,
-        taskx_version=__version__,
+        dopetask_version=__version__,
         git_hash=git_hash
     )
 
@@ -68,8 +68,8 @@ def compile(
     platform: str | None = typer.Option(None, "--platform"),
     model: str | None = typer.Option(None, "--model"),
 ) -> None:
-    """Deprecated compatibility alias for `taskx ops export`."""
-    console.print("[yellow]Deprecated:[/yellow] use `taskx ops export` instead of `taskx ops compile`.")
+    """Deprecated compatibility alias for `dopetask ops export`."""
+    console.print("[yellow]Deprecated:[/yellow] use `dopetask ops export` instead of `dopetask ops compile`.")
     run_export_flow(export_path=out_path, platform=platform, model=model)
 
 @app.command()
@@ -85,7 +85,7 @@ def init(
     no_export: bool = typer.Option(False, "--no-export"),
     export_path: Path | None = typer.Option(None, "--export-path"),
 ) -> None:
-    """Initialize TaskX operator configuration. Exports unified prompt by default."""
+    """Initialize dopeTask operator configuration. Exports unified prompt by default."""
     _ = yes
     root = get_repo_root()
     ops_dir = root / "ops"
@@ -99,7 +99,7 @@ def init(
                 "repo_root": str(root),
                 "timezone": "America/Vancouver"
             },
-            "taskx": {
+            "dopetask": {
                 "pin_type": "git_commit",
                 "pin_value": get_git_hash(),
                 "cli_min_version": __version__
@@ -232,7 +232,7 @@ def export(
     platform: str | None = typer.Option(None, "--platform"),
     model: str | None = typer.Option(None, "--model"),
 ) -> None:
-    """Export a unified operator system prompt from TaskX templates and profile configuration. Does not affect packet execution behavior."""
+    """Export a unified operator system prompt from dopeTask templates and profile configuration. Does not affect packet execution behavior."""
     run_export_flow(export_path=export_path, platform=platform, model=model)
 
 @app.command()
@@ -243,7 +243,7 @@ def preview(
     root = get_repo_root()
     profile = load_profile(root / "ops" / "operator_profile.yaml")
     templates_dir = root / "ops" / "templates"
-    compiled = export_prompt(profile, templates_dir, taskx_version=__version__, git_hash=get_git_hash())
+    compiled = export_prompt(profile, templates_dir, dopetask_version=__version__, git_hash=get_git_hash())
     content_hash = calculate_hash(compiled)
     platform = profile.get("platform", {}).get("target", "chatgpt")
     model = profile.get("platform", {}).get("model", "UNKNOWN")
@@ -288,7 +288,7 @@ def apply(
         content = export_file_path.read_text()
     else:
         try:
-            content = export_prompt(profile, templates_dir, platform, model, taskx_version=__version__, git_hash=get_git_hash())
+            content = export_prompt(profile, templates_dir, platform, model, dopetask_version=__version__, git_hash=get_git_hash())
         except Exception as e:
             console.print(f"[red]Could not generate prompt: {e}[/red]")
             raise typer.Exit(1) from e
@@ -342,7 +342,7 @@ def manual(
 
     root = get_repo_root()
     profile = load_profile(root / "ops" / "operator_profile.yaml")
-    compiled = export_prompt(profile, root / "ops" / "templates", taskx_version=__version__, git_hash=get_git_hash())
+    compiled = export_prompt(profile, root / "ops" / "templates", dopetask_version=__version__, git_hash=get_git_hash())
     run_manual_mode(compiled, platform or "chatgpt", model or "UNKNOWN")
 
 @app.command()

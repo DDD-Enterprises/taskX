@@ -2,7 +2,7 @@
 ## ChatX Directives (Add-on, Minimal)
 
 This pack is additive.
-This pack does not override TaskX pack; if conflict, TaskX wins.
+This pack does not override dopeTask pack; if conflict, dopeTask wins.
 
 1. Case Bundle audit mode requirements:
 2. Perform deep audit of recent packets, runs, evidence artifacts, and repo logs.
@@ -20,7 +20,7 @@ This pack does not override TaskX pack; if conflict, TaskX wins.
 14. Meta hygiene:
 15. Never rewrite existing packet contract text unless explicitly authorized.
 16. Localize changes to meta-layer guidance and audit artifacts.
-17. Do not weaken TaskX verification and evidence requirements.
+17. Do not weaken dopeTask verification and evidence requirements.
 18. If evidence is insufficient:
 19. Mark `UNKNOWN`.
 20. List missing artifacts.

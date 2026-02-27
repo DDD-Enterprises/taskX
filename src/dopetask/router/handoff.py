@@ -101,7 +101,7 @@ def render_handoff_markdown(plan: RoutePlan) -> str:
             [
                 "### Artifact expectations",
                 "",
-                "- Update route artifacts under `out/taskx_route/`.",
+                "- Update route artifacts under `out/dopetask_route/`.",
                 "- Preserve deterministic outputs for identical inputs.",
                 "",
             ]
@@ -114,7 +114,7 @@ def _codex_prompt(step: str, model: str | None) -> str:
     selected_model = model or "unspecified"
     return (
         f"Model: {selected_model}\n"
-        f"Execute TaskX step `{step}` in assisted mode.\n"
+        f"Execute dopeTask step `{step}` in assisted mode.\n"
         "Do not run external runners. Produce deterministic artifacts only."
     )
 
@@ -123,7 +123,7 @@ def _claude_prompt(step: str, model: str | None) -> str:
     selected_model = model or "unspecified"
     return (
         f"Model: {selected_model}\n"
-        f"Implement TaskX step `{step}` using the packet instructions.\n"
+        f"Implement dopeTask step `{step}` using the packet instructions.\n"
         "Print commands/prompts only for handoff, no background execution."
     )
 

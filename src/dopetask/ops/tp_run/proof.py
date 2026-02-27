@@ -1,4 +1,4 @@
-"""Proof pack writer for taskx tp run."""
+"""Proof pack writer for dopetask tp run."""
 
 from __future__ import annotations
 

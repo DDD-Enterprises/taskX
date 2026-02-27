@@ -1,4 +1,4 @@
-"""TaskX CLI entrypoint for python -m taskx."""
+"""dopeTask CLI entrypoint for python -m dopetask."""
 
 from dopetask.cli import cli
 

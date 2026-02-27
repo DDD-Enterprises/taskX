@@ -17,7 +17,7 @@ def test_init_creates_files_when_missing(tmp_path: Path) -> None:
         "CLAUDE.md",
         "CODEX.md",
         "AGENTS.md",
-        "taskx_bundle.yaml",
+        "dopetask_bundle.yaml",
         "PROJECT_INIT_REPORT.md",
     }
     assert expected_files.issubset({path.name for path in out_dir.iterdir()})
@@ -29,7 +29,7 @@ def test_init_creates_files_when_missing(tmp_path: Path) -> None:
         assert "<!-- TASKX:END -->" in text
         assert "<!-- CHATX:BEGIN -->" in text
         assert "<!-- CHATX:END -->" in text
-        assert extract_block_content(text, "taskx") == read_pack_text("taskx")
+        assert extract_block_content(text, "dopetask") == read_pack_text("dopetask")
         assert extract_block_content(text, "chatx") == read_pack_text("chatx")
 
 
@@ -41,19 +41,19 @@ def test_init_updates_existing_blocks_only(tmp_path: Path) -> None:
     original = (
         "# CLAUDE\n\n"
         "User section before blocks.\n\n"
-        "<!-- TASKX:BEGIN -->\nold taskx payload\n<!-- TASKX:END -->\n\n"
+        "<!-- TASKX:BEGIN -->\nold dopetask payload\n<!-- TASKX:END -->\n\n"
         "<!-- CHATX:BEGIN -->\nold chatx payload\n<!-- CHATX:END -->\n\n"
         "User section after blocks.\n"
     )
     target = out_dir / "CLAUDE.md"
     target.write_text(original, encoding="utf-8")
 
-    init_project(out_dir=out_dir, preset="taskx")
+    init_project(out_dir=out_dir, preset="dopetask")
     updated = target.read_text(encoding="utf-8")
 
     assert "User section before blocks." in updated
     assert "User section after blocks." in updated
-    assert extract_block_content(updated, "taskx") == read_pack_text("taskx")
+    assert extract_block_content(updated, "dopetask") == read_pack_text("dopetask")
     assert extract_block_content(updated, "chatx") == "(disabled)"
 
 
@@ -72,5 +72,5 @@ def test_init_appends_missing_blocks_without_clobbering_content(tmp_path: Path) 
     assert updated.startswith(original)
     assert "<!-- TASKX:BEGIN -->" in updated
     assert "<!-- CHATX:BEGIN -->" in updated
-    assert extract_block_content(updated, "taskx") == "(disabled)"
+    assert extract_block_content(updated, "dopetask") == "(disabled)"
     assert extract_block_content(updated, "chatx") == "(disabled)"

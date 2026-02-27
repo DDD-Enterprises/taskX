@@ -18,4 +18,4 @@ def discover_instruction_file(repo_root: Path) -> Path | None:
 
 
 def get_sidecar_path(repo_root: Path) -> Path:
-    return repo_root / "docs" / "llm" / "TASKX_OPERATOR_SYSTEM.md"
+    return repo_root / "docs" / "llm" / "DOPETASK_OPERATOR_SYSTEM.md"

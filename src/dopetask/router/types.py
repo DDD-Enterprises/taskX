@@ -14,10 +14,10 @@ DEFAULT_STEPS: tuple[str, ...] = (
     "finish",
 )
 
-DEFAULT_AVAILABILITY_RELATIVE_PATH = Path(".taskx/runtime/availability.yaml")
-DEFAULT_PLAN_RELATIVE_PATH = Path("out/taskx_route/ROUTE_PLAN.json")
-DEFAULT_PLAN_MARKDOWN_RELATIVE_PATH = Path("out/taskx_route/ROUTE_PLAN.md")
-DEFAULT_HANDOFF_RELATIVE_PATH = Path("out/taskx_route/HANDOFF.md")
+DEFAULT_AVAILABILITY_RELATIVE_PATH = Path(".dopetask/runtime/availability.yaml")
+DEFAULT_PLAN_RELATIVE_PATH = Path("out/dopetask_route/ROUTE_PLAN.json")
+DEFAULT_PLAN_MARKDOWN_RELATIVE_PATH = Path("out/dopetask_route/ROUTE_PLAN.md")
+DEFAULT_HANDOFF_RELATIVE_PATH = Path("out/dopetask_route/HANDOFF.md")
 
 COST_TIERS: tuple[str, ...] = ("cheap", "medium", "high")
 CONTEXT_WINDOWS: tuple[str, ...] = ("small", "medium", "large")

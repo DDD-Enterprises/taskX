@@ -1,12 +1,11 @@
 """Cross-project hard block and WIP rescue patch tests."""
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from typer.testing import CliRunner
 
 from dopetask.cli import cli
-
 
 RUNNER = CliRunner()
 
@@ -26,13 +25,13 @@ def _init_fake_repo(repo: Path) -> None:
     _git(repo, "init")
 
 
-def test_guarded_command_blocks_without_taskxroot_even_with_pyproject(
+def test_guarded_command_blocks_without_dopetaskroot_even_with_pyproject(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
     fake_repo = (tmp_path / "fake_repo").resolve()
     _init_fake_repo(fake_repo)
-    (fake_repo / "pyproject.toml").write_text('[project]\nname = "taskx"\n', encoding="utf-8")
+    (fake_repo / "pyproject.toml").write_text('[project]\nname = "dopetask"\n', encoding="utf-8")
     run_dir = fake_repo / "out" / "runs" / "RUN_DETERMINISTIC"
     run_dir.mkdir(parents=True)
 
@@ -50,7 +49,7 @@ def test_guarded_command_blocks_without_taskxroot_even_with_pyproject(
 
     assert result.exit_code != 0
     normalized = " ".join(result.output.split())
-    assert "This is not a TaskX repo (missing .taskxroot). Refusing to run stateful command." in normalized
+    assert "This is not a dopeTask repo (missing .dopetaskroot). Refusing to run stateful command." in normalized
     assert "Detected repo root:" in normalized
     assert "CWD:" in normalized
     assert str(fake_repo.name) in normalized
@@ -86,7 +85,7 @@ def test_guarded_command_writes_rescue_patch_and_exits_non_zero(
     assert result.exit_code != 0
     assert "Rescue patch written to:" in result.output
 
-    rescue_root = fake_repo / "out" / "taskx_rescue"
+    rescue_root = fake_repo / "out" / "dopetask_rescue"
     rescue_patches = list(rescue_root.glob("*/rescue.patch"))
     assert len(rescue_patches) == 1
 

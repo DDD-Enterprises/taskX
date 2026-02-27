@@ -1,4 +1,4 @@
-"""Git branch guard helpers for TaskX assisted PR flow."""
+"""Git branch guard helpers for dopeTask assisted PR flow."""
 
 from __future__ import annotations
 

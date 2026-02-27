@@ -5,7 +5,7 @@
 1. Initialize routing availability for this repo:
 
 ```bash
-taskx route init --repo-root .
+dopetask route init --repo-root .
 ```
 
 2. Create a minimal packet file:
@@ -19,22 +19,22 @@ ROUTER_HINTS:
 3. Produce deterministic route plan artifacts:
 
 ```bash
-taskx route plan --repo-root . --packet PACKET.md
+dopetask route plan --repo-root . --packet PACKET.md
 ```
 
 ## Expected artifacts
 
 Route plan output is written under:
 
-- `out/taskx_route/ROUTE_PLAN.json`
-- `out/taskx_route/ROUTE_PLAN.md`
-- `out/taskx_route/HANDOFF.md` (for handoff flows)
+- `out/dopetask_route/ROUTE_PLAN.json`
+- `out/dopetask_route/ROUTE_PLAN.md`
+- `out/dopetask_route/HANDOFF.md` (for handoff flows)
 
 ## Refusal example
 
-If required configuration is missing, TaskX refuses with evidence and a stable exit code.
+If required configuration is missing, dopeTask refuses with evidence and a stable exit code.
 
-Example: running `taskx route plan` without initializing availability will refuse and still write plan artifacts with refusal reasons.
+Example: running `dopetask route plan` without initializing availability will refuse and still write plan artifacts with refusal reasons.
 
 See `13_TASK_PACKET_FORMAT.md` for packet requirements.
 

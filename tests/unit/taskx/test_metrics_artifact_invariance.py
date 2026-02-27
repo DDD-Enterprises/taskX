@@ -8,12 +8,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tests.unit.taskx.route_test_utils import create_taskx_repo, write_packet
+from tests.unit.dopetask.route_test_utils import create_dopetask_repo, write_packet
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def _run_taskx(args: list[str], *, env: dict[str, str]) -> None:
+def _run_dopetask(args: list[str], *, env: dict[str, str]) -> None:
     run_env = dict(env)
     src_path = str(REPO_ROOT / "src")
     existing_pythonpath = run_env.get("PYTHONPATH")
@@ -27,7 +27,7 @@ def _run_taskx(args: list[str], *, env: dict[str, str]) -> None:
         text=True,
         check=False,
     )
-    assert result.returncode == 0, f"taskx command failed: {' '.join(args)}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    assert result.returncode == 0, f"dopetask command failed: {' '.join(args)}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
 
 
 def _artifact_hashes(out_dir: Path) -> dict[str, str]:
@@ -40,33 +40,33 @@ def _artifact_hashes(out_dir: Path) -> dict[str, str]:
 
 
 def test_metrics_env_on_off_do_not_change_route_plan_artifacts(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     packet = write_packet(repo)
 
     base_env = os.environ.copy()
     base_env.update(
         {
-            "TASKX_NEON": "0",
-            "TASKX_STRICT": "0",
+            "DOPETASK_NEON": "0",
+            "DOPETASK_STRICT": "0",
         }
     )
     env_off = dict(base_env)
     env_off.update(
         {
-            "TASKX_METRICS": "0",
+            "DOPETASK_METRICS": "0",
             "XDG_STATE_HOME": str(tmp_path / "state_off"),
         }
     )
     env_on = dict(base_env)
     env_on.update(
         {
-            "TASKX_METRICS": "1",
+            "DOPETASK_METRICS": "1",
             "XDG_STATE_HOME": str(tmp_path / "state_on"),
         }
     )
 
-    _run_taskx(["route", "init", "--repo-root", str(repo)], env=env_off)
-    _run_taskx(
+    _run_dopetask(["route", "init", "--repo-root", str(repo)], env=env_off)
+    _run_dopetask(
         [
             "route",
             "plan",
@@ -79,7 +79,7 @@ def test_metrics_env_on_off_do_not_change_route_plan_artifacts(tmp_path: Path) -
         ],
         env=env_off,
     )
-    _run_taskx(
+    _run_dopetask(
         [
             "route",
             "plan",
@@ -99,21 +99,21 @@ def test_metrics_env_on_off_do_not_change_route_plan_artifacts(tmp_path: Path) -
 
 
 def test_metrics_persistent_opt_in_does_not_change_route_plan_artifacts(tmp_path: Path) -> None:
-    repo = create_taskx_repo(tmp_path / "repo")
+    repo = create_dopetask_repo(tmp_path / "repo")
     packet = write_packet(repo)
 
     env = os.environ.copy()
     env.update(
         {
             "XDG_STATE_HOME": str(tmp_path / "state"),
-            "TASKX_NEON": "0",
-            "TASKX_STRICT": "0",
+            "DOPETASK_NEON": "0",
+            "DOPETASK_STRICT": "0",
         }
     )
 
-    _run_taskx(["route", "init", "--repo-root", str(repo)], env=env)
-    _run_taskx(["metrics", "enable"], env=env)
-    _run_taskx(
+    _run_dopetask(["route", "init", "--repo-root", str(repo)], env=env)
+    _run_dopetask(["metrics", "enable"], env=env)
+    _run_dopetask(
         [
             "route",
             "plan",
@@ -127,8 +127,8 @@ def test_metrics_persistent_opt_in_does_not_change_route_plan_artifacts(tmp_path
         env=env,
     )
 
-    _run_taskx(["metrics", "disable"], env=env)
-    _run_taskx(
+    _run_dopetask(["metrics", "disable"], env=env)
+    _run_dopetask(
         [
             "route",
             "plan",

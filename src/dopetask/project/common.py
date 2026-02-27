@@ -8,7 +8,7 @@ from hashlib import sha256
 try:
     from importlib.resources import files
 except ImportError as exc:  # pragma: no cover - python<3.11 unsupported
-    raise RuntimeError("TaskX requires Python 3.11+ for template loading.") from exc
+    raise RuntimeError("dopeTask requires Python 3.11+ for template loading.") from exc
 
 
 MANAGED_FILES: tuple[str, ...] = (
@@ -26,21 +26,21 @@ MANAGED_TEMPLATE_FILES: dict[str, str] = {
 }
 
 PACK_TEMPLATE_FILES: dict[str, str] = {
-    "taskx": "directive_pack_taskx.md",
+    "dopetask": "directive_pack_dopetask.md",
     "chatx": "directive_pack_chatx.md",
 }
 
-PACK_ORDER: tuple[str, ...] = ("taskx", "chatx")
+PACK_ORDER: tuple[str, ...] = ("dopetask", "chatx")
 
 SENTINELS: dict[str, tuple[str, str]] = {
-    "taskx": ("<!-- TASKX:BEGIN -->", "<!-- TASKX:END -->"),
+    "dopetask": ("<!-- TASKX:BEGIN -->", "<!-- TASKX:END -->"),
     "chatx": ("<!-- CHATX:BEGIN -->", "<!-- CHATX:END -->"),
 }
 
 DISABLED_TEXT = "(disabled)"
 
-BUNDLE_FILE = "taskx_bundle.yaml"
-BUNDLE_TEMPLATE_FILE = "taskx_bundle.template.yaml"
+BUNDLE_FILE = "dopetask_bundle.yaml"
+BUNDLE_TEMPLATE_FILE = "dopetask_bundle.template.yaml"
 
 _ASSETS_PACKAGE = "dopetask.assets.templates"
 
@@ -156,4 +156,3 @@ def _join_lines(lines: list[str]) -> str:
     if not lines:
         return ""
     return "\n".join(lines).rstrip("\n") + "\n"
-

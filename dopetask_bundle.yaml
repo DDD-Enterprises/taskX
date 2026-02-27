@@ -1,5 +1,5 @@
-# TaskX Bundle Configuration
-# Controls what gets included in 'taskx bundle export'
+# dopeTask Bundle Configuration
+# Controls what gets included in 'dopetask bundle export'
 
 logs:
   globs:

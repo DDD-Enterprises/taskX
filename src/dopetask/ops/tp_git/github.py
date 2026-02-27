@@ -1,4 +1,4 @@
-"""GitHub integrations for taskx tp git commands."""
+"""GitHub integrations for dopetask tp git commands."""
 
 from __future__ import annotations
 

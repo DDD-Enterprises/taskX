@@ -14,7 +14,7 @@ We provide security updates for the latest released `main` branch and the most r
 
 Please report security issues privately.
 
-1. Email: `security@taskx.dev`
+1. Email: `security@dopetask.dev`
 2. Include a clear description of the vulnerability, impact, and reproduction steps.
 3. Share any proof-of-concept in a private channel only.
 

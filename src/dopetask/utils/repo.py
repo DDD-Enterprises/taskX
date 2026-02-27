@@ -141,17 +141,17 @@ def _infer_project_type(directory: Path) -> ProjectType:
     return "unknown"
 
 
-def find_taskx_repo_root(
+def find_dopetask_repo_root(
     start_path: Path,
     *,
     allow_pyproject_fallback: bool = True,
 ) -> Path | None:
     """
-    Find TaskX repository root by searching for .taskxroot marker.
+    Find dopeTask repository root by searching for .dopetaskroot marker.
 
     Walks up directory tree from start_path looking for:
-    1. .taskxroot file (highest priority)
-    2. pyproject.toml where [project].name == "taskx" (optional fallback)
+    1. .dopetaskroot file (highest priority)
+    2. pyproject.toml where [project].name == "dopetask" (optional fallback)
 
     Args:
         start_path: Starting directory for search
@@ -165,19 +165,19 @@ def find_taskx_repo_root(
     current = start_path.resolve()
 
     while True:
-        # Check for .taskxroot marker (primary)
-        taskxroot_marker = current / ".taskxroot"
-        if taskxroot_marker.exists() and taskxroot_marker.is_file():
+        # Check for .dopetaskroot marker (primary)
+        dopetaskroot_marker = current / ".dopetaskroot"
+        if dopetaskroot_marker.exists() and dopetaskroot_marker.is_file():
             return current
 
         if allow_pyproject_fallback:
-            # Check for pyproject.toml with project.name == "taskx" (fallback)
+            # Check for pyproject.toml with project.name == "dopetask" (fallback)
             pyproject = current / "pyproject.toml"
             if pyproject.exists() and pyproject.is_file():
                 try:
                     with open(pyproject, "rb") as f:
                         data = tomllib.load(f)
-                        if data.get("project", {}).get("name") == "taskx":
+                        if data.get("project", {}).get("name") == "dopetask":
                             return current
                 except (OSError, tomllib.TOMLDecodeError):
                     pass  # Invalid TOML, keep searching
@@ -191,27 +191,27 @@ def find_taskx_repo_root(
         current = parent
 
 
-def require_taskx_repo_root(
+def require_dopetask_repo_root(
     start_path: Path,
     *,
     allow_pyproject_fallback: bool = True,
     stateful_command: bool = False,
 ) -> Path:
     """
-    Find TaskX repository root or raise error with helpful message.
+    Find dopeTask repository root or raise error with helpful message.
 
     Args:
         start_path: Starting directory for search
         allow_pyproject_fallback: If True, pyproject fallback is accepted
-        stateful_command: If True, enforce hard .taskxroot-only block message
+        stateful_command: If True, enforce hard .dopetaskroot-only block message
 
     Returns:
         Path to repo root
 
     Raises:
-        RuntimeError: If no TaskX repo detected
+        RuntimeError: If no dopeTask repo detected
     """
-    repo_root = find_taskx_repo_root(
+    repo_root = find_dopetask_repo_root(
         start_path,
         allow_pyproject_fallback=allow_pyproject_fallback,
     )
@@ -224,23 +224,23 @@ def require_taskx_repo_root(
                 detected_repo_root = Path("<not detected>")
 
             raise RuntimeError(
-                "This is not a TaskX repo (missing .taskxroot). Refusing to run stateful command.\n"
+                "This is not a dopeTask repo (missing .dopetaskroot). Refusing to run stateful command.\n"
                 f"Detected repo root: {detected_repo_root}\n"
                 f"CWD: {start_path.resolve()}"
             )
 
         if allow_pyproject_fallback:
             raise RuntimeError(
-                "TaskX repo not detected. This command requires running in a TaskX repository.\n"
+                "dopeTask repo not detected. This command requires running in a dopeTask repository.\n"
                 "To fix:\n"
-                "  1. Create a .taskxroot marker: touch .taskxroot\n"
-                "  2. Or ensure pyproject.toml has [project].name = 'taskx'\n"
+                "  1. Create a .dopetaskroot marker: touch .dopetaskroot\n"
+                "  2. Or ensure pyproject.toml has [project].name = 'dopetask'\n"
                 "  3. Or use --no-repo-guard to bypass (use with caution)"
             )
         raise RuntimeError(
-            "TaskX repo not detected. This command requires running in a TaskX repository.\n"
+            "dopeTask repo not detected. This command requires running in a dopeTask repository.\n"
             "To fix:\n"
-            "  1. Create a .taskxroot marker: touch .taskxroot\n"
+            "  1. Create a .dopetaskroot marker: touch .dopetaskroot\n"
             "  2. Or use --no-repo-guard to bypass (use with caution)"
         )
 

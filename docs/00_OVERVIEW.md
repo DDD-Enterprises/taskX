@@ -1,10 +1,10 @@
 # Overview
 
-TaskX is a deterministic execution kernel for task packets.
+dopeTask is a deterministic execution kernel for task packets.
 
 ## What it is
 
-TaskX enforces a narrow contract:
+dopeTask enforces a narrow contract:
 
 - determinism for planning and execution artifacts
 - refusal when policy, scope, or evidence constraints are violated
@@ -13,7 +13,7 @@ TaskX enforces a narrow contract:
 
 ## What it is not
 
-TaskX is not a generic orchestration platform. It does not provide hidden retries, implicit fallbacks, or background side effects.
+dopeTask is not a generic orchestration platform. It does not provide hidden retries, implicit fallbacks, or background side effects.
 
 ## Kernel boundary
 
@@ -23,7 +23,7 @@ Scheduling, memory, UX layers, and long-running orchestration belong to external
 
 ## Operating promise
 
-Given the same packet, declared inputs, and TaskX version, output artifacts and refusal behavior are stable.
+Given the same packet, declared inputs, and dopeTask version, output artifacts and refusal behavior are stable.
 
 ## Next docs
 

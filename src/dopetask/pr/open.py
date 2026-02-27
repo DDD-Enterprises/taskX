@@ -18,7 +18,7 @@ from dopetask.git.branch_guard import (
     restore_git_state,
 )
 
-REPORT_DIR = Path("out/taskx_pr")
+REPORT_DIR = Path("out/dopetask_pr")
 REPORT_JSON = "PR_OPEN_REPORT.json"
 REPORT_MD = "PR_OPEN_REPORT.md"
 
@@ -131,8 +131,8 @@ def run_pr_open(
                 "ran": True,
                 "status": refresh_status,
                 "report_paths": {
-                    "json": str(resolved_repo / "out" / "taskx_docs_refresh_llm" / "DOCS_REFRESH_LLM_REPORT.json"),
-                    "md": str(resolved_repo / "out" / "taskx_docs_refresh_llm" / "DOCS_REFRESH_LLM_REPORT.md"),
+                    "json": str(resolved_repo / "out" / "dopetask_docs_refresh_llm" / "DOCS_REFRESH_LLM_REPORT.json"),
+                    "md": str(resolved_repo / "out" / "dopetask_docs_refresh_llm" / "DOCS_REFRESH_LLM_REPORT.md"),
                 },
             }
             if refresh_status == "refused":

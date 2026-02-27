@@ -1,6 +1,6 @@
-"""Schema registry for TaskX with package-data-only loading.
+"""Schema registry for dopeTask with package-data-only loading.
 
-Provides guaranteed schema access when TaskX is installed via pip,
+Provides guaranteed schema access when dopeTask is installed via pip,
 with no dependency on current working directory or repository structure.
 """
 
@@ -13,7 +13,7 @@ try:
     from importlib.resources import files
 except ImportError as exc:
     raise RuntimeError(
-        "TaskX requires Python 3.11+ for importlib.resources. "
+        "dopeTask requires Python 3.11+ for importlib.resources. "
         "Please upgrade Python."
     ) from exc
 
@@ -22,7 +22,7 @@ except ImportError as exc:
 class SchemaRegistry:
     """Registry of available schemas from package data.
 
-    Schemas are loaded exclusively from the installed taskx_schemas package,
+    Schemas are loaded exclusively from the installed dopetask_schemas package,
     ensuring consistent behavior regardless of working directory.
 
     Attributes:
@@ -44,9 +44,9 @@ class SchemaRegistry:
             List of canonical schema names (without .schema.json suffix)
         """
         try:
-            # Access taskx_schemas package (now a proper package with __init__.py)
+            # Access dopetask_schemas package (now a proper package with __init__.py)
             from importlib.resources import files as resource_files
-            schema_files = resource_files("taskx_schemas")
+            schema_files = resource_files("dopetask_schemas")
 
             # Collect all .schema.json files
             available = []
@@ -108,15 +108,15 @@ class SchemaRegistry:
                 available_list += f", ... ({len(self.available)} total)"
 
             raise KeyError(
-                f"Schema '{canonical_name}' not found in TaskX package data.\n"
+                f"Schema '{canonical_name}' not found in dopeTask package data.\n"
                 f"Available schemas: {available_list}\n"
-                f"If you recently migrated TaskX, ensure schemas were copied to taskx_schemas/.\n"
-                f"Run 'taskx-migrate --apply' to sync schemas."
+                f"If you recently migrated dopeTask, ensure schemas were copied to dopetask_schemas/.\n"
+                f"Run 'dopetask-migrate --apply' to sync schemas."
             )
 
         # Load from package data
         try:
-            schema_files = files("taskx_schemas")
+            schema_files = files("dopetask_schemas")
             filename = self._get_filename(canonical_name)
             schema_file = schema_files / filename
 
@@ -131,7 +131,7 @@ class SchemaRegistry:
             raise RuntimeError(
                 f"Failed to load schema '{canonical_name}' from package data: {e}\n"
                 f"The schema exists in the registry but couldn't be read.\n"
-                f"This may indicate a broken installation. Try reinstalling TaskX."
+                f"This may indicate a broken installation. Try reinstalling dopeTask."
             ) from e
 
     def get_json(self, name: str) -> dict[str, Any]:
@@ -157,7 +157,7 @@ class SchemaRegistry:
         except json.JSONDecodeError as e:
             raise ValueError(
                 f"Schema '{canonical_name}' contains invalid JSON: {e}\n"
-                f"This may indicate a corrupted installation. Try reinstalling TaskX."
+                f"This may indicate a corrupted installation. Try reinstalling dopeTask."
             ) from e
 
 

@@ -5,14 +5,15 @@ These tests are minimal but exercise actual code paths to prevent "no data colle
 from pathlib import Path
 
 import pytest
+
 from dopetask import __version__
 
 
-class TestTaskXImport:
-    """Test that TaskX package can be imported and has expected attributes."""
+class TestdopeTaskImport:
+    """Test that dopeTask package can be imported and has expected attributes."""
 
-    def test_taskx_imports(self):
-        """TaskX package imports successfully."""
+    def test_dopetask_imports(self):
+        """dopeTask package imports successfully."""
         import dopetask
 
         assert dopetask is not None
@@ -21,10 +22,10 @@ class TestTaskXImport:
 
     def test_doctor_module_imports(self):
         """Doctor module imports successfully."""
-        from dopetask.doctor import DoctorReport, _check_taskx_import
+        from dopetask.doctor import DoctorReport, _check_dopetask_import
 
         assert DoctorReport is not None
-        assert _check_taskx_import is not None
+        assert _check_dopetask_import is not None
 
 
 class TestSchemaRegistry:
@@ -52,11 +53,11 @@ class TestSchemaRegistry:
 class TestDoctorNonCLI:
     """Test doctor functionality without invoking CLI."""
 
-    def test_check_taskx_import(self):
-        """Internal taskx import check works."""
-        from dopetask.doctor import _check_taskx_import
+    def test_check_dopetask_import(self):
+        """Internal dopetask import check works."""
+        from dopetask.doctor import _check_dopetask_import
 
-        result = _check_taskx_import()
+        result = _check_dopetask_import()
         assert result.status == "pass"
         assert __version__ in result.message
 
@@ -95,30 +96,30 @@ class TestDoctorNonCLI:
 class TestRepoUtils:
     """Test repository utility functions."""
 
-    def test_find_taskx_repo_root_with_marker(self, tmp_path: Path):
-        """Can find TaskX repo root with .taskxroot marker."""
-        from dopetask.utils.repo import find_taskx_repo_root
+    def test_find_dopetask_repo_root_with_marker(self, tmp_path: Path):
+        """Can find dopeTask repo root with .dopetaskroot marker."""
+        from dopetask.utils.repo import find_dopetask_repo_root
 
         # Create a mock repo with marker
-        marker = tmp_path / ".taskxroot"
+        marker = tmp_path / ".dopetaskroot"
         marker.touch()
 
-        result = find_taskx_repo_root(tmp_path)
+        result = find_dopetask_repo_root(tmp_path)
         assert result == tmp_path
 
-    def test_find_taskx_repo_root_no_marker(self, tmp_path: Path):
-        """Returns None when no TaskX repo marker found."""
-        from dopetask.utils.repo import find_taskx_repo_root
+    def test_find_dopetask_repo_root_no_marker(self, tmp_path: Path):
+        """Returns None when no dopeTask repo marker found."""
+        from dopetask.utils.repo import find_dopetask_repo_root
 
-        result = find_taskx_repo_root(tmp_path)
+        result = find_dopetask_repo_root(tmp_path)
         assert result is None
 
-    def test_require_taskx_repo_root_raises(self, tmp_path: Path):
+    def test_require_dopetask_repo_root_raises(self, tmp_path: Path):
         """Raises helpful error when repo not found."""
-        from dopetask.utils.repo import require_taskx_repo_root
+        from dopetask.utils.repo import require_dopetask_repo_root
 
         with pytest.raises(RuntimeError) as exc_info:
-            require_taskx_repo_root(tmp_path)
+            require_dopetask_repo_root(tmp_path)
 
-        assert "TaskX repo not detected" in str(exc_info.value)
-        assert "touch .taskxroot" in str(exc_info.value)
+        assert "dopeTask repo not detected" in str(exc_info.value)
+        assert "touch .dopetaskroot" in str(exc_info.value)

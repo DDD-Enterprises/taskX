@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides step-by-step instructions for migrating dopemux from `taskx-kernel` to `dopetask`.
+This guide provides step-by-step instructions for migrating dopemux from `dopetask-kernel` to `dopetask`.
 
 ## Changes Required in dopemux
 
@@ -13,7 +13,7 @@ This guide provides step-by-step instructions for migrating dopemux from `taskx-
 **Before**:
 ```toml
 [tool.poetry.dependencies]
-taskx-kernel = "^0.1.3"
+dopetask-kernel = "^0.1.3"
 ```
 
 **After**:
@@ -28,9 +28,9 @@ dopetask = "^0.1.4"
 
 ```python
 # Before
-import taskx
-from taskx import some_module
-from taskx.some_module import some_function
+import dopetask
+from dopetask import some_module
+from dopetask.some_module import some_function
 
 # After  
 import dopetask
@@ -42,7 +42,7 @@ from dopetask.some_module import some_function
 
 **Both commands will work** (backward compatibility maintained):
 - `dopetask` (new, preferred)
-- `taskx` (old, still works)
+- `dopetask` (old, still works)
 
 No changes needed in scripts that call the CLI.
 
@@ -52,7 +52,7 @@ No changes needed in scripts that call the CLI.
 
 **Before**:
 ```bash
-pip install taskx-kernel
+pip install dopetask-kernel
 ```
 
 **After**:
@@ -63,13 +63,13 @@ pip install dopetask
 ### 5. Update Documentation
 
 **Find and replace in all documentation**:
-- `taskx-kernel` → `dopetask`
-- `taskX` → `dopetask` (where referring to the package)
-- Keep `taskx` CLI references (backward compatibility)
+- `dopetask-kernel` → `dopetask`
+- `dopeTask` → `dopetask` (where referring to the package)
+- Keep `dopetask` CLI references (backward compatibility)
 
 ### 6. Update Configuration Files
 
-**File**: `.taskx-pin` (if exists)
+**File**: `.dopetask-pin` (if exists)
 
 **Before**:
 ```
@@ -93,11 +93,11 @@ pip install --upgrade dopetask
 
 # Using poetry
 poetry add dopetask@^0.1.4
-poetry remove taskx-kernel
+poetry remove dopetask-kernel
 
 # Using uv
 uv add dopetask
-uv remove taskx-kernel
+uv remove dopetask-kernel
 ```
 
 ### Step 2: Update Imports
@@ -105,13 +105,13 @@ uv remove taskx-kernel
 Run a global search and replace:
 
 ```bash
-# Find all taskx imports
-grep -r "import taskx" . --include="*.py"
-grep -r "from taskx" . --include="*.py"
+# Find all dopetask imports
+grep -r "import dopetask" . --include="*.py"
+grep -r "from dopetask" . --include="*.py"
 
 # Replace them (use sed or your IDE's find/replace)
-sed -i 's/import taskx/import dopetask/g' $(find . -name "*.py")
-sed -i 's/from taskx/from dopetask/g' $(find . -name "*.py")
+sed -i 's/import dopetask/import dopetask/g' $(find . -name "*.py")
+sed -i 's/from dopetask/from dopetask/g' $(find . -name "*.py")
 ```
 
 ### Step 3: Test the Migration
@@ -122,7 +122,7 @@ python -c "import dopetask; print('✅ dopetask import works')"
 
 # Test CLI
 dopetask --version
-taskx --version  # Should still work
+dopetask --version  # Should still work
 
 # Run your test suite
 pytest
@@ -132,37 +132,37 @@ pytest
 
 ```bash
 # Find documentation references
-grep -r "taskx-kernel" . --include="*.md"
-grep -r "taskX" . --include="*.md" | grep -i package
+grep -r "dopetask-kernel" . --include="*.md"
+grep -r "dopeTask" . --include="*.md" | grep -i package
 
 # Update them manually or with sed
-sed -i 's/taskx-kernel/dopetask/g' $(find . -name "*.md")
+sed -i 's/dopetask-kernel/dopetask/g' $(find . -name "*.md")
 ```
 
 ## Backward Compatibility
 
 ### What Still Works
 
-- ✅ `taskx` CLI command (points to same binary as `dopetask`)
+- ✅ `dopetask` CLI command (points to same binary as `dopetask`)
 - ✅ All existing functionality
 - ✅ All CLI commands and flags
 - ✅ Configuration file formats
 
 ### What Changed
 
-- ❌ `import taskx` in Python code (must use `import dopetask`)
-- ❌ `pip install taskx-kernel` (must use `pip install dopetask`)
+- ❌ `import dopetask` in Python code (must use `import dopetask`)
+- ❌ `pip install dopetask-kernel` (must use `pip install dopetask`)
 
 ## Troubleshooting
 
 ### Import Errors
 
-**Error**: `ModuleNotFoundError: No module named 'taskx'`
+**Error**: `ModuleNotFoundError: No module named 'dopetask'`
 
 **Solution**: Update imports to use `dopetask`:
 ```python
 # Change this
-import taskx
+import dopetask
 
 # To this
 import dopetask
@@ -170,7 +170,7 @@ import dopetask
 
 ### Installation Errors
 
-**Error**: `Could not find a version that satisfies the requirement taskx-kernel`
+**Error**: `Could not find a version that satisfies the requirement dopetask-kernel`
 
 **Solution**: Install the new package:
 ```bash
@@ -190,7 +190,7 @@ pip install --upgrade dopetask
 
 - [ ] `import dopetask` works in Python
 - [ ] `dopetask --version` shows 0.1.4
-- [ ] `taskx --version` still works (backward compatibility)
+- [ ] `dopetask --version` still works (backward compatibility)
 - [ ] All tests pass
 - [ ] Documentation updated
 - [ ] CI/CD pipelines updated
@@ -200,7 +200,7 @@ pip install --upgrade dopetask
 
 For issues with the migration:
 
-1. Check the [dopetask documentation](https://github.com/hu3mann/taskX)
+1. Check the [dopetask documentation](https://github.com/hu3mann/dopeTask)
 2. Review this migration guide
 3. Test in a staging environment first
 4. Open an issue if you encounter problems

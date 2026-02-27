@@ -15,7 +15,7 @@ def export_prompt(
     templates_dir: Path,
     platform_override: str | None = None,
     model_override: str | None = None,
-    taskx_version: str = "UNKNOWN",
+    dopetask_version: str = "UNKNOWN",
     git_hash: str = "UNKNOWN"
 ) -> str:
     platform = platform_override or profile.get("platform", {}).get("target", "chatgpt")
@@ -24,20 +24,20 @@ def export_prompt(
     project_name = profile.get("project", {}).get("name", "UNKNOWN")
     repo_root = profile.get("project", {}).get("repo_root", "UNKNOWN")
     timezone = profile.get("project", {}).get("timezone", "UTC")
-    pin_type = profile.get("taskx", {}).get("pin_type", "UNKNOWN")
-    pin_value = profile.get("taskx", {}).get("pin_value", "UNKNOWN")
-    cli_version = profile.get("taskx", {}).get("cli_min_version", taskx_version)
+    pin_type = profile.get("dopetask", {}).get("pin_type", "UNKNOWN")
+    pin_value = profile.get("dopetask", {}).get("pin_value", "UNKNOWN")
+    cli_version = profile.get("dopetask", {}).get("cli_min_version", dopetask_version)
 
     header = [
         "# OPERATOR SYSTEM PROMPT",
-        f"# TaskX Version: {taskx_version}",
+        f"# dopeTask Version: {dopetask_version}",
         f"# Git Commit: {git_hash}",
         f"# Project: {project_name}",
         f"# Platform: {platform}",
         f"# Model: {model}",
         f"# Repo Root: {repo_root}",
         f"# Timezone: {timezone}",
-        f"# TaskX Pin: {pin_type}={pin_value}",
+        f"# dopeTask Pin: {pin_type}={pin_value}",
         f"# CLI Min Version: {cli_version}",
         ""
     ]
@@ -72,7 +72,7 @@ def export_prompt(
 
     handoff = """## Handoff contract
 - Follow all instructions provided in this prompt.
-- Use TaskX CLI for all task management.
+- Use dopeTask CLI for all task management.
 - Ensure all outputs conform to the project spec."""
     parts.append(handoff)
 

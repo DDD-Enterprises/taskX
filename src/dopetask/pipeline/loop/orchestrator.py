@@ -19,7 +19,7 @@ from dopetask.pipeline.task_runner.parser import parse_task_packet
 from dopetask.pipeline.task_runner.runner import create_run_workspace
 from dopetask.utils.json_output import write_json_strict
 
-TASKX_VERSION = "0.1.0"
+DOPETASK_VERSION = "0.1.0"
 STAGE_ORDER = ["mine_spec", "compile_tasks", "run_task", "collect_evidence", "spec_feedback"]
 
 
@@ -123,7 +123,7 @@ def _run_mine_spec(
             include_globs=["docs/**/*.md", "**/*.md"],
             exclude_globs=["node_modules/**", "venv/**", ".venv/**"],
             max_file_kb=500,
-            pipeline_version=TASKX_VERSION,
+            pipeline_version=DOPETASK_VERSION,
             format="both",
         )
 
@@ -198,7 +198,7 @@ def _run_compile_tasks(
             mode=inputs.mode,
             max_packets=inputs.max_packets,
             seed=inputs.seed,
-            pipeline_version=TASKX_VERSION,
+            pipeline_version=DOPETASK_VERSION,
             timestamp_mode=timestamp_mode,
         )
 
@@ -372,7 +372,7 @@ def _run_collect_evidence(
             timestamp_mode=timestamp_mode,
             max_claims=200,
             max_evidence_chars=200000,
-            pipeline_version=TASKX_VERSION,
+            pipeline_version=DOPETASK_VERSION,
         )
 
         # Collect outputs (from artifacts dict)
@@ -585,7 +585,7 @@ def _build_envelope(
 
     return {
         "schema_version": "1.0",
-        "pipeline_version": TASKX_VERSION,
+        "pipeline_version": DOPETASK_VERSION,
         "loop_id": loop_id,
         "generated_at": generated_at,
         "timestamp_mode": timestamp_mode,

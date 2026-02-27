@@ -1,4 +1,4 @@
-"""CLI surface for taskx tp git workflows."""
+"""CLI surface for dopetask tp git workflows."""
 
 from __future__ import annotations
 
@@ -218,7 +218,7 @@ def list_cmd(
         help="Repository path (defaults to current working directory).",
     ),
 ) -> None:
-    """List worktrees and highlight TaskX TP worktree paths."""
+    """List worktrees and highlight dopeTask TP worktree paths."""
     try:
         listing = list_worktrees(repo=repo)
     except RuntimeError as exc:

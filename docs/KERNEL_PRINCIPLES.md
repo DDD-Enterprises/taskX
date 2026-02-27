@@ -1,6 +1,6 @@
 # Kernel Principles
 
-TaskX operates as a constrained kernel, not an improvisational assistant.
+dopeTask operates as a constrained kernel, not an improvisational assistant.
 
 ## Principles
 
@@ -19,4 +19,4 @@ TaskX operates as a constrained kernel, not an improvisational assistant.
 
 ## Design consequence
 
-TaskX prefers a hard no with evidence over a soft maybe without guarantees.
+dopeTask prefers a hard no with evidence over a soft maybe without guarantees.

@@ -22,11 +22,11 @@ def _run(cmd: list[str], *, cwd: Path) -> str:
 def _init_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir(parents=True, exist_ok=True)
-    (repo / ".taskxroot").write_text("", encoding="utf-8")
-    taskx_dir = repo / ".taskx"
-    taskx_dir.mkdir(parents=True, exist_ok=True)
-    (taskx_dir / "project.json").write_text(
-        json.dumps({"project_id": "taskx.core"}, sort_keys=True, indent=2) + "\n",
+    (repo / ".dopetaskroot").write_text("", encoding="utf-8")
+    dopetask_dir = repo / ".dopetask"
+    dopetask_dir.mkdir(parents=True, exist_ok=True)
+    (dopetask_dir / "project.json").write_text(
+        json.dumps({"project_id": "dopetask.core"}, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
@@ -35,7 +35,7 @@ def _init_repo(tmp_path: Path) -> Path:
     _run(["git", "config", "user.name", "Test User"], cwd=repo)
     (repo / "README.md").write_text("# repo\n", encoding="utf-8")
     _run(
-        ["git", "add", "README.md", ".gitignore", ".taskxroot", ".taskx/project.json"],
+        ["git", "add", "README.md", ".gitignore", ".dopetaskroot", ".dopetask/project.json"],
         cwd=repo,
     )
     _run(["git", "commit", "-m", "init"], cwd=repo)
@@ -66,7 +66,7 @@ def test_pr_open_refuses_dirty_tree(tmp_path: Path, monkeypatch) -> None:
     )
 
     assert result.exit_code == 2
-    payload = json.loads((repo / "out" / "taskx_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
+    payload = json.loads((repo / "out" / "dopetask_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
     assert payload["status"] == "refused"
     assert "dirty" in payload["refusal_reason"].lower()
 
@@ -96,7 +96,7 @@ def test_pr_open_refuses_detached_head(tmp_path: Path, monkeypatch) -> None:
     )
 
     assert result.exit_code == 2
-    payload = json.loads((repo / "out" / "taskx_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
+    payload = json.loads((repo / "out" / "dopetask_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
     assert payload["status"] == "refused"
     assert "detached" in payload["refusal_reason"].lower()
 
@@ -126,7 +126,7 @@ def test_pr_open_refuses_base_branch(tmp_path: Path, monkeypatch) -> None:
     )
 
     assert result.exit_code == 2
-    payload = json.loads((repo / "out" / "taskx_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
+    payload = json.loads((repo / "out" / "dopetask_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
     assert payload["status"] == "refused"
     assert "base branch" in payload["refusal_reason"].lower()
 
@@ -154,6 +154,6 @@ def test_pr_open_refuses_branch_isolation(tmp_path: Path, monkeypatch) -> None:
     )
 
     assert result.exit_code == 2
-    payload = json.loads((repo / "out" / "taskx_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
+    payload = json.loads((repo / "out" / "dopetask_pr" / "PR_OPEN_REPORT.json").read_text(encoding="utf-8"))
     assert payload["status"] == "refused"
     assert "branch isolation refusal" in payload["refusal_reason"].lower()

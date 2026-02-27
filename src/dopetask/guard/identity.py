@@ -34,9 +34,9 @@ class RepoIdentity:
     packet_required_header: bool
 
 
-GUARD_ARTIFACT_PATH = Path("out/taskx_guard")
-TASKX_PROJECT_ID = "taskx.core"
-SAFE_INVOCATION = "PYTHONPATH=src python -m taskx ..."
+GUARD_ARTIFACT_PATH = Path("out/dopetask_guard")
+DOPETASK_PROJECT_ID = "dopetask.core"
+SAFE_INVOCATION = "PYTHONPATH=src python -m dopetask ..."
 
 
 @dataclass(frozen=True)
@@ -53,7 +53,7 @@ class RunIdentity:
 
 
 def load_repo_identity(repo_root: Path) -> RepoIdentity:
-    """Load canonical repo identity from `.taskx/project.json`."""
+    """Load canonical repo identity from `.dopetask/project.json`."""
     identity_path = (repo_root / PROJECT_IDENTITY_PATH).resolve()
     try:
         payload = json.loads(identity_path.read_text(encoding="utf-8"))
@@ -207,10 +207,10 @@ def run_identity_origin_warning(
 def origin_hint_warning(repo_remote_hint: str | None, origin_url: str | None) -> str | None:
     """Build a one-line warning for remote hint mismatches."""
     if origin_url is None:
-        return "[taskx][WARNING] origin URL not available"
+        return "[dopetask][WARNING] origin URL not available"
     if repo_remote_hint and repo_remote_hint not in origin_url:
         return (
-            "[taskx][WARNING] origin URL does not match "
+            "[dopetask][WARNING] origin URL does not match "
             f"repo_remote_hint='{repo_remote_hint}' (origin='{origin_url}')"
         )
     return None
@@ -289,7 +289,7 @@ class RepoIdentityGuardError(RuntimeError):
             f"expected_project_id: {expected_project_id}\n"
             f"observed_project_id: {observed}\n"
             f"repo_root: {repo_root}\n"
-            f"hint: You are likely running the wrong repo or a shadowed taskx install. "
+            f"hint: You are likely running the wrong repo or a shadowed dopetask install. "
             f"Use {SAFE_INVOCATION}"
         )
         super().__init__(message)
@@ -312,13 +312,13 @@ def assert_repo_identity(
     expected_project_id: str | None = None,
     report_dir: Path | None = None,
 ) -> RepoIdentity:
-    taskxroot = repo_root / ".taskxroot"
+    dopetaskroot = repo_root / ".dopetaskroot"
     project_file = repo_root / PROJECT_IDENTITY_PATH
 
-    if not taskxroot.exists():
-        raise RepoIdentityGuardError(expected_project_id or TASKX_PROJECT_ID, None, repo_root)
+    if not dopetaskroot.exists():
+        raise RepoIdentityGuardError(expected_project_id or DOPETASK_PROJECT_ID, None, repo_root)
     if not project_file.exists():
-        raise RepoIdentityGuardError(expected_project_id or TASKX_PROJECT_ID, None, repo_root)
+        raise RepoIdentityGuardError(expected_project_id or DOPETASK_PROJECT_ID, None, repo_root)
 
     identity = load_repo_identity(repo_root)
     if expected_project_id and identity.project_id != expected_project_id:
@@ -331,8 +331,8 @@ def assert_repo_identity(
         expected_project_id=effective_expected,
         observed_project_id=identity.project_id,
         files={
-            ".taskxroot": True,
-            ".taskx/project.json": project_file.exists(),
+            ".dopetaskroot": True,
+            ".dopetask/project.json": project_file.exists(),
         },
     )
 

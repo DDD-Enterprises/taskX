@@ -6,9 +6,9 @@ Tone: Deterministic. Unapologetic.
 
 ---
 
-## 1. What TaskX Is
+## 1. What dopeTask Is
 
-TaskX is a deterministic execution kernel.
+dopeTask is a deterministic execution kernel.
 
 It takes a structured packet and makes a decision.
 
@@ -21,9 +21,9 @@ There is no third state.
 There is no "maybe."
 There is no hidden recovery mode.
 
-TaskX does not guess.
-TaskX does not retry behind your back.
-TaskX does not perform invisible magic.
+dopeTask does not guess.
+dopeTask does not retry behind your back.
+dopeTask does not perform invisible magic.
 
 If it did not write an artifact, it did not happen.
 
@@ -66,13 +66,13 @@ It defines:
 - In what order
 - Under what policy
 
-TaskX does not read intent from:
+dopeTask does not read intent from:
 - Environment variables (unless declared)
 - Git state (unless declared)
 - Prior runs
 - "Common sense"
 
-If the packet does not say it, TaskX does not assume it.
+If the packet does not say it, dopeTask does not assume it.
 
 Precision is power.
 
@@ -132,7 +132,7 @@ Refusal produces:
 - A stable exit code.
 - Zero side effects.
 
-TaskX would rather refuse than lie.
+dopeTask would rather refuse than lie.
 
 ---
 
@@ -185,7 +185,7 @@ For identical:
 
 - Packet
 - Declared inputs
-- TaskX version
+- dopeTask version
 
 Outputs must be byte-stable.
 
@@ -201,9 +201,9 @@ Convenience never outranks determinism.
 
 ---
 
-## 10. Boundaries: What TaskX Refuses to Be
+## 10. Boundaries: What dopeTask Refuses to Be
 
-TaskX does not:
+dopeTask does not:
 
 - Schedule recurring jobs.
 - Persist cross-run memory.
@@ -216,14 +216,14 @@ TaskX does not:
 
 Those are ecosystem concerns.
 
-TaskX stays small.
+dopeTask stays small.
 Small stays sharp.
 
 ---
 
 ## 11. Kernel vs Ecosystem
 
-TaskX is the execution spine.
+dopeTask is the execution spine.
 
 Higher systems may:
 
@@ -234,7 +234,7 @@ Higher systems may:
 - Provide UX.
 - Add orchestration.
 
-TaskX remains:
+dopeTask remains:
 
 - Stateless between runs.
 - Deterministic per invocation.
@@ -248,7 +248,7 @@ If a feature requires ambiguity, it does not belong here.
 
 ## 12. Stability Model
 
-TaskX follows Semantic Versioning.
+dopeTask follows Semantic Versioning.
 
 - Patch: bug fixes only.
 - Minor: additive, backward-compatible.
@@ -266,7 +266,7 @@ No silent contract drift.
 
 ## Final Principle
 
-TaskX is not designed to be helpful.
+dopeTask is not designed to be helpful.
 
 It is designed to be correct.
 

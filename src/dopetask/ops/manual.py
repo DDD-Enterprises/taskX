@@ -3,7 +3,7 @@ import sys
 
 def run_manual_mode(compiled_content: str, platform: str, model: str) -> None:
     _ = platform, model
-    print("\n=== TaskX Manual Mode ===")
+    print("\n=== dopeTask Manual Mode ===")
     print("Please paste current system instructions (optional). End with a single line containing 'END':")
     system_input = []
     while True:
@@ -29,6 +29,6 @@ def run_manual_mode(compiled_content: str, platform: str, model: str) -> None:
         print("\n### Existing Project Instructions (pasted)")
         print("".join(project_input))
 
-    print("\n### TaskX Addendum")
+    print("\n### dopeTask Addendum")
     print(compiled_content)
     print("--- END MERGED OUTPUT ---")

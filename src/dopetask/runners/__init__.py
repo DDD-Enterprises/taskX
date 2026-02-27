@@ -1,4 +1,4 @@
-"""Runner adapters for TaskX orchestrator."""
+"""Runner adapters for dopeTask orchestrator."""
 
 from dopetask.runners.base import RunnerAdapter
 from dopetask.runners.claude_code import ClaudeCodeAdapter

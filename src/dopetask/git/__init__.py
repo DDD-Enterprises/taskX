@@ -1,4 +1,4 @@
-"""Git operations for TaskX task packets."""
+"""Git operations for dopeTask task packets."""
 
 from dopetask.git.commit_run import commit_run
 from dopetask.git.commit_sequence import commit_sequence

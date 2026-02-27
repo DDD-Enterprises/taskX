@@ -16,7 +16,7 @@ RUNNER = CliRunner()
 
 
 def _report_json(repo_root: Path) -> dict:
-    report_path = repo_root / "out" / "taskx_project_upgrade" / "PROJECT_UPGRADE_REPORT.json"
+    report_path = repo_root / "out" / "dopetask_project_upgrade" / "PROJECT_UPGRADE_REPORT.json"
     assert report_path.exists()
     return json.loads(report_path.read_text(encoding="utf-8"))
 
@@ -39,7 +39,7 @@ def test_project_upgrade_refuses_when_rails_missing_without_allow_init(tmp_path:
 
     assert result.exit_code == 2
     assert "REFUSAL: repo identity mismatch" in result.output
-    assert "expected_project_id: taskx.core" in result.output
+    assert "expected_project_id: dopetask.core" in result.output
 
 
 def test_project_upgrade_creates_rails_with_allow_init(tmp_path: Path) -> None:
@@ -60,8 +60,8 @@ def test_project_upgrade_creates_rails_with_allow_init(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert (repo_root / ".taskxroot").exists()
-    project_json = repo_root / ".taskx" / "project.json"
+    assert (repo_root / ".dopetaskroot").exists()
+    project_json = repo_root / ".dopetask" / "project.json"
     assert project_json.exists()
 
     payload = json.loads(project_json.read_text(encoding="utf-8"))
@@ -111,8 +111,8 @@ def test_project_upgrade_shell_is_idempotent(tmp_path: Path) -> None:
     assert second_report["shell_init"]["created_files"] == []
     assert second_report["shell_init"]["skipped_files"] == [
         ".envrc",
-        "scripts/taskx",
-        "scripts/taskx-local",
+        "scripts/dopetask",
+        "scripts/dopetask-local",
     ]
 
 
@@ -137,7 +137,7 @@ def test_project_upgrade_runs_packs_doctor(tmp_path: Path) -> None:
 
     assert result.exit_code == 0, result.output
 
-    instructions_root = repo_root / ".taskx" / "instructions"
+    instructions_root = repo_root / ".dopetask" / "instructions"
     for name in ["PROJECT_INSTRUCTIONS.md", "CLAUDE.md", "CODEX.md", "AGENTS.md"]:
         assert (instructions_root / name).exists()
 
@@ -184,6 +184,6 @@ def test_project_upgrade_doctor_warns_when_direnv_missing(tmp_path: Path, monkey
     assert checks_by_id["direnv_envrc"]["status"] == "warn"
     assert "direnv is not installed" in checks_by_id["direnv_envrc"]["message"]
 
-    md_report = repo_root / "out" / "taskx_project_upgrade" / "PROJECT_UPGRADE_REPORT.md"
+    md_report = repo_root / "out" / "dopetask_project_upgrade" / "PROJECT_UPGRADE_REPORT.md"
     assert md_report.exists()
     assert "# PROJECT_UPGRADE_REPORT" in md_report.read_text(encoding="utf-8")

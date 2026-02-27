@@ -1,4 +1,4 @@
-"""TaskX orchestrator v0 kernel."""
+"""dopeTask orchestrator v0 kernel."""
 
 from __future__ import annotations
 
@@ -12,12 +12,12 @@ from dopetask.orchestrator.handoff import build_handoff_chunks, render_handoff_c
 from dopetask.router import build_route_plan, route_plan_to_dict
 from dopetask.router.availability import availability_path_for_repo, default_route_policy
 from dopetask.runners import RUNNER_ADAPTERS
-from dopetask.utils.repo import find_taskx_repo_root
+from dopetask.utils.repo import find_dopetask_repo_root
 
 
 def orchestrate(packet_path: str) -> dict[str, Any]:
     """
-    Orchestrate one deterministic TaskX run.
+    Orchestrate one deterministic dopeTask run.
 
     Returns an outcome with:
       - status: "ok" | "refused" | "error" | "needs_handoff"
@@ -25,7 +25,7 @@ def orchestrate(packet_path: str) -> dict[str, Any]:
       - artifacts: dict (from ARTIFACT_INDEX)
     """
     packet_file = Path(packet_path).expanduser().resolve()
-    repo_root = find_taskx_repo_root(packet_file.parent) or Path.cwd().resolve()
+    repo_root = find_dopetask_repo_root(packet_file.parent) or Path.cwd().resolve()
 
     try:
         raw_packet = _read_packet_text(packet_file)

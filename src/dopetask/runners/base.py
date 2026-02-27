@@ -6,7 +6,7 @@ from typing import Protocol
 
 
 class RunnerAdapter(Protocol):
-    """Protocol implemented by TaskX runner adapters."""
+    """Protocol implemented by dopeTask runner adapters."""
 
     runner_id: str
 

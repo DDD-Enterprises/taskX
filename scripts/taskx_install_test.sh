@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# TaskX install test - Creates temp venv, installs wheel, and runs doctor
+# dopeTask install test - Creates temp venv, installs wheel, and runs doctor
 
 set -euo pipefail
 
-echo "=== TaskX Install Test ==="
+echo "=== dopeTask Install Test ==="
 
 # Find the wheel file
 WHEEL_FILE=$(find dist/ -name "*.whl" | head -n 1)
@@ -16,7 +16,7 @@ fi
 echo "Testing wheel: $WHEEL_FILE"
 
 # Create temporary venv
-TEMP_VENV=$(mktemp -d -t taskx-test-venv.XXXXXX)
+TEMP_VENV=$(mktemp -d -t dopetask-test-venv.XXXXXX)
 echo "Creating temporary venv: $TEMP_VENV"
 
 python -m venv "$TEMP_VENV"
@@ -38,29 +38,29 @@ fi
 echo "Installing wheel..."
 pip install "$WHEEL_FILE" --quiet
 
-# Test 1: taskx --help
-echo "Test 1: taskx --help"
-if ! taskx --help > /dev/null 2>&1; then
-    echo "❌ Error: taskx --help failed"
+# Test 1: dopetask --help
+echo "Test 1: dopetask --help"
+if ! dopetask --help > /dev/null 2>&1; then
+    echo "❌ Error: dopetask --help failed"
     deactivate
     rm -rf "$TEMP_VENV"
     exit 1
 fi
-echo "✅ taskx --help works"
+echo "✅ dopetask --help works"
 
-# Test 2: taskx doctor
-echo "Test 2: taskx doctor"
-DOCTOR_OUT=$(mktemp -d -t taskx-doctor-test.XXXXXX)
+# Test 2: dopetask doctor
+echo "Test 2: dopetask doctor"
+DOCTOR_OUT=$(mktemp -d -t dopetask-doctor-test.XXXXXX)
 
-if ! taskx doctor --timestamp-mode deterministic --out "$DOCTOR_OUT"; then
-    echo "❌ Error: taskx doctor failed"
+if ! dopetask doctor --timestamp-mode deterministic --out "$DOCTOR_OUT"; then
+    echo "❌ Error: dopetask doctor failed"
     cat "$DOCTOR_OUT/DOCTOR_REPORT.md" || true
     deactivate
     rm -rf "$TEMP_VENV"
     rm -rf "$DOCTOR_OUT"
     exit 1
 fi
-echo "✅ taskx doctor passed"
+echo "✅ dopetask doctor passed"
 
 # Cleanup
 deactivate

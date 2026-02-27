@@ -1,4 +1,4 @@
-"""TaskX Ops Module — operator system prompt management.
+"""dopeTask Ops Module — operator system prompt management.
 
 Public API for programmatic access to operator prompt compilation,
 block injection, diagnostics, and instruction-file discovery.

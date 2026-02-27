@@ -1,4 +1,4 @@
-"""Deterministic stage runner for taskx tp run."""
+"""Deterministic stage runner for dopetask tp run."""
 
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ def _render_banner(*, worktree_path: Path, branch: str) -> str:
         f"- worktree: {worktree_path}\n"
         f"- branch: {branch}\n"
         "Do work in this worktree. Commit per TP commit plan.\n"
-        "Then rerun `taskx tp run ... --continue` or use `taskx tp git pr/merge`.\n"
+        "Then rerun `dopetask tp run ... --continue` or use `dopetask tp git pr/merge`.\n"
     )
 
 
@@ -222,10 +222,10 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
 
     title = options.pr_title or f"{options.tp_id}: {normalized_slug}"
     body = options.pr_body or (
-        "Automated TaskX TP run.\n\n"
+        "Automated dopeTask TP run.\n\n"
         f"- run_id: {options.run_id}\n"
         f"- proof_dir: {writer.paths.run_dir}\n"
-        "- checklist: tests passed, PR opened by taskx tp run\n"
+        "- checklist: tests passed, PR opened by dopetask tp run\n"
     )
     try:
         pr_payload = pr_create(

@@ -24,9 +24,9 @@ def _make_zip(source_dir: Path, zip_path: Path) -> None:
 def test_build_case_index_categorization(tmp_path: Path) -> None:
     case_root = tmp_path / "case_root"
     files = {
-        "taskx/task_queue.json": "{}",
-        "taskx/runs/run-1/TASK_PACKET.md": "packet",
-        "taskx/runs/run-1/RUN_SUMMARY.json": "summary",
+        "dopetask/task_queue.json": "{}",
+        "dopetask/runs/run-1/TASK_PACKET.md": "packet",
+        "dopetask/runs/run-1/RUN_SUMMARY.json": "summary",
         "repo/REPO_SNAPSHOT.json": "{}",
         "repo/logs/build.log": "log-data",
         "reports/audit.md": "report-data",
@@ -41,9 +41,9 @@ def test_build_case_index_categorization(tmp_path: Path) -> None:
     index = _build_case_index(case_root)
     categories = {entry["path"]: entry["category"] for entry in index["files"]}
 
-    assert categories["taskx/task_queue.json"] == "taskx_task_queue"
-    assert categories["taskx/runs/run-1/TASK_PACKET.md"] == "taskx_packet"
-    assert categories["taskx/runs/run-1/RUN_SUMMARY.json"] == "taskx_run_artifact"
+    assert categories["dopetask/task_queue.json"] == "dopetask_task_queue"
+    assert categories["dopetask/runs/run-1/TASK_PACKET.md"] == "dopetask_packet"
+    assert categories["dopetask/runs/run-1/RUN_SUMMARY.json"] == "dopetask_run_artifact"
     assert categories["repo/REPO_SNAPSHOT.json"] == "repo_snapshot"
     assert categories["repo/logs/build.log"] == "repo_log"
     assert categories["reports/audit.md"] == "report"
@@ -57,7 +57,7 @@ def test_ingest_bundle_detects_integrity_mismatch(tmp_path: Path) -> None:
 
     # Write extracted payload with actual (tampered) file contents
     tampered_content = "tampered"
-    task_queue_path = bundle_root / "taskx" / "task_queue.json"
+    task_queue_path = bundle_root / "dopetask" / "task_queue.json"
     task_queue_path.parent.mkdir(parents=True, exist_ok=True)
     task_queue_path.write_text(tampered_content, encoding="utf-8")
 
@@ -73,10 +73,10 @@ def test_ingest_bundle_detects_integrity_mismatch(tmp_path: Path) -> None:
         "contents": {},
         "files": [
             {
-                "path": "taskx/task_queue.json",
+                "path": "dopetask/task_queue.json",
                 "sha256": _sha("expected-content"),
                 "size_bytes": len("expected-content"),
-                "category": "taskx_task_queue",
+                "category": "dopetask_task_queue",
             }
         ],
     }

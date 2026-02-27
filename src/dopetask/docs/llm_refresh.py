@@ -10,9 +10,9 @@ from dopetask.guard.identity import RepoIdentity, load_repo_identity
 if TYPE_CHECKING:
     from pathlib import Path
 
-AUTOGEN_START = "<!-- TASKX:AUTOGEN:START -->"
-AUTOGEN_END = "<!-- TASKX:AUTOGEN:END -->"
-AUTOGEN_HINT = "<!-- (managed by taskx docs refresh-llm) -->"
+AUTOGEN_START = "<!-- DOPETASK:AUTOGEN:START -->"
+AUTOGEN_END = "<!-- DOPETASK:AUTOGEN:END -->"
+AUTOGEN_HINT = "<!-- (managed by dopetask docs refresh-llm) -->"
 
 
 
@@ -76,7 +76,7 @@ def build_llm_prompt(repo_identity: RepoIdentity | None, repo_scan: dict[str, An
     scan_lines = "\n".join(f"- {key}: {value}" for key, value in sorted(repo_scan.items()))
 
     return (
-        "You are refreshing TaskX instruction-file AUTOGEN sections.\n"
+        "You are refreshing dopeTask instruction-file AUTOGEN sections.\n"
         "Return ONLY markdown content intended for insertion between markers.\n"
         "Do not include marker lines, YAML, JSON, or code fences unless needed as markdown examples.\n\n"
         f"Repo project_id: {project_id}\n"

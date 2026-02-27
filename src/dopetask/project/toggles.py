@@ -1,4 +1,4 @@
-"""Deterministic TaskX/ChatX directive pack toggles."""
+"""Deterministic dopeTask/ChatX directive pack toggles."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from dopetask.project.common import (
     read_template_text,
 )
 
-VALID_PACKS = {"taskx", "chatx"}
+VALID_PACKS = {"dopetask", "chatx"}
 
 
 def apply_pack(file_path: Path, pack_name: str, enabled: bool) -> dict[str, Any]:

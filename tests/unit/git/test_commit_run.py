@@ -1,4 +1,4 @@
-"""Tests for taskx commit-run functionality."""
+"""Tests for dopetask commit-run functionality."""
 import json
 import subprocess
 from pathlib import Path
@@ -110,7 +110,7 @@ class TestCommitRunHappyPath:
         assert "src/module.py" in report["allowlist"]["staged_files"]
 
         # Verify commit message format
-        expected_msg = "TASKX commit-run | run=RUN_001 | promo=abc123def456"
+        expected_msg = "DOPETASK commit-run | run=RUN_001 | promo=abc123def456"
         assert report["git"]["commit_message"] == expected_msg
 
         # Verify report was written

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -121,7 +122,7 @@ def status_shell(repo_root: Path) -> dict[str, Any]:
 def _file_state(target: Path, expected: str, spec: ShellFileSpec) -> dict[str, Any]:
     exists = target.exists()
     content_matches = False
-    executable_ok: bool | None = None
+    executable_ok: typing.Optional[bool] = None
 
     if exists:
         actual = target.read_text(encoding="utf-8")

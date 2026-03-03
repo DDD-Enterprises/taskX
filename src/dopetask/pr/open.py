@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import subprocess
+import typing
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -45,7 +46,7 @@ def run_pr_open(
     require_branch_prefix: str,
     allow_branch_prefix_override: bool,
     refresh_llm: bool,
-    refresh_llm_runner: LlmRefreshRunner | None = None,
+    refresh_llm_runner: typing.Optional[LlmRefreshRunner] = None,
 ) -> dict[str, Any]:
     """Execute assisted PR open flow with deterministic report artifacts."""
     resolved_repo = repo_root.resolve()
@@ -54,7 +55,7 @@ def run_pr_open(
     if not resolved_body.exists():
         raise RuntimeError(f"Body file not found: {resolved_body}")
 
-    state: GitState | None = None
+    state: typing.Optional[GitState] = None
     report: dict[str, Any] = {
         "status": "error",
         "repo_root": str(resolved_repo),
@@ -89,8 +90,8 @@ def run_pr_open(
             "report_paths": None,
         },
     }
-    pending_error: Exception | None = None
-    restore_error: str | None = None
+    pending_error: typing.Optional[Exception] = None
+    restore_error: typing.Optional[str] = None
 
     try:
         state = preflight_or_refuse(
@@ -245,7 +246,7 @@ def _build_push_command(repo_root: Path, *, remote: str, branch: str) -> list[st
     return ["git", "push", "-u", remote, branch]
 
 
-def _parse_owner_repo(remote_url: str) -> str | None:
+def _parse_owner_repo(remote_url: str) -> typing.Optional[str]:
     ssh_match = re.match(r"^git@github\.com:(?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$", remote_url)
     if ssh_match:
         return f"{ssh_match.group('owner')}/{ssh_match.group('repo')}"
@@ -260,7 +261,7 @@ def _parse_owner_repo(remote_url: str) -> str | None:
     return None
 
 
-def _extract_pr_url(stdout_text: str) -> str | None:
+def _extract_pr_url(stdout_text: str) -> typing.Optional[str]:
     for line in stdout_text.splitlines():
         value = line.strip()
         if value.startswith("http://") or value.startswith("https://"):
@@ -268,7 +269,7 @@ def _extract_pr_url(stdout_text: str) -> str | None:
     return None
 
 
-def _branch_for_detached(repo_root: Path, head_sha: str) -> str | None:
+def _branch_for_detached(repo_root: Path, head_sha: str) -> typing.Optional[str]:
     refs = _git_output(repo_root, ["for-each-ref", "--format=%(refname:short) %(objectname)", "refs/heads"])
     candidates: list[str] = []
     for line in refs.splitlines():

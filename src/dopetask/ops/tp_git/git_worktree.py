@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,11 +21,11 @@ class StartResult:
     reused: bool
 
 
-def _worktree_branch(repo_root: Path, worktree_path: Path) -> str | None:
+def _worktree_branch(repo_root: Path, worktree_path: Path) -> typing.Optional[str]:
     listing = run_git(["worktree", "list", "--porcelain"], repo_root=repo_root).stdout
     target = str(worktree_path.resolve())
-    active_path: str | None = None
-    active_branch: str | None = None
+    active_path: typing.Optional[str] = None
+    active_branch: typing.Optional[str] = None
     for raw_line in listing.splitlines():
         line = raw_line.strip()
         if line.startswith("worktree "):
@@ -51,7 +52,7 @@ def start_tp(
     *,
     tp_id: str,
     slug: str,
-    repo: Path | None = None,
+    repo: typing.Optional[Path] = None,
     reuse: bool = False,
 ) -> StartResult:
     """Run doctor and create deterministic branch/worktree."""
@@ -95,7 +96,7 @@ def start_tp(
     )
 
 
-def tp_status(*, tp_id: str, repo: Path | None = None) -> dict[str, str]:
+def tp_status(*, tp_id: str, repo: typing.Optional[Path] = None) -> dict[str, str]:
     """Lightweight local status for a TP worktree."""
     repo_root = resolve_repo_root(repo)
     worktree_path = (repo_root / ".worktrees" / tp_id).resolve()
@@ -112,7 +113,7 @@ def tp_status(*, tp_id: str, repo: Path | None = None) -> dict[str, str]:
     }
 
 
-def sync_main(*, repo: Path | None = None) -> dict[str, str]:
+def sync_main(*, repo: typing.Optional[Path] = None) -> dict[str, str]:
     """Sync main branch with ff-only policy."""
     repo_root = resolve_repo_root(repo)
     run_git(["checkout", "main"], repo_root=repo_root)
@@ -125,7 +126,7 @@ def sync_main(*, repo: Path | None = None) -> dict[str, str]:
     }
 
 
-def cleanup_tp(*, tp_id: str, repo: Path | None = None) -> dict[str, str]:
+def cleanup_tp(*, tp_id: str, repo: typing.Optional[Path] = None) -> dict[str, str]:
     """Remove TP worktree after validating cleanliness."""
     repo_root = resolve_repo_root(repo)
     worktree_path = (repo_root / ".worktrees" / tp_id).resolve()
@@ -146,7 +147,7 @@ def cleanup_tp(*, tp_id: str, repo: Path | None = None) -> dict[str, str]:
     }
 
 
-def list_worktrees(*, repo: Path | None = None) -> str:
+def list_worktrees(*, repo: typing.Optional[Path] = None) -> str:
     """Return git worktree list output."""
     repo_root = resolve_repo_root(repo)
     listing = run_git(["worktree", "list"], repo_root=repo_root).stdout.rstrip()

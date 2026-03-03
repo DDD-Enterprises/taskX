@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import typing
 from datetime import datetime
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def promote_run(
     run_dir: Path,
     timestamp_mode: str = "deterministic",
     require_run_summary: bool = False,
-    out_dir: Path | None = None,
+    out_dir: typing.Optional[Path] = None,
 ) -> PromotionToken:
     """
     Promote a run by validating all completion requirements.

@@ -7,8 +7,9 @@ package data, with special attention to schema bundling issues.
 import json
 import platform
 import shutil
+import typing
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, TextIO
 
@@ -63,7 +64,7 @@ def _get_deterministic_timestamp() -> str:
 
 def _get_wallclock_timestamp() -> str:
     """Get current wallclock timestamp."""
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _check_dopetask_import() -> CheckItem:
@@ -85,7 +86,7 @@ def _check_dopetask_import() -> CheckItem:
             message=f"Failed to import dopeTask: {e}",
             remediation=[
                 "Ensure dopeTask is installed: pip install -e . or pip install dopetask",
-                "Check Python version is 3.11+",
+                "Check Python version is 3.9+",
                 "Verify virtual environment is activated if using one"
             ]
         )
@@ -204,7 +205,7 @@ def _check_schema_load() -> CheckItem:
         )
 
 
-def _check_repo_detection(repo_root: Path | None, project_root: Path | None) -> CheckItem:
+def _check_repo_detection(repo_root: typing.Optional[Path], project_root: typing.Optional[Path]) -> CheckItem:
     """Check D: Repo scope detection (optional)."""
     _ = project_root
     # This is optional - we just report what we detect
@@ -239,7 +240,7 @@ def _check_repo_detection(repo_root: Path | None, project_root: Path | None) -> 
         )
 
 
-def _check_git_availability(repo_root: Path | None, require_git: bool) -> CheckItem:
+def _check_git_availability(repo_root: typing.Optional[Path], require_git: bool) -> CheckItem:
     """Check E: Git availability (optional)."""
     # Check for git executable
     git_exe = shutil.which("git")
@@ -278,7 +279,7 @@ def _check_git_availability(repo_root: Path | None, require_git: bool) -> CheckI
         )
 
 
-def _check_direnv_warning(repo_root: Path | None) -> CheckItem:
+def _check_direnv_warning(repo_root: typing.Optional[Path]) -> CheckItem:
     """Check F: warn when .envrc exists but direnv is unavailable."""
     if repo_root is None:
         return CheckItem(
@@ -321,8 +322,8 @@ def run_doctor(
     out_dir: Path,
     timestamp_mode: str = "deterministic",
     require_git: bool = False,
-    repo_root: Path | None = None,
-    project_root: Path | None = None
+    repo_root: typing.Optional[Path] = None,
+    project_root: typing.Optional[Path] = None
 ) -> DoctorReport:
     """Run dopeTask installation integrity checks.
 

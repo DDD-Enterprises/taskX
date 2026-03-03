@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import typing
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
@@ -20,7 +21,7 @@ def run_allowlist_gate(
     timestamp_mode: str = "deterministic",
     require_verification_evidence: bool = True,
     diff_mode: str = "auto",
-    out_dir: Path | None = None,
+    out_dir: typing.Optional[Path] = None,
 ) -> AllowlistDiff:
     """
     Run allowlist compliance gate on a completed run.

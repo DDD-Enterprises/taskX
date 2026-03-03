@@ -1,5 +1,6 @@
 """Types for loop orchestrator."""
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,8 +13,8 @@ class LoopInputs:
     mode: str  # mvp, hardening, full
     max_packets: int
     seed: int
-    run_task: str | None
-    run_id: str | None
+    run_task: typing.Optional[str]
+    run_id: typing.Optional[str]
     collect_evidence: bool
     feedback: bool
 
@@ -24,10 +25,10 @@ class StageResult:
 
     enabled: bool
     status: str  # skipped, ok, failed
-    started_at: str | None
-    ended_at: str | None
-    out_dir: str | None
+    started_at: typing.Optional[str]
+    ended_at: typing.Optional[str]
+    out_dir: typing.Optional[str]
     inputs: dict
     outputs: list[str]
     hashes: dict
-    error: str | None
+    error: typing.Optional[str]

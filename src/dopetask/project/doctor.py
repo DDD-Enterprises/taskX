@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from typing import TYPE_CHECKING, Any
 
 from dopetask.project.common import (
@@ -113,7 +114,7 @@ def check_project(project_dir: Path) -> dict[str, Any]:
     }
 
 
-def fix_project(project_dir: Path, mode: str | None) -> dict[str, Any]:
+def fix_project(project_dir: Path, mode: typing.Optional[str]) -> dict[str, Any]:
     """Repair common project readiness issues and return post-fix doctor report."""
     project_dir.mkdir(parents=True, exist_ok=True)
     actions_taken: list[str] = []
@@ -332,7 +333,7 @@ def _render_supervisor_prompt(mode: str) -> str:
     return "\n".join(lines)
 
 
-def _resolve_fix_mode(detected_mode: str, requested_mode: str | None) -> str:
+def _resolve_fix_mode(detected_mode: str, requested_mode: typing.Optional[str]) -> str:
     if requested_mode is not None:
         return normalize_mode(requested_mode)
     if detected_mode in VALID_MODES:

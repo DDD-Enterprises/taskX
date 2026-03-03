@@ -6,8 +6,9 @@ import json
 import re
 import shlex
 import subprocess
+import typing
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,7 @@ class CommitPlanStep:
 
 def _timestamp_utc() -> str:
     """Return current UTC timestamp in RFC3339 Z format."""
-    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _normalize_repo_path(path: str) -> str:
@@ -153,7 +154,7 @@ def _stash_changes(
     repo_root: Path,
     message: str,
     include_ignored: bool,
-    paths: list[str] | None = None,
+    paths: typing.Optional[list[str]] = None,
 ) -> str:
     """Stash changes and return created stash reference."""
     args = ["stash", "push", "-m", message]
@@ -187,7 +188,7 @@ def _default_branch(run_dir: Path) -> str:
     return f"tp/{_sanitize_token(run_dir.name)}"
 
 
-def _load_packet_identity_tokens(run_dir: Path) -> tuple[str | None, str | None]:
+def _load_packet_identity_tokens(run_dir: Path) -> tuple[typing.Optional[str], typing.Optional[str]]:
     """Best-effort extraction of packet_id and project_id from TASK_PACKET.md."""
     task_packet_path = run_dir / "TASK_PACKET.md"
     if not task_packet_path.exists():
@@ -198,13 +199,13 @@ def _load_packet_identity_tokens(run_dir: Path) -> tuple[str | None, str | None]
     except OSError:
         return None, None
 
-    packet_id: str | None = None
+    packet_id: typing.Optional[str] = None
     first_line = content.splitlines()[0] if content.splitlines() else ""
     first_line_match = re.match(r"^#\s+TASK_PACKET\s+(TP_\d{4})\b", first_line)
     if first_line_match is not None:
         packet_id = first_line_match.group(1)
 
-    project_id: str | None = None
+    project_id: typing.Optional[str] = None
     section_match = re.search(
         r"^##\s+PROJECT IDENTITY\s*$\n(.*?)(?=^##\s+|\Z)",
         content,
@@ -375,12 +376,12 @@ def _ensure_not_dirty_or_stash_all(
 def start_worktree(
     *,
     run_dir: Path,
-    branch: str | None,
+    branch: typing.Optional[str],
     base: str,
     remote: str,
-    worktree_path: Path | None,
+    worktree_path: typing.Optional[Path],
     dirty_policy: str,
-    cwd: Path | None = None,
+    cwd: typing.Optional[Path] = None,
 ) -> dict[str, Any]:
     """Create dopeTask worktree + branch and write WORKTREE.json."""
     invoke_cwd = (cwd or Path.cwd()).resolve()
@@ -446,7 +447,7 @@ def commit_sequence(
     run_dir: Path,
     allow_unpromoted: bool,
     dirty_policy: str,
-    cwd: Path | None = None,
+    cwd: typing.Optional[Path] = None,
 ) -> dict[str, Any]:
     """Execute COMMIT PLAN step-by-step with allowlist-only staging."""
     invoke_cwd = (cwd or Path.cwd()).resolve()
@@ -561,13 +562,13 @@ def _load_worktree_metadata(run_dir: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _find_worktree_for_branch(repo_root: Path, branch: str) -> Path | None:
+def _find_worktree_for_branch(repo_root: Path, branch: str) -> typing.Optional[Path]:
     """Find worktree path where branch is currently checked out."""
     proc = _run_git(["worktree", "list", "--porcelain"], cwd=repo_root, check=True)
     blocks = proc.stdout.split("\n\n")
     branch_ref = f"refs/heads/{branch}"
     for block in blocks:
-        worktree_path: Path | None = None
+        worktree_path: typing.Optional[Path] = None
         branch_line = ""
         for line in block.splitlines():
             if line.startswith("worktree "):
@@ -585,7 +586,7 @@ def finish_run(
     mode: str,
     cleanup: bool,
     dirty_policy: str,
-    cwd: Path | None = None,
+    cwd: typing.Optional[Path] = None,
 ) -> dict[str, Any]:
     """Finalize task branch into main using rebase + ff + push."""
     if mode != "rebase-ff":

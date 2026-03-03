@@ -12,14 +12,14 @@ This guide provides step-by-step instructions for migrating dopemux from `dopeta
 
 **Before**:
 ```toml
-[tool.poetry.dependencies]
-dopetask-kernel = "^0.1.3"
+[project.dependencies]
+dopetask-kernel>=0.1.3
 ```
 
 **After**:
 ```toml
-[tool.poetry.dependencies]
-dopetask = "^0.1.4"
+[project.dependencies]
+dopetask>=0.1.4
 ```
 
 ### 2. Update Import Statements
@@ -90,10 +90,6 @@ ref=0.1.4
 ```bash
 # Using pip
 pip install --upgrade dopetask
-
-# Using poetry
-poetry add dopetask@^0.1.4
-poetry remove dopetask-kernel
 
 # Using uv
 uv add dopetask

@@ -2,8 +2,9 @@ import hashlib
 import json
 import os
 import shutil
+import typing
 import zipfile
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,11 +16,11 @@ console = Console()
 class BundleExporter:
     """Handles deterministic export of case bundles."""
 
-    def __init__(self, repo_root: Path, config_path: Path | None = None):
+    def __init__(self, repo_root: Path, config_path: typing.Optional[Path] = None):
         self.repo_root = repo_root.resolve()
         self.config = self._load_config(config_path)
 
-    def _load_config(self, config_path: Path | None) -> dict[str, Any]:
+    def _load_config(self, config_path: typing.Optional[Path]) -> dict[str, Any]:
         """Load config from file or use defaults."""
         defaults = {
             "logs": {
@@ -80,7 +81,7 @@ class BundleExporter:
         repo_dir.mkdir(parents=True, exist_ok=True)
 
         snapshot = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "git_available": False,
             "head_sha": None,
             "branch": None
@@ -231,11 +232,11 @@ class BundleExporter:
         manifest = {
             "schema_version": "1.0",
             "case_id": case_id,
-            "generated_at": datetime.now(UTC).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "bundle_manifest": {
                 "sha256": manifest_hash,
                 "source_label": "dopetask-export",
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             },
             "contents": {
                 "task_queue": "dopetask/task_queue.json",
@@ -248,12 +249,12 @@ class BundleExporter:
         with open(case_dir / "CASE_MANIFEST.json", "w") as f:
             json.dump(manifest, f, indent=2)
 
-    def export(self, last_n: int, out_dir: Path, case_id: str | None = None) -> Path:
+    def export(self, last_n: int, out_dir: Path, case_id: typing.Optional[str] = None) -> Path:
         """Main export flow."""
         import tempfile
 
         if not case_id:
-            ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             case_id = f"CASE_{ts}"
 
         console.print(f"[cyan]Exporting Case Bundle: {case_id}[/cyan]")

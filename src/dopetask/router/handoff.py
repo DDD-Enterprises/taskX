@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -110,7 +111,7 @@ def render_handoff_markdown(plan: RoutePlan) -> str:
     return "\n".join(lines)
 
 
-def _codex_prompt(step: str, model: str | None) -> str:
+def _codex_prompt(step: str, model: typing.Optional[str]) -> str:
     selected_model = model or "unspecified"
     return (
         f"Model: {selected_model}\n"
@@ -119,7 +120,7 @@ def _codex_prompt(step: str, model: str | None) -> str:
     )
 
 
-def _claude_prompt(step: str, model: str | None) -> str:
+def _claude_prompt(step: str, model: typing.Optional[str]) -> str:
     selected_model = model or "unspecified"
     return (
         f"Model: {selected_model}\n"
@@ -128,7 +129,7 @@ def _claude_prompt(step: str, model: str | None) -> str:
     )
 
 
-def _copilot_command(step: str, model: str | None) -> str:
+def _copilot_command(step: str, model: typing.Optional[str]) -> str:
     selected_model = model or "unspecified"
     return (
         "copilot chat "

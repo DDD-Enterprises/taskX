@@ -2,7 +2,8 @@
 
 import json
 import subprocess
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -11,10 +12,10 @@ def _get_timestamp(mode: str = "deterministic") -> str:
     """Get timestamp based on mode."""
     if mode == "deterministic":
         return "1970-01-01T00:00:00Z"
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
-def _run_git_command(args: list[str], cwd: Path | None = None) -> str:
+def _run_git_command(args: list[str], cwd: typing.Optional[Path] = None) -> str:
     """Run git command and return output.
 
     Args:
@@ -42,7 +43,7 @@ def _run_git_command(args: list[str], cwd: Path | None = None) -> str:
 
 def commit_run(
     run_dir: Path,
-    message: str | None = None,
+    message: typing.Optional[str] = None,
     allow_unpromoted: bool = False,
     timestamp_mode: str = "deterministic",
 ) -> dict[str, Any]:

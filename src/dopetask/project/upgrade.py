@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -44,11 +45,11 @@ def run_project_upgrade(
 
     rails_state = ensure_rails(resolved_repo_root, allow_init_rails=allow_init_rails)
 
-    shell_result: dict[str, Any] | None = None
+    shell_result: typing.Optional[dict[str, Any]] = None
     if shell:
         shell_result = init_shell(resolved_repo_root)
 
-    packs_result: dict[str, Any] | None = None
+    packs_result: typing.Optional[dict[str, Any]] = None
     if packs:
         packs_report = fix_project(resolved_instructions, normalized_mode)
         packs_report_paths = write_doctor_reports(resolved_instructions, packs_report)
@@ -61,7 +62,7 @@ def run_project_upgrade(
             "report_paths": packs_report_paths,
         }
 
-    doctor_result: dict[str, Any] | None = None
+    doctor_result: typing.Optional[dict[str, Any]] = None
     if doctor:
         doctor_out = resolved_repo_root / "out" / "dopetask_doctor"
         doctor_report = run_doctor(

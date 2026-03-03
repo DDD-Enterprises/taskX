@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import subprocess
+import typing
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -29,8 +30,8 @@ class RepoIdentity:
     """Canonical identity of the active repository."""
 
     project_id: str
-    project_slug: str | None
-    repo_remote_hint: str | None
+    project_slug: typing.Optional[str]
+    repo_remote_hint: typing.Optional[str]
     packet_required_header: bool
 
 
@@ -46,8 +47,8 @@ class RunIdentity:
     schema_version: str
     project_id: str
     repo_root: str
-    origin_url: str | None
-    head_sha: str | None
+    origin_url: typing.Optional[str]
+    head_sha: typing.Optional[str]
     timestamp_utc: str
 
 
@@ -85,13 +86,13 @@ def load_repo_identity(repo_root: Path) -> RepoIdentity:
 
 
 
-def extract_origin_url(repo_root: Path) -> str | None:
+def extract_origin_url(repo_root: Path) -> typing.Optional[str]:
     """Best-effort git origin URL lookup."""
     return _git_output(repo_root, "remote", "get-url", "origin")
 
 
 
-def load_run_identity(run_dir: Path) -> RunIdentity | None:
+def load_run_identity(run_dir: Path) -> typing.Optional[RunIdentity]:
     """Load RUN_IDENTITY.json from run directory when present."""
     identity_path = run_dir / RUN_IDENTITY_FILENAME
     if not identity_path.exists():
@@ -150,7 +151,7 @@ def ensure_run_identity(
 
 def assert_repo_packet_identity(
     repo_identity: RepoIdentity,
-    packet_identity: ProjectIdentity | None,
+    packet_identity: typing.Optional[ProjectIdentity],
 ) -> None:
     """Hard-fail when task packet identity mismatches repo identity."""
     if packet_identity is None:
@@ -198,13 +199,13 @@ def assert_repo_branch_identity(repo_identity: RepoIdentity, branch_name: str) -
 def run_identity_origin_warning(
     repo_identity: RepoIdentity,
     run_identity: RunIdentity,
-) -> str | None:
+) -> typing.Optional[str]:
     """Return soft warning when run origin URL does not match repo hint."""
     return origin_hint_warning(repo_identity.repo_remote_hint, run_identity.origin_url)
 
 
 
-def origin_hint_warning(repo_remote_hint: str | None, origin_url: str | None) -> str | None:
+def origin_hint_warning(repo_remote_hint: typing.Optional[str], origin_url: typing.Optional[str]) -> typing.Optional[str]:
     """Build a one-line warning for remote hint mismatches."""
     if origin_url is None:
         return "[dopetask][WARNING] origin URL not available"
@@ -241,11 +242,11 @@ def _run_identity_from_payload(payload: Any, identity_path: Path) -> RunIdentity
 
 
 def _timestamp_utc() -> str:
-    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 
-def _git_output(repo_root: Path, *args: str) -> str | None:
+def _git_output(repo_root: Path, *args: str) -> typing.Optional[str]:
     try:
         out = subprocess.check_output(
             ["git", "-C", str(repo_root), *args],
@@ -259,7 +260,7 @@ def _git_output(repo_root: Path, *args: str) -> str | None:
 
 
 
-def _to_optional_str(value: object) -> str | None:
+def _to_optional_str(value: object) -> typing.Optional[str]:
     if value is None:
         return None
     text = str(value).strip()
@@ -282,7 +283,7 @@ def _to_bool(value: object, *, default: bool) -> bool:
 
 
 class RepoIdentityGuardError(RuntimeError):
-    def __init__(self, expected_project_id: str, observed_project_id: str | None, repo_root: Path):
+    def __init__(self, expected_project_id: str, observed_project_id: typing.Optional[str], repo_root: Path):
         observed = observed_project_id or "MISSING"
         message = (
             "REFUSAL: repo identity mismatch\n"
@@ -298,7 +299,7 @@ class RepoIdentityGuardError(RuntimeError):
         self.repo_root = repo_root
 
 
-def read_observed_project_id(repo_root: Path) -> str | None:
+def read_observed_project_id(repo_root: Path) -> typing.Optional[str]:
     try:
         identity = load_repo_identity(repo_root)
         return identity.project_id
@@ -309,8 +310,8 @@ def read_observed_project_id(repo_root: Path) -> str | None:
 def assert_repo_identity(
     repo_root: Path,
     *,
-    expected_project_id: str | None = None,
-    report_dir: Path | None = None,
+    expected_project_id: typing.Optional[str] = None,
+    report_dir: typing.Optional[Path] = None,
 ) -> RepoIdentity:
     dopetaskroot = repo_root / ".dopetaskroot"
     project_file = repo_root / PROJECT_IDENTITY_PATH

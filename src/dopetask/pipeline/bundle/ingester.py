@@ -5,8 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import typing
 import zipfile
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from jsonschema import validate
@@ -26,7 +27,7 @@ def _timestamp(timestamp_mode: str) -> str:
     if timestamp_mode == "deterministic":
         return DETERMINISTIC_TIMESTAMP
     if timestamp_mode == "wallclock":
-        return datetime.now(UTC).isoformat()
+        return datetime.now(timezone.utc).isoformat()
     raise ValueError(f"Invalid timestamp_mode: {timestamp_mode}")
 
 
@@ -60,8 +61,8 @@ def _classify_path(rel_path: str) -> str:
 def _build_case_index(
     case_root: Path,
     *,
-    case_id: str | None = None,
-    integrity: dict[str, Any] | None = None,
+    case_id: typing.Optional[str] = None,
+    integrity: typing.Optional[dict[str, Any]] = None,
     timestamp_mode: str = "deterministic",
 ) -> dict[str, Any]:
     """Build deterministic CASE_INDEX payload for an extracted bundle."""

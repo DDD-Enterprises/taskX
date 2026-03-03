@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -93,19 +94,19 @@ class PlannedStep:
     """Selected route decision for one lifecycle step."""
 
     step: str
-    runner: str | None
-    model: str | None
+    runner: typing.Optional[str]
+    model: typing.Optional[str]
     confidence: float
     scores: dict[str, int]
     reasons: tuple[str, ...]
     candidates_top3: tuple[TopCandidate, ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RefusalReason:
-    reason_code: str | None
+    reason_code: typing.Optional[str]
     message: str
-    detail: str | None = None
+    detail: typing.Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.reason_code is not None and not self.reason_code:
@@ -113,8 +114,8 @@ class RefusalReason:
         if not self.message:
             raise ValueError("message must be provided")
 
-    def to_dict(self) -> dict[str, str | None]:
-        data: dict[str, str | None] = {
+    def to_dict(self) -> dict[str, typing.Optional[str]]:
+        data: dict[str, typing.Optional[str]] = {
             "reason_code": self.reason_code,
             "message": self.message,
         }

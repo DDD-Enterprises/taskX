@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from typing import TYPE_CHECKING, Any
 
 from dopetask.artifacts.canonical_json import sha256_file, write_json
@@ -17,8 +18,8 @@ def write_run_artifacts(
     *,
     route_plan: dict[str, Any],
     report: dict[str, Any],
-    stdout_text: str | None,
-    stderr_text: str | None,
+    stdout_text: typing.Optional[str],
+    stderr_text: typing.Optional[str],
 ) -> dict[str, Any]:
     """Write deterministic orchestrator artifacts and return the index payload."""
     run_dir.mkdir(parents=True, exist_ok=True)

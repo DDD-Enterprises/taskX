@@ -6,6 +6,7 @@ projects without modifying dopeTask core logic.
 
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ from dopetask_adapters.base import AdapterInfo, BaseAdapter
 from dopetask_adapters.types import DopemuxDetection, DopemuxPaths
 
 
-def detect_dopemux_root(start: Path | None = None, override: Path | None = None) -> DopemuxDetection:
+def detect_dopemux_root(start: typing.Optional[Path] = None, override: typing.Optional[Path] = None) -> DopemuxDetection:
     """Detect Dopemux root directory.
 
     Detection priority (first match wins):
@@ -83,7 +84,7 @@ def detect_dopemux_root(start: Path | None = None, override: Path | None = None)
 
 def compute_dopemux_paths(
     root: Path,
-    out_root_override: Path | None = None,
+    out_root_override: typing.Optional[Path] = None,
 ) -> DopemuxPaths:
     """Compute dopeTask paths using Dopemux conventions.
 
@@ -131,7 +132,7 @@ def compute_dopemux_paths(
     )
 
 
-def select_run_folder(runs_out: Path, run: Path | None = None) -> Path:
+def select_run_folder(runs_out: Path, run: typing.Optional[Path] = None) -> Path:
     """Select a run folder deterministically.
 
     If run is provided, uses it directly.
@@ -184,7 +185,7 @@ class DopemuxAdapter(BaseAdapter):
     def name(self) -> str:
         return "dopemux"
 
-    def detect(self, start: Path | None = None) -> AdapterInfo:
+    def detect(self, start: typing.Optional[Path] = None) -> AdapterInfo:
         """Detect Dopemux root, delegating to ``detect_dopemux_root``."""
         detection = detect_dopemux_root(start=start)
         return AdapterInfo(

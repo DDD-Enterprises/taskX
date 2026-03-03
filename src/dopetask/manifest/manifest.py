@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import re
 import shlex
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -56,7 +57,7 @@ def get_timestamp(timestamp_mode: str) -> str:
     """Return timestamp for deterministic or wallclock mode."""
     if timestamp_mode == "deterministic":
         return DETERMINISTIC_TIMESTAMP
-    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def manifest_path(run_dir: Path) -> Path:
@@ -92,16 +93,16 @@ def init_manifest(run_dir: Path, task_packet_id: str, mode: str, timestamp_mode:
 
 def record_command(
     manifest: Manifest,
-    cmd: str | list[str],
-    cwd: str | Path,
+    cmd: typing.Union[str, list[str]],
+    cwd: typing.Union[str, Path],
     exit_code: int,
-    stdout_path: str | Path,
-    stderr_path: str | Path,
-    started_at: str | None = None,
-    ended_at: str | None = None,
+    stdout_path: typing.Union[str, Path],
+    stderr_path: typing.Union[str, Path],
+    started_at: typing.Optional[str] = None,
+    ended_at: typing.Optional[str] = None,
     timestamp_mode: str = "deterministic",
     truncated: bool = False,
-    notes: str | None = None,
+    notes: typing.Optional[str] = None,
 ) -> Manifest:
     """Append a command execution record to a manifest object."""
     commands_raw = manifest.get("commands", [])
@@ -136,7 +137,7 @@ def finalize_manifest(
     artifacts_expected: Iterable[str],
     artifacts_found: Iterable[str],
     status: str,
-    notes: str | None = None,
+    notes: typing.Optional[str] = None,
 ) -> Manifest:
     """Finalize expected/found artifacts and overall status for a manifest."""
     manifest["artifacts_expected"] = _sorted_unique_strings(artifacts_expected)
@@ -157,7 +158,7 @@ def finalize_manifest(
     return manifest
 
 
-def load_manifest(run_dir: Path) -> Manifest | None:
+def load_manifest(run_dir: Path) -> typing.Optional[Manifest]:
     """Load manifest from run dir, or None when absent."""
     path = manifest_path(run_dir)
     if not path.exists():
@@ -186,16 +187,16 @@ def save_manifest(manifest: Manifest, run_dir: Path) -> Path:
 
 def append_command_record(
     run_dir: Path,
-    cmd: str | list[str],
+    cmd: typing.Union[str, list[str]],
     cwd: Path,
     exit_code: int,
     stdout_text: str,
     stderr_text: str,
     timestamp_mode: str,
-    expected_artifacts: list[str] | None = None,
-    notes: str | None = None,
-    started_at: str | None = None,
-    ended_at: str | None = None,
+    expected_artifacts: typing.Optional[list[str]] = None,
+    notes: typing.Optional[str] = None,
+    started_at: typing.Optional[str] = None,
+    ended_at: typing.Optional[str] = None,
 ) -> bool:
     """Append command execution to existing manifest and refresh artifact state."""
     manifest = load_manifest(run_dir)
@@ -387,7 +388,7 @@ def _is_sensitive_key(key: str) -> bool:
     return normalized.endswith(_SENSITIVE_SUFFIXES)
 
 
-def _redact_command(cmd: str | list[str]) -> str | list[str]:
+def _redact_command(cmd: typing.Union[str, list[str]]) -> typing.Union[str, list[str]]:
     if isinstance(cmd, list):
         return _redact_tokens(cmd)
 
@@ -436,7 +437,7 @@ def _redact_tokens(tokens: list[str]) -> list[str]:
     return redacted
 
 
-def _redact_token_assignment(token: str, default_value: str | None = None) -> str:
+def _redact_token_assignment(token: str, default_value: typing.Optional[str] = None) -> str:
     if "=" not in token:
         return token
 

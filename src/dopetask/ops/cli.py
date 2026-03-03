@@ -1,5 +1,6 @@
 import difflib
 import subprocess
+import typing
 from pathlib import Path
 
 import typer
@@ -35,9 +36,9 @@ def get_git_hash() -> str:
         return "UNKNOWN"
 
 def run_export_flow(
-    export_path: Path | None = None,
-    platform: str | None = None,
-    model: str | None = None,
+    export_path: typing.Optional[Path] = None,
+    platform: typing.Optional[str] = None,
+    model: typing.Optional[str] = None,
 ) -> bool:
     """Helper to run the export logic used by multiple commands."""
     root = get_repo_root()
@@ -64,9 +65,9 @@ def run_export_flow(
 
 @app.command(hidden=True)
 def compile(
-    out_path: Path | None = typer.Option(None, "--out-path"),
-    platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model"),
+    out_path: typing.Optional[Path] = typer.Option(None, "--out-path"),
+    platform: typing.Optional[str] = typer.Option(None, "--platform"),
+    model: typing.Optional[str] = typer.Option(None, "--model"),
 ) -> None:
     """Deprecated compatibility alias for `dopetask ops export`."""
     console.print("[yellow]Deprecated:[/yellow] use `dopetask ops export` instead of `dopetask ops compile`.")
@@ -83,7 +84,7 @@ def init(
         help="Non-interactive mode (accept defaults).",
     ),
     no_export: bool = typer.Option(False, "--no-export"),
-    export_path: Path | None = typer.Option(None, "--export-path"),
+    export_path: typing.Optional[Path] = typer.Option(None, "--export-path"),
 ) -> None:
     """Initialize dopeTask operator configuration. Exports unified prompt by default."""
     _ = yes
@@ -228,16 +229,16 @@ When forced to choose:
 
 @app.command()
 def export(
-    export_path: Path | None = typer.Option(None, "--export-path"),
-    platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model"),
+    export_path: typing.Optional[Path] = typer.Option(None, "--export-path"),
+    platform: typing.Optional[str] = typer.Option(None, "--platform"),
+    model: typing.Optional[str] = typer.Option(None, "--model"),
 ) -> None:
     """Export a unified operator system prompt from dopeTask templates and profile configuration. Does not affect packet execution behavior."""
     run_export_flow(export_path=export_path, platform=platform, model=model)
 
 @app.command()
 def preview(
-    target: Path | None = typer.Option(None, "--target"),
+    target: typing.Optional[Path] = typer.Option(None, "--target"),
 ) -> None:
     """Preview changes to instruction files."""
     root = get_repo_root()
@@ -264,11 +265,11 @@ def preview(
 
 @app.command()
 def apply(
-    target: Path | None = typer.Option(None, "--target"),
+    target: typing.Optional[Path] = typer.Option(None, "--target"),
     strategy: str = typer.Option("append", "--strategy"),
     dry_run: bool = typer.Option(False, "--dry-run"),
-    platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model"),
+    platform: typing.Optional[str] = typer.Option(None, "--platform"),
+    model: typing.Optional[str] = typer.Option(None, "--model"),
 ) -> None:
     """Apply compiled prompt to instruction files."""
     from dopetask.ops.doctor import get_canonical_target
@@ -334,8 +335,8 @@ def apply(
 
 @app.command()
 def manual(
-    platform: str | None = typer.Option(None, "--platform"),
-    model: str | None = typer.Option(None, "--model"),
+    platform: typing.Optional[str] = typer.Option(None, "--platform"),
+    model: typing.Optional[str] = typer.Option(None, "--model"),
 ) -> None:
     """Run manual merge mode."""
     from dopetask.ops.manual import run_manual_mode
@@ -349,7 +350,7 @@ def manual(
 def doctor(
     json: bool = typer.Option(False, "--json"),
     no_export: bool = typer.Option(False, "--no-export"),
-    export_path: Path | None = typer.Option(None, "--export-path"),
+    export_path: typing.Optional[Path] = typer.Option(None, "--export-path"),
 ) -> None:
     """Diagnose configuration drift and conflicts. Exports unified prompt by default."""
     from dopetask.ops.doctor import run_doctor

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import typing
 from typing import TYPE_CHECKING, Any
 
 from dopetask.guard.identity import RepoIdentity, load_repo_identity
@@ -69,7 +70,7 @@ def replace_autogen_block(
 
 
 
-def build_llm_prompt(repo_identity: RepoIdentity | None, repo_scan: dict[str, Any]) -> str:
+def build_llm_prompt(repo_identity: typing.Optional[RepoIdentity], repo_scan: dict[str, Any]) -> str:
     """Build deterministic prompt requesting only autogen markdown content."""
     project_id = repo_identity.project_id if repo_identity is not None else "unknown"
     project_slug = repo_identity.project_slug if repo_identity is not None else "unknown"

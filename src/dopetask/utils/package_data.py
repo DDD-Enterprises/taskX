@@ -8,6 +8,7 @@ NOTE: This module is deprecated in favor of schema_registry.py
 but maintained for backward compatibility.
 """
 
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -55,7 +56,7 @@ def get_schema_dict(schema_name: str) -> dict[str, Any]:
     return _registry_get_json(schema_name)
 
 
-def get_schema_path(schema_name: str) -> Path | None:
+def get_schema_path(schema_name: str) -> typing.Optional[Path]:
     """Get filesystem path to schema (best effort).
 
     DEPRECATED: This function is deprecated as schemas should be loaded

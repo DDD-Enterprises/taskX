@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, cast
 
@@ -32,7 +32,7 @@ def _timestamp(timestamp_mode: str) -> str:
     if timestamp_mode == "deterministic":
         return DETERMINISTIC_TIMESTAMP
     if timestamp_mode == "wallclock":
-        return datetime.now(UTC).isoformat()
+        return datetime.now(timezone.utc).isoformat()
     raise ValueError(f"Invalid timestamp_mode: {timestamp_mode}")
 
 
@@ -624,7 +624,7 @@ def audit_case(
 
     missing_summaries = sorted(
         run_dir.name
-        for run_dir, summary in zip(run_dirs, run_summaries_all, strict=False)
+        for run_dir, summary in zip(run_dirs, run_summaries_all)
         if summary.get("_summary_missing")
     )
 

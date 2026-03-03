@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import difflib
 import os
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -130,7 +131,7 @@ class PersistResult:
     path: Path
     changed: bool
     diff: str
-    backup_path: Path | None
+    backup_path: typing.Optional[Path]
 
 
 def persist_rc_file(

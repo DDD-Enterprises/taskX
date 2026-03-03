@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from dopetask.obs.run_artifacts import DIRTY_STATE_FILENAME, WORKTREE_FILENAME
@@ -17,7 +18,7 @@ VALID_DIRTY_POLICIES = {"refuse", "stash"}
 
 def get_timestamp() -> str:
     """Return wallclock timestamp for generated artifacts."""
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def run_git_command(args: list[str], cwd: Path) -> str:
@@ -98,7 +99,7 @@ def stash_changes(
     cwd: Path,
     message: str,
     include_untracked: bool = True,
-    paths: list[str] | None = None,
+    paths: typing.Optional[list[str]] = None,
 ) -> str:
     """Stash changes and return git stash command output."""
     args = ["stash", "push"]
@@ -117,8 +118,8 @@ def start_worktree(
     *,
     base_branch: str = "main",
     remote: str = "origin",
-    branch: str | None,
-    worktree_path: Path | None,
+    branch: typing.Optional[str],
+    worktree_path: typing.Optional[Path],
     dirty_policy: str = "refuse",
 ) -> dict[str, Any]:
     """Create a task branch worktree and write WORKTREE.json artifact."""
@@ -169,7 +170,7 @@ def start_worktree(
         run_git_command(["fetch", remote], cwd=resolved_repo_root)
 
         dirty_files = sorted(set(git_changed_files(resolved_repo_root)))
-        run_dir_relative: str | None = None
+        run_dir_relative: typing.Optional[str] = None
         try:
             run_dir_relative = resolved_run_dir.relative_to(resolved_repo_root).as_posix()
         except ValueError:

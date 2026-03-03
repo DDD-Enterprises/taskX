@@ -4,6 +4,8 @@
 
 dopeTask provides a simple, pinned installation mechanism for consumer repositories (like Dopemux, ChatX, etc.) without vendoring source code.
 
+Supported Python versions: 3.9+.
+
 ### Quick Start (Automatic)
 
 The easiest way to install dopeTask into your repository is using the unified installer script. This will set up a virtual environment and install dopeTask.

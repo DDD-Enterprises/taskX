@@ -1,5 +1,6 @@
 """Schema validation utilities for dopeTask using package-data-only registry."""
 
+import typing
 from typing import Any
 
 try:
@@ -12,7 +13,7 @@ from dopetask.utils.schema_registry import get_registry
 
 
 def validate_data(
-    data: dict[str, Any] | list[dict[str, Any]],
+    data: typing.Union[dict[str, Any], list[dict[str, Any]]],
     schema_name: str,
     strict: bool = True
 ) -> tuple[bool, list[str]]:

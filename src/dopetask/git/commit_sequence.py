@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 def _timestamp(mode: str) -> str:
     if mode == "deterministic":
         return "1970-01-01T00:00:00Z"
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _allowlist_violation_count(payload: dict[str, Any]) -> int:
@@ -94,7 +95,7 @@ def _execute_verification(
     *,
     commands: list[str],
     cwd: Path,
-) -> tuple[bool, list[dict[str, Any]], str | None]:
+) -> tuple[bool, list[dict[str, Any]], typing.Optional[str]]:
     results: list[dict[str, Any]] = []
     for command in commands:
         completed = subprocess.run(

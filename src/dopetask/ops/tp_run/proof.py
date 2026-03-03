@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +23,7 @@ class ProofPaths:
 
 def build_run_id(*, tp_id: str, repo_root: Path) -> str:
     """Build deterministic run id with UTC timestamp and current short sha."""
-    stamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     short_sha = run_git(["rev-parse", "--short", "HEAD"], repo_root=repo_root).stdout.strip() or "unknown"
     return f"{tp_id}_{stamp}_{short_sha}"
 

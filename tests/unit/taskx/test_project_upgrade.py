@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
@@ -152,7 +153,7 @@ def test_project_upgrade_runs_packs_doctor(tmp_path: Path) -> None:
 def test_project_upgrade_doctor_warns_when_direnv_missing(tmp_path: Path, monkeypatch) -> None:
     repo_root = tmp_path / "repo"
 
-    def _fake_which(binary: str) -> str | None:
+    def _fake_which(binary: str) -> typing.Optional[str]:
         if binary == "direnv":
             return None
         if binary == "git":

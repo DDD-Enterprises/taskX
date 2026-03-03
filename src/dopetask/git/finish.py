@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,7 @@ def _clean_or_stash(
     scope: str,
     dirty_policy: str,
     event: str,
-    exclude_prefixes: list[str] | None = None,
+    exclude_prefixes: typing.Optional[list[str]] = None,
 ) -> dict[str, Any]:
     changed_files = sorted(set(git_changed_files(cwd)))
     if exclude_prefixes:
@@ -173,8 +174,8 @@ def finish_run(
             cwd=worktree_path,
         )
 
-        run_dir_relative_to_repo: str | None = None
-        worktree_relative_to_repo: str | None = None
+        run_dir_relative_to_repo: typing.Optional[str] = None
+        worktree_relative_to_repo: typing.Optional[str] = None
         try:
             run_dir_relative_to_repo = resolved_run_dir.relative_to(repo_root).as_posix()
         except ValueError:

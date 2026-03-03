@@ -6,8 +6,9 @@ Provides a single deterministic gate for CI/CD pipelines that enforces:
 """
 
 import json
+import typing
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, TextIO
 
@@ -51,10 +52,10 @@ def _get_deterministic_timestamp() -> str:
 
 def _get_wallclock_timestamp() -> str:
     """Get current wallclock timestamp."""
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
-def _select_latest_run(runs_root: Path) -> Path | None:
+def _select_latest_run(runs_root: Path) -> typing.Optional[Path]:
     """Select latest run by deterministic folder name sort (descending).
 
     Args:
@@ -82,7 +83,7 @@ def _validate_promotion(
     run_dir: Path,
     promotion_filename: str,
     require_passed: bool
-) -> tuple[bool, str | None, list[str]]:
+) -> tuple[bool, typing.Optional[str], list[str]]:
     """Validate promotion token in run directory.
 
     Args:
@@ -152,8 +153,8 @@ def run_ci_gate(
     out_dir: Path,
     timestamp_mode: str = "deterministic",
     require_git: bool = False,
-    run_dir: Path | None = None,
-    runs_root: Path | None = None,
+    run_dir: typing.Optional[Path] = None,
+    runs_root: typing.Optional[Path] = None,
     promotion_filename: str = "PROMOTION.json",
     require_promotion: bool = True,
     require_promotion_passed: bool = True

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import typing
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -54,11 +55,11 @@ def test_stateful_commands_write_only_inside_run_dir(
         encoding="utf-8",
     )
 
-    def fake_guard(_: bool, rescue_patch: str | None = None) -> Path:
+    def fake_guard(_: bool, rescue_patch: typing.Optional[str] = None) -> Path:
         del rescue_patch
         return workspace
 
-    def fake_allowlist_gate(*, run_dir: Path, out_dir: Path | None = None, **kwargs):
+    def fake_allowlist_gate(*, run_dir: Path, out_dir: typing.Optional[Path] = None, **kwargs):
         del kwargs
         target = out_dir or run_dir
         target.mkdir(parents=True, exist_ok=True)
@@ -66,7 +67,7 @@ def test_stateful_commands_write_only_inside_run_dir(
         (target / "VIOLATIONS.md").write_text("# violations\n", encoding="utf-8")
         return SimpleNamespace(violations=[])
 
-    def fake_promote_run(*, run_dir: Path, out_dir: Path | None = None, **kwargs):
+    def fake_promote_run(*, run_dir: Path, out_dir: typing.Optional[Path] = None, **kwargs):
         del kwargs
         target = out_dir or run_dir
         target.mkdir(parents=True, exist_ok=True)
@@ -83,7 +84,7 @@ def test_stateful_commands_write_only_inside_run_dir(
             "allowlist": {"staged_files": ["src/example.py"]},
         }
 
-    def fake_ci_gate(*, out_dir: Path, run_dir: Path | None = None, **kwargs):
+    def fake_ci_gate(*, out_dir: Path, run_dir: typing.Optional[Path] = None, **kwargs):
         del kwargs
         target = out_dir
         target.mkdir(parents=True, exist_ok=True)

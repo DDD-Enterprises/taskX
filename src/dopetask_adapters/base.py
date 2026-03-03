@@ -7,6 +7,7 @@ Adapters are discovered via the ``dopetask.adapters`` entry-point group.
 from __future__ import annotations
 
 import abc
+import typing
 from dataclasses import dataclass
 from pathlib import Path  # noqa: TC003 — runtime dataclass field
 from typing import Any
@@ -42,7 +43,7 @@ class BaseAdapter(abc.ABC):
         """Short, unique adapter identifier (e.g. ``"dopemux"``)."""
 
     @abc.abstractmethod
-    def detect(self, start: Path | None = None) -> AdapterInfo:
+    def detect(self, start: typing.Optional[Path] = None) -> AdapterInfo:
         """Detect project root for this adapter.
 
         Args:

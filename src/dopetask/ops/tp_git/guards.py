@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,7 +21,7 @@ class DoctorReport:
     pull: ExecResult
 
 
-def resolve_repo_root(repo: Path | None = None) -> Path:
+def resolve_repo_root(repo: typing.Optional[Path] = None) -> Path:
     """Resolve git repo root from cwd or explicit path."""
     probe = (repo or Path.cwd()).resolve()
     try:
@@ -35,7 +36,7 @@ def resolve_repo_root(repo: Path | None = None) -> Path:
 
 def run_doctor(
     *,
-    repo: Path | None = None,
+    repo: typing.Optional[Path] = None,
 ) -> DoctorReport:
     """Enforce clean-main+no-stash gate and sync remote refs."""
     repo_root = resolve_repo_root(repo)

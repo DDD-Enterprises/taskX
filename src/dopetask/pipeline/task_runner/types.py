@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 
 
@@ -10,7 +11,7 @@ class ProjectIdentity:
     """Task packet project identity declaration."""
 
     project_id: str
-    intended_repo: str | None = None
+    intended_repo: typing.Optional[str] = None
 
 
 @dataclass
@@ -20,7 +21,7 @@ class CommitStep:
     step_id: str
     message: str
     allowlist: list[str]
-    verify: list[str] | None
+    verify: typing.Optional[list[str]]
 
 
 @dataclass
@@ -34,9 +35,9 @@ class TaskPacketInfo:
     allowlist: list[str]
     sources: list[str]
     verification_commands: list[str]
-    commit_plan: list[CommitStep] | None
+    commit_plan: typing.Optional[list[CommitStep]]
     sections: dict[str, str]
-    project_identity: ProjectIdentity | None = None
+    project_identity: typing.Optional[ProjectIdentity] = None
 
 
 @dataclass

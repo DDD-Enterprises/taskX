@@ -3,6 +3,7 @@ from __future__ import annotations
 import difflib
 import os
 import time
+import typing
 from dataclasses import dataclass
 from itertools import cycle
 from pathlib import Path
@@ -87,7 +88,7 @@ def get_theme_name() -> str:
     return os.getenv("DOPETASK_THEME", "mintwave")
 
 
-def get_theme_palette(theme: str | None = None) -> list[str]:
+def get_theme_palette(theme: typing.Optional[str] = None) -> list[str]:
     name = theme or get_theme_name()
     return THEMES.get(name, THEMES["mintwave"])
 
@@ -102,7 +103,7 @@ def should_show_banner(argv: Sequence[str]) -> bool:
     return bool(len(argv) >= 2 and argv[1] in ("version",))
 
 
-def render_banner(theme: str | None = None) -> None:
+def render_banner(theme: typing.Optional[str] = None) -> None:
     if not neon_enabled():
         return
 
@@ -185,7 +186,7 @@ def render_neon_rc_block(*, theme: str) -> str:
     return "\n".join(lines)
 
 
-def _locate_single_neon_block(contents: str) -> tuple[int, int] | None:
+def _locate_single_neon_block(contents: str) -> typing.Optional[tuple[int, int]]:
     begin_idx = contents.find(NEON_RC_MARKER_BEGIN)
     end_idx = contents.find(NEON_RC_MARKER_END)
 
@@ -273,7 +274,7 @@ class NeonRcPersistResult:
     path: Path
     changed: bool
     diff: str
-    backup_path: Path | None
+    backup_path: typing.Optional[Path]
 
 
 def persist_neon_rc_file(

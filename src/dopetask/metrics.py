@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import typing
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -24,7 +25,7 @@ def _default_payload() -> dict[str, Any]:
     }
 
 
-def _truthy(value: str | None) -> bool:
+def _truthy(value: typing.Optional[str]) -> bool:
     if value is None:
         return False
     return value.strip().lower() in {"1", "true", "yes", "on"}
@@ -32,8 +33,8 @@ def _truthy(value: str | None) -> bool:
 
 def resolve_metrics_path(
     *,
-    env: Mapping[str, str] | None = None,
-    home: Path | None = None,
+    env: typing.Optional[Mapping[str, str]] = None,
+    home: typing.Optional[Path] = None,
 ) -> Path:
     """Return the canonical metrics file path."""
     effective_env = env if env is not None else {}
@@ -94,13 +95,13 @@ def save_metrics(path: Path, payload: dict[str, Any]) -> None:
     tmp_path.replace(path)
 
 
-def metrics_env_enabled(env: Mapping[str, str] | None = None) -> bool:
+def metrics_env_enabled(env: typing.Optional[Mapping[str, str]] = None) -> bool:
     """Return whether metrics are enabled by environment variable."""
     effective_env = env if env is not None else {}
     return _truthy(effective_env.get(METRICS_ENV_VAR))
 
 
-def metrics_effective_enabled(path: Path, env: Mapping[str, str] | None = None) -> bool:
+def metrics_effective_enabled(path: Path, env: typing.Optional[Mapping[str, str]] = None) -> bool:
     """Return true when either env or persistent opt-in enables metrics."""
     payload = load_metrics(path)
     persistent_enabled = bool(payload.get("enabled", False))
@@ -155,7 +156,7 @@ def record_cli_invocation(
     *,
     argv: Sequence[str],
     path: Path,
-    env: Mapping[str, str] | None = None,
+    env: typing.Optional[Mapping[str, str]] = None,
 ) -> bool:
     """Record a CLI invocation when metrics are enabled."""
     if not metrics_effective_enabled(path, env):

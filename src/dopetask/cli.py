@@ -6,7 +6,8 @@ import re
 import shutil
 import subprocess
 import sys
-from enum import StrEnum
+import typing
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,12 @@ import click
 import typer
 from rich.console import Console
 from typer.core import TyperGroup
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    class StrEnum(str, Enum):
+        """Python 3.9/3.10 fallback for enum.StrEnum."""
 
 from dopetask import __version__
 from dopetask.manifest import (
@@ -372,12 +379,12 @@ def neon_status() -> None:
 
 @neon_app.command("persist")
 def neon_persist(
-    shell: str | None = typer.Option(
+    shell: typing.Optional[str] = typer.Option(
         None,
         "--shell",
         help="Target shell: zsh or bash (defaults to inferred $SHELL).",
     ),
-    rc_path: Path | None = typer.Option(
+    rc_path: typing.Optional[Path] = typer.Option(
         None,
         "--rc-path",
         "--path",
@@ -393,7 +400,7 @@ def neon_persist(
         "--dry-run",
         help="Do not write any changes (dry run mode).",
     ),
-    theme: str | None = typer.Option(
+    theme: typing.Optional[str] = typer.Option(
         None,
         "--theme",
         help="Theme override (default: DOPETASK_THEME or mintwave).",
@@ -410,7 +417,7 @@ def neon_persist(
         raise typer.Exit(2)
 
     if rc_path is None:
-        resolved_shell: str | None = None
+        resolved_shell: typing.Optional[str] = None
         shell_env = os.environ.get("SHELL", "")
         if shell_env.endswith("zsh"):
             resolved_shell = "zsh"
@@ -530,7 +537,7 @@ def metrics_reset() -> None:
     typer.echo("metrics_commands_reset=1")
 
 
-def _check_repo_guard(bypass: bool, rescue_patch: str | None = None) -> Path:
+def _check_repo_guard(bypass: bool, rescue_patch: typing.Optional[str] = None) -> Path:
     """
     Check dopeTask repo guard unless bypassed.
 
@@ -587,8 +594,8 @@ def _require_module(module_func: Any, module_name: str) -> None:
 
 
 def _resolve_stateful_run_dir(
-    run: Path | None,
-    run_root: Path | None,
+    run: typing.Optional[Path],
+    run_root: typing.Optional[Path],
     timestamp_mode: str,
 ) -> Path:
     """Resolve target run directory for stateful commands."""
@@ -601,7 +608,7 @@ def _resolve_stateful_run_dir(
     return selected_run
 
 
-def _git_output(repo_root: Path, *args: str) -> str | None:
+def _git_output(repo_root: Path, *args: str) -> typing.Optional[str]:
     """Best-effort git output helper."""
     try:
         out = subprocess.check_output(
@@ -614,7 +621,7 @@ def _git_output(repo_root: Path, *args: str) -> str | None:
     return text or None
 
 
-def _try_git_repo_root(cwd: Path) -> Path | None:
+def _try_git_repo_root(cwd: Path) -> typing.Optional[Path]:
     """Resolve git root for current invocation, if available."""
     root = _git_output(cwd, "rev-parse", "--show-toplevel")
     if root is None:
@@ -622,7 +629,7 @@ def _try_git_repo_root(cwd: Path) -> Path | None:
     return Path(root).resolve()
 
 
-def _load_repo_identity_for_command(cwd: Path) -> tuple[Path | None, Any | None]:
+def _load_repo_identity_for_command(cwd: Path) -> tuple[typing.Optional[Path], typing.Optional[Any]]:
     """Load repo identity when configured for this repository."""
     from dopetask.guard.identity import load_repo_identity
 
@@ -641,8 +648,8 @@ def _load_repo_identity_for_command(cwd: Path) -> tuple[Path | None, Any | None]
 
 
 def _require_repo_identity(
-    repo_root: Path | None,
-    require_project_id: str | None,
+    repo_root: typing.Optional[Path],
+    require_project_id: typing.Optional[str],
     *,
     allow_missing_identity: bool = False,
 ) -> None:
@@ -662,7 +669,7 @@ def _require_repo_identity(
         raise typer.Exit(2) from exc
 
 
-def _load_packet_identity_for_run(run_dir: Path, repo_identity: Any) -> Any | None:
+def _load_packet_identity_for_run(run_dir: Path, repo_identity: Any) -> typing.Optional[Any]:
     """Load packet identity declaration from run packet when available."""
     from dopetask.pipeline.task_runner.parser import parse_packet_project_identity
 
@@ -684,7 +691,7 @@ def _sanitize_branch_token(value: str) -> str:
     return token or "run"
 
 
-def _packet_id_from_run_packet(run_dir: Path) -> str | None:
+def _packet_id_from_run_packet(run_dir: Path) -> typing.Optional[str]:
     """Extract packet identifier from run TASK_PACKET.md first H1."""
     packet_path = run_dir / "TASK_PACKET.md"
     if not packet_path.exists():
@@ -716,7 +723,7 @@ def _enforce_run_identity_guards(
     run_dir: Path,
     require_branch: bool,
     quiet: bool,
-) -> tuple[Path | None, Any | None]:
+) -> tuple[typing.Optional[Path], typing.Optional[Any]]:
     """Apply packet/run/branch identity checks when repo identity is configured."""
     from dopetask.guard.banner import (
         get_banner_context,
@@ -864,14 +871,14 @@ def _ensure_manifest_ready(
 def _append_manifest_command(
     *,
     enabled: bool,
-    run_dir: Path | None,
+    run_dir: typing.Optional[Path],
     timestamp_mode: str,
     exit_code: int,
     started_at: str,
     stdout_lines: list[str],
     stderr_lines: list[str],
-    expected_artifacts: list[str] | None = None,
-    notes: str | None = None,
+    expected_artifacts: typing.Optional[list[str]] = None,
+    notes: typing.Optional[str] = None,
 ) -> None:
     """Write command record into TASK_PACKET_MANIFEST.json when enabled."""
     if not enabled or run_dir is None:
@@ -946,7 +953,7 @@ def manifest_finalize_cmd(
         "--run",
         help="Run directory containing TASK_PACKET_MANIFEST.json",
     ),
-    status: str | None = typer.Option(
+    status: typing.Optional[str] = typer.Option(
         None,
         "--status",
         help="Override status: passed or failed",
@@ -961,7 +968,7 @@ def manifest_finalize_cmd(
         "--artifact-found",
         help="Found artifact path (repeat option)",
     ),
-    notes: str | None = typer.Option(
+    notes: typing.Optional[str] = typer.Option(
         None,
         "--notes",
         help="Optional manifest notes",
@@ -1091,7 +1098,7 @@ def init_cmd(
         "--platform",
         help="Target platform for operator prompt.",
     ),
-    adapter: str | None = typer.Option(
+    adapter: typing.Optional[str] = typer.Option(
         None,
         "--adapter",
         help="Adapter name to wire (discovered via dopetask.adapters entry points).",
@@ -1213,7 +1220,7 @@ def compile_tasks(
         "mvp",
         help="Compilation mode: mvp, hardening, or full",
     ),
-    max_packets: int | None = typer.Option(
+    max_packets: typing.Optional[int] = typer.Option(
         None,
         help="Maximum number of task packets to generate",
     ),
@@ -1221,11 +1228,11 @@ def compile_tasks(
         Path("./out/tasks"),
         help="Output directory for compiled task packets",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1279,22 +1286,22 @@ def run_task(
         Path("./out/tasks/task_queue.json"),
         help="Path to task queue file",
     ),
-    run_root: Path | None = typer.Option(
+    run_root: typing.Optional[Path] = typer.Option(
         None,
         "--run-root",
         help="Run root directory (default resolves via --run-root, DOPETASK_RUN_ROOT, repo root, then cwd)",
     ),
-    out: Path | None = typer.Option(
+    out: typing.Optional[Path] = typer.Option(
         None,
         "--out",
         help="Deprecated alias for --run-root",
         hidden=True,
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1364,11 +1371,11 @@ def collect_evidence(
         50000,
         help="Maximum characters of evidence to collect",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1399,12 +1406,12 @@ def collect_evidence(
 
 @cli.command()
 def gate_allowlist(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         "--run",
         help="Path to run directory (default <run-root>/<run-id>)",
     ),
-    run_root: Path | None = typer.Option(
+    run_root: typing.Optional[Path] = typer.Option(
         None,
         "--run-root",
         help="Run root used when --run is omitted",
@@ -1417,11 +1424,11 @@ def gate_allowlist(
         True,
         help="Require verification evidence to pass gate",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1439,7 +1446,7 @@ def gate_allowlist(
         "--manifest",
         help="Initialize manifest if missing and append this command record",
     ),
-    rescue_patch: str | None = typer.Option(
+    rescue_patch: typing.Optional[str] = typer.Option(
         None,
         "--rescue-patch",
         help="Write a rescue patch on guard failure (path or 'auto')",
@@ -1449,7 +1456,7 @@ def gate_allowlist(
     _require_module(run_allowlist_gate, "compliance")
     _use_compat_options(project_root)
 
-    selected_run: Path | None = None
+    selected_run: typing.Optional[Path] = None
     manifest_enabled = False
     manifest_started_at = get_manifest_timestamp("deterministic")
     manifest_stdout: list[str] = []
@@ -1516,12 +1523,12 @@ def gate_allowlist(
 
 @cli.command()
 def promote_run(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         "--run",
         help="Path to run directory (default <run-root>/<run-id>)",
     ),
-    run_root: Path | None = typer.Option(
+    run_root: typing.Optional[Path] = typer.Option(
         None,
         "--run-root",
         help="Run root used when --run is omitted",
@@ -1530,11 +1537,11 @@ def promote_run(
         False,
         help="Require RUN_SUMMARY.json to exist",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1552,7 +1559,7 @@ def promote_run(
         "--manifest",
         help="Initialize manifest if missing and append this command record",
     ),
-    rescue_patch: str | None = typer.Option(
+    rescue_patch: typing.Optional[str] = typer.Option(
         None,
         "--rescue-patch",
         help="Write a rescue patch on guard failure (path or 'auto')",
@@ -1562,7 +1569,7 @@ def promote_run(
     _require_module(promote_run_impl, "promotion")
     _use_compat_options(repo_root, project_root)
 
-    selected_run: Path | None = None
+    selected_run: typing.Optional[Path] = None
     manifest_enabled = False
     manifest_started_at = get_manifest_timestamp("deterministic")
     manifest_stdout: list[str] = []
@@ -1625,17 +1632,17 @@ def promote_run(
 
 @cli.command()
 def commit_run(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         "--run",
         help="Path to run directory (default <run-root>/<run-id>)",
     ),
-    run_root: Path | None = typer.Option(
+    run_root: typing.Optional[Path] = typer.Option(
         None,
         "--run-root",
         help="Run root used when --run is omitted",
     ),
-    message: str | None = typer.Option(
+    message: typing.Optional[str] = typer.Option(
         None,
         "--message",
         "-m",
@@ -1660,7 +1667,7 @@ def commit_run(
         "--manifest",
         help="Initialize manifest if missing and append this command record",
     ),
-    rescue_patch: str | None = typer.Option(
+    rescue_patch: typing.Optional[str] = typer.Option(
         None,
         "--rescue-patch",
         help="Write a rescue patch on guard failure (path or 'auto')",
@@ -1684,7 +1691,7 @@ def commit_run(
     """
     from dopetask.git.commit_run import commit_run as commit_run_impl
 
-    selected_run: Path | None = None
+    selected_run: typing.Optional[Path] = None
     manifest_enabled = False
     manifest_started_at = get_manifest_timestamp("deterministic")
     manifest_stdout: list[str] = []
@@ -1773,11 +1780,11 @@ def spec_feedback(
         True,
         help="Only include promoted runs in feedback",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1812,7 +1819,7 @@ def spec_feedback(
 
 @cli.command()
 def loop(
-    loop_id: str | None = typer.Option(
+    loop_id: typing.Optional[str] = typer.Option(
         None,
         help="Loop identifier (auto-generated if not provided)",
     ),
@@ -1824,7 +1831,7 @@ def loop(
         "mvp",
         help="Loop mode: mvp, hardening, or full",
     ),
-    run_task: str | None = typer.Option(
+    run_task: typing.Optional[str] = typer.Option(
         None,
         help="Specific task ID to run in loop",
     ),
@@ -1844,11 +1851,11 @@ def loop(
         42,
         help="Random seed for ordering",
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         help="Repository root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -1918,7 +1925,7 @@ def wt_start(
         "--run",
         help="Run directory for this Task Packet execution",
     ),
-    branch: str | None = typer.Option(
+    branch: typing.Optional[str] = typer.Option(
         None,
         "--branch",
         help="Task branch name (default inferred from run directory)",
@@ -1933,7 +1940,7 @@ def wt_start(
         "--remote",
         help="Remote used for base branch fetch",
     ),
-    worktree_path: Path | None = typer.Option(
+    worktree_path: typing.Optional[Path] = typer.Option(
         None,
         "--worktree-path",
         help="Explicit worktree path (default under out/worktrees)",
@@ -1948,7 +1955,7 @@ def wt_start(
         "--quiet",
         help="Suppress identity banner output",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -2016,7 +2023,7 @@ def commit_sequence_cmd(
         "--quiet",
         help="Suppress identity banner output",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -2082,7 +2089,7 @@ def finish_cmd(
         "--quiet",
         help="Suppress identity banner output",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -2147,7 +2154,7 @@ def docs_refresh_llm(
         "--check",
         help="Check for drift without modifying files (exit 1 on drift)",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -2307,7 +2314,7 @@ def route_handoff(
         "--packet",
         help="Task Packet markdown path",
     ),
-    plan: Path | None = typer.Option(
+    plan: typing.Optional[Path] = typer.Option(
         None,
         "--plan",
         help="Existing ROUTE_PLAN.json path (optional)",
@@ -2351,12 +2358,12 @@ def route_explain(
         "--repo-root",
         help="Repository root path",
     ),
-    packet: Path | None = typer.Option(
+    packet: typing.Optional[Path] = typer.Option(
         None,
         "--packet",
         help="Task Packet markdown path (required when --plan is not provided)",
     ),
-    plan: Path | None = typer.Option(
+    plan: typing.Optional[Path] = typer.Option(
         None,
         "--plan",
         help="Existing ROUTE_PLAN.json path (optional)",
@@ -2491,7 +2498,7 @@ def pr_open(
         "--refresh-llm/--no-refresh-llm",
         help="Run docs refresh-llm before push/PR and include result in report",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -2594,19 +2601,19 @@ def dopemux_compile(
         "mvp",
         help="Compilation mode: mvp, hardening, or full",
     ),
-    max_packets: int | None = typer.Option(
+    max_packets: typing.Optional[int] = typer.Option(
         None,
         help="Maximum number of packets to compile",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2667,19 +2674,19 @@ def dopemux_run(
         ...,
         help="Task packet ID to execute",
     ),
-    run_id: str | None = typer.Option(
+    run_id: typing.Optional[str] = typer.Option(
         None,
         help="Run identifier (auto-generated if not provided)",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2732,7 +2739,7 @@ def dopemux_run(
 
 @dopemux_app.command(name="collect")
 def dopemux_collect(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         help="Specific run folder (auto-selects most recent if not provided)",
     ),
@@ -2744,15 +2751,15 @@ def dopemux_collect(
         50000,
         help="Maximum evidence characters",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2792,7 +2799,7 @@ def dopemux_collect(
 
 @dopemux_app.command(name="gate")
 def dopemux_gate(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         help="Specific run folder (auto-selects most recent if not provided)",
     ),
@@ -2804,15 +2811,15 @@ def dopemux_gate(
         True,
         help="Require verification evidence",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2862,7 +2869,7 @@ def dopemux_gate(
 
 @dopemux_app.command(name="promote")
 def dopemux_promote(
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         help="Specific run folder (auto-selects most recent if not provided)",
     ),
@@ -2870,15 +2877,15 @@ def dopemux_promote(
         True,
         help="Require run summary for promotion",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2928,15 +2935,15 @@ def dopemux_feedback(
         True,
         help="Only process promoted runs",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -2986,7 +2993,7 @@ def dopemux_feedback(
 
 @dopemux_app.command(name="loop")
 def dopemux_loop(
-    loop_id: str | None = typer.Option(
+    loop_id: typing.Optional[str] = typer.Option(
         None,
         help="Loop identifier (auto-generated if not provided)",
     ),
@@ -2994,7 +3001,7 @@ def dopemux_loop(
         "mvp",
         help="Loop mode: mvp, hardening, or full",
     ),
-    run_task: str | None = typer.Option(
+    run_task: typing.Optional[str] = typer.Option(
         None,
         help="Specific task ID to run in loop",
     ),
@@ -3014,15 +3021,15 @@ def dopemux_loop(
         42,
         help="Random seed for ordering",
     ),
-    dopemux_root: Path | None = typer.Option(
+    dopemux_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override Dopemux root detection",
     ),
-    out_root: Path | None = typer.Option(
+    out_root: typing.Optional[Path] = typer.Option(
         None,
         help="Override output root directory",
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         help="Project root directory",
     ),
@@ -3093,12 +3100,12 @@ def doctor_cmd(
         "--require-git",
         help="Fail if git is not available"
     ),
-    repo_root: Path | None = typer.Option(
+    repo_root: typing.Optional[Path] = typer.Option(
         None,
         "--repo-root",
         help="Override repository root path"
     ),
-    project_root: Path | None = typer.Option(
+    project_root: typing.Optional[Path] = typer.Option(
         None,
         "--project-root",
         help="Override project root path"
@@ -3153,7 +3160,7 @@ def doctor_cmd(
 
 @cli.command()
 def upgrade(
-    version: str | None = typer.Option(
+    version: typing.Optional[str] = typer.Option(
         None,
         "--version",
         help="Target version to upgrade/downgrade to",
@@ -3320,7 +3327,7 @@ def upgrade(
 
 @cli.command(name="ci-gate")
 def ci_gate_cmd(
-    out: Path | None = typer.Option(
+    out: typing.Optional[Path] = typer.Option(
         None,
         "--out",
         "-o",
@@ -3337,17 +3344,17 @@ def ci_gate_cmd(
         "--require-git",
         help="Fail if git is not available"
     ),
-    run: Path | None = typer.Option(
+    run: typing.Optional[Path] = typer.Option(
         None,
         "--run",
         help="Run directory to validate (default <run-root>/<run-id>)",
     ),
-    run_root: Path | None = typer.Option(
+    run_root: typing.Optional[Path] = typer.Option(
         None,
         "--run-root",
         help="Run root used when --run is omitted",
     ),
-    runs_root: Path | None = typer.Option(
+    runs_root: typing.Optional[Path] = typer.Option(
         None,
         "--runs-root",
         help="Deprecated alias for --run-root",
@@ -3378,7 +3385,7 @@ def ci_gate_cmd(
         "--manifest",
         help="Initialize manifest if missing and append this command record",
     ),
-    rescue_patch: str | None = typer.Option(
+    rescue_patch: typing.Optional[str] = typer.Option(
         None,
         "--rescue-patch",
         help="Write a rescue patch on guard failure (path or 'auto')",
@@ -3397,7 +3404,7 @@ def ci_gate_cmd(
     """
     from dopetask.ci_gate import run_ci_gate
 
-    selected_run: Path | None = None
+    selected_run: typing.Optional[Path] = None
     manifest_enabled = False
     manifest_started_at = get_manifest_timestamp("deterministic")
     manifest_stdout: list[str] = []
@@ -3699,7 +3706,7 @@ def project_doctor_cmd(
         "--fix",
         help="Apply deterministic repairs before re-checking",
     ),
-    mode: ProjectMode | None = typer.Option(
+    mode: typing.Optional[ProjectMode] = typer.Option(
         None,
         "--mode",
         help="Override target mode used by --fix",
@@ -3770,7 +3777,7 @@ def project_upgrade_cmd(
         "--allow-init-rails",
         help="Initialize missing .dopetaskroot/.dopetask/project.json rails",
     ),
-    require_project_id: str | None = typer.Option(
+    require_project_id: typing.Optional[str] = typer.Option(
         None,
         "--require-project-id",
         help="Refuse unless repo project_id matches.",
@@ -3909,8 +3916,8 @@ bundle_app = typer.Typer(
 def bundle_export(
     last: int = typer.Option(10, help="Number of recent runs/packets to include"),
     out: Path = typer.Option(Path("./out/bundles"), help="Output directory for bundles"),
-    case_id: str | None = typer.Option(None, help="Specific case ID (auto-generated if empty)"),
-    config: Path | None = typer.Option(None, help="Path to bundle config yaml"),
+    case_id: typing.Optional[str] = typer.Option(None, help="Specific case ID (auto-generated if empty)"),
+    config: typing.Optional[Path] = typer.Option(None, help="Path to bundle config yaml"),
 ) -> None:
     """Export a deterministic case bundle."""
     _require_module(BundleExporter, "bundle_exporter")
@@ -3966,7 +3973,7 @@ case_app = typer.Typer(
 @case_app.command(name="audit")
 def case_audit(
     case_dir: Path = typer.Option(..., "--case", help="Path to ingested case directory"),
-    out: Path | None = typer.Option(
+    out: typing.Optional[Path] = typer.Option(
         None,
         "--out",
         help="Output directory for audit artifacts (default: <case>/reports)",

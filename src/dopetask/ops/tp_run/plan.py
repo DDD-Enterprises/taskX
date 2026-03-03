@@ -5,8 +5,9 @@ from __future__ import annotations
 import shlex
 import subprocess
 import time
+import typing
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -29,11 +30,11 @@ class RunOptions:
     slug: str
     run_id: str
     continue_mode: bool = False
-    stop_after: StopAfter | None = None
-    test_cmd: str | None = None
-    pr_title: str | None = None
-    pr_body: str | None = None
-    pr_body_file: Path | None = None
+    stop_after: typing.Optional[StopAfter] = None
+    test_cmd: typing.Optional[str] = None
+    pr_title: typing.Optional[str] = None
+    pr_body: typing.Optional[str] = None
+    pr_body_file: typing.Optional[Path] = None
     wait_merge: bool = False
     wait_timeout_sec: int = 900
     merge_enabled: bool = True
@@ -45,8 +46,8 @@ class RunResult:
 
     exit_code: int
     message: str
-    branch: str | None
-    worktree_path: Path | None
+    branch: typing.Optional[str]
+    worktree_path: typing.Optional[Path]
     merged_confirmed: bool = False
 
 
@@ -85,7 +86,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
     """Execute deterministic tp run stages up through start/banner."""
     repo_root = options.repo_root
     normalized_slug = normalize_slug(options.slug)
-    started_at = datetime.now(UTC).isoformat()
+    started_at = datetime.now(timezone.utc).isoformat()
 
     writer.write_text("PRECHECK.txt", _capture_precheck(repo_root))
 
@@ -107,7 +108,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
                     "branch": None,
                     "worktree_path": None,
                     "start_time": started_at,
-                    "end_time": datetime.now(UTC).isoformat(),
+                    "end_time": datetime.now(timezone.utc).isoformat(),
                 },
             )
             return RunResult(exit_code=1, message=str(exc), branch=None, worktree_path=None)
@@ -124,7 +125,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
                     "branch": None,
                     "worktree_path": None,
                     "start_time": started_at,
-                    "end_time": datetime.now(UTC).isoformat(),
+                    "end_time": datetime.now(timezone.utc).isoformat(),
                     "doctor_branch": doctor.branch,
                 },
             )
@@ -147,7 +148,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
                     "branch": None,
                     "worktree_path": None,
                     "start_time": started_at,
-                    "end_time": datetime.now(UTC).isoformat(),
+                    "end_time": datetime.now(timezone.utc).isoformat(),
                 },
             )
             return RunResult(exit_code=1, message=str(exc), branch=None, worktree_path=None)
@@ -178,7 +179,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
             "branch": branch,
             "worktree_path": str(worktree_path),
             "start_time": started_at,
-            "end_time": datetime.now(UTC).isoformat(),
+            "end_time": datetime.now(timezone.utc).isoformat(),
             "git_shas": {
                 "main_before": run_git(["rev-parse", "HEAD"], repo_root=repo_root).stdout.strip(),
                 "worktree_head": run_git(["-C", str(worktree_path), "rev-parse", "HEAD"], repo_root=repo_root).stdout.strip(),
@@ -248,7 +249,7 @@ def execute_run(options: RunOptions, writer: ProofWriter) -> RunResult:
         return RunResult(exit_code=0, message="stopped after pr", branch=branch, worktree_path=worktree_path)
 
     merged_confirmed = str(pr_payload.get("state", "")).upper() == "MERGED"
-    merge_payload: dict[str, object] | None = None
+    merge_payload: typing.Optional[dict[str, object]] = None
     if options.merge_enabled:
         try:
             merge_payload = merge_pr(tp_id=options.tp_id, mode="squash", repo=repo_root)

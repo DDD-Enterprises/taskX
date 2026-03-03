@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import typing
 from typing import TYPE_CHECKING
 
 from dopetask.pipeline.task_runner.types import (
@@ -117,7 +118,7 @@ def parse_packet_project_identity(
     packet_path: Path,
     *,
     packet_required_header: bool = False,
-) -> ProjectIdentity | None:
+) -> typing.Optional[ProjectIdentity]:
     """Parse PROJECT IDENTITY section without validating full packet structure."""
     content = packet_path.read_text(encoding="utf-8")
     sections = _parse_sections(content)
@@ -246,7 +247,7 @@ def _extract_sources(section_content: str) -> list[str]:
     return sources
 
 
-def _extract_project_identity(section_content: str | None) -> ProjectIdentity | None:
+def _extract_project_identity(section_content: typing.Optional[str]) -> typing.Optional[ProjectIdentity]:
     """Parse optional PROJECT IDENTITY section key/value pairs."""
     if section_content is None:
         return None
@@ -283,7 +284,7 @@ def _extract_project_identity(section_content: str | None) -> ProjectIdentity | 
 
 def _assert_project_identity_header(
     *,
-    project_identity: ProjectIdentity | None,
+    project_identity: typing.Optional[ProjectIdentity],
     packet_required_header: bool,
 ) -> None:
     if packet_required_header and project_identity is None:
@@ -294,10 +295,10 @@ def _assert_project_identity_header(
 
 
 def _extract_commit_plan(
-    section_content: str | None,
+    section_content: typing.Optional[str],
     *,
     packet_path: Path,
-) -> list[CommitStep] | None:
+) -> typing.Optional[list[CommitStep]]:
     """Extract optional commit plan from fenced JSON block."""
     if section_content is None:
         return None
@@ -363,7 +364,7 @@ def _extract_commit_plan(
                 )
             clean_allowlist.append(item.strip())
 
-        verify_commands: list[str] | None = None
+        verify_commands: typing.Optional[list[str]] = None
         if verify is not None:
             if not isinstance(verify, list):
                 raise ValueError(

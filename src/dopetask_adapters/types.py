@@ -1,5 +1,6 @@
 """Type definitions for dopeTask adapters."""
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,4 +40,4 @@ class DopemuxPaths:
     spec_feedback_out: Path
     loop_out: Path
     task_queue_default: Path
-    docs_root: Path | None
+    docs_root: typing.Optional[Path]

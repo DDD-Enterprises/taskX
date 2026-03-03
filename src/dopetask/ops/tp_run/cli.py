@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import typer
@@ -19,22 +20,22 @@ def register(tp_app: typer.Typer) -> None:
     def tp_run(
         tp_id: str = typer.Argument(..., metavar="TP_ID"),
         slug: str = typer.Argument(...),
-        repo: Path | None = typer.Option(None, "--repo", help="Repository path."),
+        repo: typing.Optional[Path] = typer.Option(None, "--repo", help="Repository path."),
         dry_run: bool = typer.Option(False, "--dry-run", help="Generate proof pack without mutating git state."),
         continue_mode: bool = typer.Option(False, "--continue", help="Continue using existing TP worktree."),
-        stop_after: str | None = typer.Option(
+        stop_after: typing.Optional[str] = typer.Option(
             None,
             "--stop-after",
             help="Stop after a stage: doctor|start|test|pr|merge|sync|cleanup.",
         ),
-        test_cmd: str | None = typer.Option(
+        test_cmd: typing.Optional[str] = typer.Option(
             None,
             "--test-cmd",
             help="Optional test command to run inside TP worktree (example: 'pytest -q').",
         ),
-        pr_title: str | None = typer.Option(None, "--pr-title", help="Pull request title override."),
-        pr_body: str | None = typer.Option(None, "--pr-body", help="Pull request body override."),
-        pr_body_file: Path | None = typer.Option(None, "--pr-body-file", help="Pull request body file path."),
+        pr_title: typing.Optional[str] = typer.Option(None, "--pr-title", help="Pull request title override."),
+        pr_body: typing.Optional[str] = typer.Option(None, "--pr-body", help="Pull request body override."),
+        pr_body_file: typing.Optional[Path] = typer.Option(None, "--pr-body-file", help="Pull request body file path."),
         wait_merge: bool = typer.Option(False, "--wait-merge", help="Wait for merged PR state."),
         wait_timeout_sec: int = typer.Option(900, "--wait-timeout-sec", help="Wait timeout in seconds."),
         merge_enabled: bool = typer.Option(True, "--merge/--no-merge", help="Attempt merge after PR creation."),

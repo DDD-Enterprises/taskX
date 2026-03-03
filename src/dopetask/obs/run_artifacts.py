@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import typing
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -49,9 +50,9 @@ def to_pipeline_timestamp_mode(timestamp_mode: str) -> str:
 
 
 def get_default_run_root(
-    cli_run_root: Path | None = None,
+    cli_run_root: typing.Optional[Path] = None,
     *,
-    cwd: Path | None = None,
+    cwd: typing.Optional[Path] = None,
 ) -> Path:
     """Resolve run-root path using canonical precedence."""
     if cli_run_root is not None:
@@ -82,8 +83,8 @@ def make_run_id(prefix: str, timestamp_mode: CanonicalTimestampMode) -> str:
 
 def resolve_run_dir(
     *,
-    run: Path | None,
-    run_root: Path | None,
+    run: typing.Optional[Path],
+    run_root: typing.Optional[Path],
     timestamp_mode: str,
     prefix: str = "RUN",
 ) -> Path:

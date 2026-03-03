@@ -1,4 +1,5 @@
 import re
+import typing
 from pathlib import Path
 from typing import NamedTuple
 
@@ -11,7 +12,7 @@ class BlockMatch(NamedTuple):
     hash: str
     content: str
 
-def find_block(text: str) -> BlockMatch | None:
+def find_block(text: str) -> typing.Optional[BlockMatch]:
     pattern = r"<!-- TASKX:BEGIN operator_system v=1 platform=(.*?) model=(.*?) hash=(.*?) -->\n(.*?)\n<!-- TASKX:END operator_system -->"
     match = re.search(pattern, text, re.DOTALL)
     if match:

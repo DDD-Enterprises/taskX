@@ -2,7 +2,8 @@
 
 import hashlib
 import json
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ def generate_feedback(
     run_paths: list[Path],
     task_queue_path: Path,
     output_dir: Path,
-    conflict_ledger_path: Path | None = None,
+    conflict_ledger_path: typing.Optional[Path] = None,
     timestamp_mode: str = "deterministic",
     max_runs: int = 200,
 ) -> None:
@@ -53,7 +54,7 @@ def generate_feedback(
     generated_at = (
         "1970-01-01T00:00:00Z"
         if timestamp_mode == "deterministic"
-        else datetime.now(UTC).isoformat()
+        else datetime.now(timezone.utc).isoformat()
     )
 
     # Build patch document
@@ -404,7 +405,7 @@ def _write_conflict_ledger_updates(
     patches: list[Patch],
     run_summaries: list[dict[str, Any]],
     output_dir: Path,
-    conflict_ledger_path: Path | None,
+    conflict_ledger_path: typing.Optional[Path],
 ) -> None:
     """Write CONFLICT_LEDGER_UPDATES.md."""
     lines = ["# Conflict Ledger Updates\n"]

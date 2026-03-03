@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from hashlib import sha256
-
-try:
-    from importlib.resources import files
-except ImportError as exc:  # pragma: no cover - python<3.11 unsupported
-    raise RuntimeError("dopeTask requires Python 3.11+ for template loading.") from exc
-
+from importlib.resources import files
 
 MANAGED_FILES: tuple[str, ...] = (
     "PROJECT_INSTRUCTIONS.md",
@@ -74,7 +70,7 @@ def file_hash(text: str) -> str:
     return sha256(text.encode("utf-8")).hexdigest()
 
 
-def extract_block_content(text: str, pack_name: str) -> str | None:
+def extract_block_content(text: str, pack_name: str) -> typing.Optional[str]:
     """Extract current content inside a sentinel block."""
     begin_marker, end_marker = get_sentinels(pack_name)
     lines = text.splitlines()
@@ -123,7 +119,7 @@ def apply_pack_map(text: str, pack_content: dict[str, str]) -> tuple[str, dict[s
     return updated_text, updates
 
 
-def is_enabled_content(content: str | None) -> bool:
+def is_enabled_content(content: typing.Optional[str]) -> bool:
     """Return True when block content represents an enabled pack."""
     if content is None:
         return False
@@ -138,9 +134,9 @@ def get_sentinels(pack_name: str) -> tuple[str, str]:
     return SENTINELS[pack_name]
 
 
-def _locate_block(lines: list[str], begin_marker: str, end_marker: str) -> tuple[int, int] | None:
+def _locate_block(lines: list[str], begin_marker: str, end_marker: str) -> typing.Optional[tuple[int, int]]:
     """Find begin/end marker indices for a block, if present."""
-    begin_idx: int | None = None
+    begin_idx: typing.Optional[int] = None
     for idx, line in enumerate(lines):
         if begin_idx is None:
             if line.strip() == begin_marker:

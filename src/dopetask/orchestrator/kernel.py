@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -288,7 +289,7 @@ def _read_packet_text(packet_path: Path) -> str:
     return packet_path.read_text(encoding="utf-8")
 
 
-def _parse_packet_json(raw_packet: str) -> tuple[dict[str, Any] | None, str | None]:
+def _parse_packet_json(raw_packet: str) -> tuple[typing.Optional[dict[str, Any]], typing.Optional[str]]:
     try:
         payload = json.loads(raw_packet)
     except json.JSONDecodeError as exc:
@@ -311,7 +312,7 @@ def _packet_task_id(packet: dict[str, Any], *, fallback: str) -> str:
     return fallback
 
 
-def _packet_steps(packet: dict[str, Any]) -> tuple[str, ...] | None:
+def _packet_steps(packet: dict[str, Any]) -> typing.Optional[tuple[str, ...]]:
     raw_steps = packet.get("steps")
     if raw_steps is None:
         return None
@@ -373,7 +374,7 @@ def _normalize_reasons(reasons: list[Any]) -> list[str]:
     return normalized
 
 
-def _select_single_step(route_plan: dict[str, Any]) -> dict[str, Any] | None:
+def _select_single_step(route_plan: dict[str, Any]) -> typing.Optional[dict[str, Any]]:
     for step in route_plan.get("steps", []):
         if not isinstance(step, dict):
             continue
@@ -382,7 +383,7 @@ def _select_single_step(route_plan: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
-def _first_incomplete_step(route_plan: dict[str, Any], run_dir: Path) -> str | None:
+def _first_incomplete_step(route_plan: dict[str, Any], run_dir: Path) -> typing.Optional[str]:
     for step in route_plan.get("steps", []):
         if not isinstance(step, dict):
             continue
@@ -400,7 +401,7 @@ def _normalize_step_token(step: str) -> str:
     return normalized.strip("_") or "STEP"
 
 
-def _optional_text(value: Any) -> str | None:
+def _optional_text(value: Any) -> typing.Optional[str]:
     if value is None:
         return None
     return str(value)

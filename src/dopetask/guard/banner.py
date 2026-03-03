@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import typing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -19,11 +20,11 @@ class BannerContext:
     """One-line identity banner context."""
 
     project_id: str
-    project_slug: str | None
-    branch: str | None
-    run_id: str | None
-    origin_url: str | None
-    repo_remote_hint: str | None
+    project_slug: typing.Optional[str]
+    branch: typing.Optional[str]
+    run_id: typing.Optional[str]
+    origin_url: typing.Optional[str]
+    repo_remote_hint: typing.Optional[str]
 
 
 def _use_color() -> bool:
@@ -38,7 +39,7 @@ def _c(text: str, code: str) -> str:
     return f"\033[{code}m{text}\033[0m"
 
 
-def _git(repo_root: Path, *args: str) -> str | None:
+def _git(repo_root: Path, *args: str) -> typing.Optional[str]:
     try:
         out = subprocess.check_output(
             ["git", "-C", str(repo_root), *args],
@@ -52,9 +53,9 @@ def _git(repo_root: Path, *args: str) -> str | None:
 def get_banner_context(
     repo_root: Path,
     project_id: str,
-    project_slug: str | None,
-    repo_remote_hint: str | None,
-    run_dir: Path | None,
+    project_slug: typing.Optional[str],
+    repo_remote_hint: typing.Optional[str],
+    run_dir: typing.Optional[Path],
 ) -> BannerContext:
     """Gather context for command identity banner."""
     branch = _git(repo_root, "rev-parse", "--abbrev-ref", "HEAD")

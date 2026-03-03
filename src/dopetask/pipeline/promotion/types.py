@@ -1,5 +1,6 @@
 """Promotion gate types."""
 
+import typing
 from dataclasses import dataclass
 
 
@@ -25,4 +26,4 @@ class PromotionToken:
     run_dir: str
     allowlist_diff_path: str
     run_envelope_path: str
-    run_summary_path: str | None
+    run_summary_path: typing.Optional[str]

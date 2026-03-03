@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from dopetask.pipeline.task_compiler.types import PacketSource, TaskPacket
@@ -90,7 +91,7 @@ def _parse_spec_requirements(spec_content: str) -> list[dict]:
     return requirements
 
 
-def _categorize_requirement(req: dict, mode: str) -> str | None:
+def _categorize_requirement(req: dict, mode: str) -> typing.Optional[str]:
     """Categorize requirement into packet category.
 
     Returns:
@@ -444,7 +445,7 @@ def compile_task_queue(
     if timestamp_mode == "deterministic":
         generated_at = "1970-01-01T00:00:00Z"
     elif timestamp_mode == "wallclock":
-        generated_at = datetime.now(UTC).isoformat()
+        generated_at = datetime.now(timezone.utc).isoformat()
     else:
         raise ValueError(f"Invalid timestamp_mode: {timestamp_mode}")
 

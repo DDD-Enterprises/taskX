@@ -5,17 +5,10 @@ with no dependency on current working directory or repository structure.
 """
 
 import json
+import typing
 from dataclasses import dataclass
+from importlib.resources import files
 from typing import Any
-
-# Use importlib.resources for Python 3.11+
-try:
-    from importlib.resources import files
-except ImportError as exc:
-    raise RuntimeError(
-        "dopeTask requires Python 3.11+ for importlib.resources. "
-        "Please upgrade Python."
-    ) from exc
 
 
 @dataclass(frozen=True)
@@ -162,7 +155,7 @@ class SchemaRegistry:
 
 
 # Global registry instance (singleton pattern)
-_registry: SchemaRegistry | None = None
+_registry: typing.Optional[SchemaRegistry] = None
 
 
 def get_registry() -> SchemaRegistry:

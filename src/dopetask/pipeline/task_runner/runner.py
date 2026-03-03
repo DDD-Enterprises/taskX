@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import typing
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from dopetask.pipeline.task_runner.parser import parse_task_packet
@@ -19,7 +20,7 @@ def create_run_workspace(
     *,
     task_packet_path: Path,
     output_dir: Path,
-    run_id: str | None = None,
+    run_id: typing.Optional[str] = None,
     timestamp_mode: str = "deterministic",
     pipeline_version: str,
     dry_run: bool = False,
@@ -51,7 +52,7 @@ def create_run_workspace(
     if timestamp_mode == "deterministic":
         generated_at = "1970-01-01T00:00:00Z"
     elif timestamp_mode == "wallclock":
-        generated_at = datetime.now(UTC).isoformat()
+        generated_at = datetime.now(timezone.utc).isoformat()
     else:
         raise ValueError(f"Invalid timestamp_mode: {timestamp_mode}")
 

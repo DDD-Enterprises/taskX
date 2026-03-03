@@ -9,6 +9,8 @@ third-party packages can register adapters automatically.
 
 from __future__ import annotations
 
+import importlib.metadata as importlib_metadata
+import typing
 from typing import TYPE_CHECKING
 
 from dopetask_adapters.base import AdapterInfo, BaseAdapter
@@ -37,17 +39,25 @@ __all__ = [
 ]
 
 
+def _adapter_entry_points() -> typing.Iterable[typing.Any]:
+    """Return adapter entry points across Python 3.9+ metadata APIs."""
+    eps = typing.cast(typing.Any, importlib_metadata.entry_points())
+    if hasattr(eps, "select"):
+        return typing.cast(typing.Iterable[typing.Any], eps.select(group="dopetask.adapters"))
+    if isinstance(eps, dict):
+        return typing.cast(typing.Iterable[typing.Any], eps.get("dopetask.adapters", ()))
+    return typing.cast(
+        typing.Iterable[typing.Any],
+        [ep for ep in eps if getattr(ep, "group", None) == "dopetask.adapters"],
+    )
+
+
 def discover_adapters() -> Iterator[BaseAdapter]:
     """Yield all adapters registered under the ``dopetask.adapters`` entry-point group.
 
-    Uses ``importlib.metadata.entry_points(group=...)`` (Python 3.10+).
-    Since this project requires Python >=3.11, the ``group`` parameter is always available.
+    Supports both selectable and legacy ``importlib.metadata.entry_points()`` return values.
     """
-    from importlib.metadata import entry_points
-
-    eps = entry_points(group="dopetask.adapters")
-
-    for ep in eps:
+    for ep in _adapter_entry_points():
         adapter_cls = ep.load()
         if isinstance(adapter_cls, type) and issubclass(adapter_cls, BaseAdapter):
             yield adapter_cls()
@@ -57,7 +67,7 @@ def discover_adapters() -> Iterator[BaseAdapter]:
                 yield instance
 
 
-def get_adapter(name: str) -> BaseAdapter | None:
+def get_adapter(name: str) -> typing.Optional[BaseAdapter]:
     """Return the first adapter whose ``name`` matches, or ``None``."""
     for adapter in discover_adapters():
         if adapter.name == name:

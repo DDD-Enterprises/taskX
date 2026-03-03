@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from typing import TYPE_CHECKING
 
 from dopetask.router.availability import (
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def parse_steps(steps: list[str] | None) -> tuple[str, ...]:
+def parse_steps(steps: typing.Optional[list[str]]) -> tuple[str, ...]:
     """Parse CLI step flags (repeatable and comma-separated)."""
     if not steps:
         return DEFAULT_STEPS
@@ -76,7 +77,7 @@ def build_route_plan(
     *,
     repo_root: Path,
     packet_path: Path,
-    steps: tuple[str, ...] | None = None,
+    steps: typing.Optional[tuple[str, ...]] = None,
 ) -> RoutePlan:
     """Build deterministic plan for packet + steps."""
     resolved_repo_root = repo_root.resolve()

@@ -1,7 +1,8 @@
 """Loop orchestrator - runs lifecycle stages A5→A6→A7→A8→A9."""
 
 import hashlib
-from datetime import UTC, datetime
+import typing
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +29,7 @@ def run_loop(
     loop_dir: Path,
     inputs: LoopInputs,
     timestamp_mode: str = "deterministic",
-    runs_path: Path | None = None,
+    runs_path: typing.Optional[Path] = None,
 ) -> None:
     """Run the full lifecycle loop.
 
@@ -418,7 +419,7 @@ def _run_spec_feedback(
     timestamp_mode: str,
     stop: bool,
     compile_result: StageResult,
-    runs_path: Path | None,
+    runs_path: typing.Optional[Path],
 ) -> StageResult:
     """Run A9 spec feedback stage (optional)."""
     _ = compile_result
@@ -452,7 +453,7 @@ def _run_spec_feedback(
 
         # Optional conflict ledger
         _cl_path = loop_dir / "spec_mine" / "DESIGN_CONFLICT_LEDGER_V2.md"
-        conflict_ledger_path: Path | None = _cl_path if _cl_path.exists() else None
+        conflict_ledger_path: typing.Optional[Path] = _cl_path if _cl_path.exists() else None
 
         # Call A9 feedback
         generate_feedback(
@@ -524,7 +525,7 @@ def _get_timestamp(mode: str) -> str:
     if mode == "deterministic":
         return "1970-01-01T00:00:00Z"
     else:
-        return datetime.now(UTC).isoformat()
+        return datetime.now(timezone.utc).isoformat()
 
 
 def _compute_stage_hash(loop_dir: Path, outputs: list[str]) -> str:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import typing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -15,7 +16,7 @@ class GitState:
     """Captured git checkout state for restore operations."""
 
     mode: str
-    branch: str | None
+    branch: typing.Optional[str]
     head_sha: str
 
 
@@ -60,7 +61,7 @@ def capture_git_state(repo_root: Path) -> GitState:
     return GitState(mode="branch", branch=branch, head_sha=head_sha)
 
 
-def current_branch(repo_root: Path) -> str | None:
+def current_branch(repo_root: Path) -> typing.Optional[str]:
     """Return the current branch name, or None when detached."""
     branch = _run_git(repo_root.resolve(), ["rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout.strip()
     if branch == "HEAD":

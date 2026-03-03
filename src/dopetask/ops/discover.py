@@ -1,7 +1,8 @@
+import typing
 from pathlib import Path
 
 
-def discover_instruction_file(repo_root: Path) -> Path | None:
+def discover_instruction_file(repo_root: Path) -> typing.Optional[Path]:
     candidates = [
         ".claude/CLAUDE.md",
         "CLAUDE.md",

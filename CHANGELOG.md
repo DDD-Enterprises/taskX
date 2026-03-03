@@ -9,14 +9,16 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 ### Added
 
 - Governance and contribution documentation.
+- Python 3.9 compatibility coverage for TOML parsing and adapter entry-point discovery.
 
 ### Changed
 
-- N/A
+- Lowered the supported Python floor from 3.11 to 3.9.
+- Updated packaging metadata, lint/type targets, and lock resolution to support Python 3.9+ environments.
 
 ### Fixed
 
-- N/A
+- Removed Python 3.10+/3.11-only syntax and stdlib assumptions that blocked installation or runtime use on Python 3.9.
 
 ## [0.1.3] - 2026-02-21
 

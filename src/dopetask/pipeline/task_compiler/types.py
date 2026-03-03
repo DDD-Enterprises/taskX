@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass, field
 
 
@@ -10,7 +11,7 @@ class PacketSource:
     """Source file citation."""
 
     path: str  # Repo-relative
-    heading_text: str | None = None
+    heading_text: typing.Optional[str] = None
 
 
 @dataclass

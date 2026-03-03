@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from collections.abc import Iterable
 from copy import deepcopy
 from pathlib import Path
@@ -30,7 +31,7 @@ def write_packet(
     repo_root: Path,
     *,
     name: str = "PACKET.md",
-    contents: str | None = None,
+    contents: typing.Optional[str] = None,
 ) -> Path:
     """Create a simple packet file."""
     packet_path = repo_root / name
@@ -41,9 +42,9 @@ def write_packet(
 
 def build_availability_config(
     *,
-    policy_overrides: dict[str, Any] | None = None,
-    models: dict[str, Any] | None = None,
-    runners: dict[str, Any] | None = None,
+    policy_overrides: typing.Optional[dict[str, Any]] = None,
+    models: typing.Optional[dict[str, Any]] = None,
+    runners: typing.Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Return a route availability config derived from the template."""
     template = deepcopy(AVAILABILITY_CONFIG_TEMPLATE)
@@ -59,9 +60,9 @@ def build_availability_config(
 def write_availability(
     repo_root: Path,
     *,
-    policy_overrides: dict[str, Any] | None = None,
-    models: dict[str, Any] | None = None,
-    runners: dict[str, Any] | None = None,
+    policy_overrides: typing.Optional[dict[str, Any]] = None,
+    models: typing.Optional[dict[str, Any]] = None,
+    runners: typing.Optional[dict[str, Any]] = None,
 ) -> Path:
     """Write availability.yaml under .dopetask/runtime."""
     config = build_availability_config(

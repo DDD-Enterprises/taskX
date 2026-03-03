@@ -5,12 +5,12 @@ for customizing marker priorities and project selection rules.
 """
 
 import json
-
-# Use tomllib for 3.11+
-import tomllib
+import typing
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+
+from dopetask.utils.toml_compat import tomllib
 
 ProjectType = Literal["python", "node", "go", "rust", "unknown"]
 
@@ -30,7 +30,7 @@ class ProjectSelector:
     """Rules for selecting a project in multi-project repos."""
 
     prefer_paths: list[str] = field(default_factory=list)
-    default_project_root: str | None = None
+    default_project_root: typing.Optional[str] = None
     ignore_paths: list[str] = field(default_factory=list)
 
 
@@ -83,7 +83,7 @@ class RepoConfig:
         )
 
 
-def load_repo_config(workspace_root: Path) -> RepoConfig | None:
+def load_repo_config(workspace_root: Path) -> typing.Optional[RepoConfig]:
     """Load repository configuration from .chatx/repo.toml or .chatx/repo.json.
 
     Priority order:

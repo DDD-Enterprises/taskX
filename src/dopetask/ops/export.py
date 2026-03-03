@@ -1,4 +1,5 @@
 import hashlib
+import typing
 from pathlib import Path
 
 import yaml  # type: ignore[import-untyped]
@@ -13,8 +14,8 @@ def load_profile(profile_path: Path) -> dict:
 def export_prompt(
     profile: dict,
     templates_dir: Path,
-    platform_override: str | None = None,
-    model_override: str | None = None,
+    platform_override: typing.Optional[str] = None,
+    model_override: typing.Optional[str] = None,
     dopetask_version: str = "UNKNOWN",
     git_hash: str = "UNKNOWN"
 ) -> str:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import typer
@@ -19,7 +20,7 @@ app = typer.Typer(
 
 @app.command("doctor")
 def doctor(
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -47,7 +48,7 @@ def doctor(
 def start(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
     slug: str = typer.Argument(...),
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -76,7 +77,7 @@ def start(
 @app.command("status")
 def status(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -106,9 +107,9 @@ def status(
 def pr(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
     title: str = typer.Option(..., "--title", help="Pull request title."),
-    body: str | None = typer.Option(None, "--body", help="Pull request body text."),
-    body_file: Path | None = typer.Option(None, "--body-file", help="Pull request body file path."),
-    repo: Path | None = typer.Option(
+    body: typing.Optional[str] = typer.Option(None, "--body", help="Pull request body text."),
+    body_file: typing.Optional[Path] = typer.Option(None, "--body-file", help="Pull request body file path."),
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -140,7 +141,7 @@ def merge(
     squash: bool = typer.Option(False, "--squash", help="Use squash merge mode."),
     merge_flag: bool = typer.Option(False, "--merge", help="Use merge commit mode."),
     rebase: bool = typer.Option(False, "--rebase", help="Use rebase merge mode."),
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -169,7 +170,7 @@ def merge(
 
 @app.command("sync-main")
 def sync_main_cmd(
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -190,7 +191,7 @@ def sync_main_cmd(
 @app.command("cleanup")
 def cleanup(
     tp_id: str = typer.Argument(..., metavar="TP_ID"),
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",
@@ -212,7 +213,7 @@ def cleanup(
 
 @app.command("list")
 def list_cmd(
-    repo: Path | None = typer.Option(
+    repo: typing.Optional[Path] = typer.Option(
         None,
         "--repo",
         help="Repository path (defaults to current working directory).",

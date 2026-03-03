@@ -7,6 +7,7 @@ Historically, the ops toolchain exposed hashing/compilation helpers via
 
 from __future__ import annotations
 
+import typing
 from typing import TYPE_CHECKING, Any
 
 from dopetask.ops.export import (
@@ -38,8 +39,8 @@ def load_profile(path: Path) -> dict[str, Any]:
 def compile_prompt(
     profile: dict[str, Any],
     templates_dir: Path,
-    platform_override: str | None = None,
-    model_override: str | None = None,
+    platform_override: typing.Optional[str] = None,
+    model_override: typing.Optional[str] = None,
     *,
     dopetask_version: str = "UNKNOWN",
     git_hash: str = "UNKNOWN",

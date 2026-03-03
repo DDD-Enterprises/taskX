@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import typing
 from pathlib import Path
 from subprocess import CompletedProcess
 
@@ -34,7 +35,7 @@ def _write_packet(repo_root: Path, text: str = "# Packet\n") -> Path:
     return packet
 
 
-def _run(repo_root: Path, args: list[str], expect: int | None = None) -> CompletedProcess:
+def _run(repo_root: Path, args: list[str], expect: typing.Optional[int] = None) -> CompletedProcess:
     result = subprocess.run(
         [sys.executable, "-m", "dopetask", *args],
         cwd=repo_root,

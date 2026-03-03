@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dopetask.pipeline.evidence.types import Claim, RunStatus
@@ -75,7 +75,7 @@ def collect_evidence(
     if timestamp_mode == "deterministic":
         generated_at = "1970-01-01T00:00:00Z"
     elif timestamp_mode == "wallclock":
-        generated_at = datetime.now(UTC).isoformat()
+        generated_at = datetime.now(timezone.utc).isoformat()
     else:
         raise ValueError(f"Invalid timestamp_mode: {timestamp_mode}")
 

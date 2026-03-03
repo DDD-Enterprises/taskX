@@ -2,8 +2,9 @@
 
 import hashlib
 import json
+import typing
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -155,7 +156,7 @@ def quarantine_invalid_json(
     schema_name: str,
     error: Exception,
     quarantine_dir: Path,
-    run_id: str | None,
+    run_id: typing.Optional[str],
     intended_path: Path,
     allow_raw: bool,
 ) -> Path:
@@ -176,7 +177,7 @@ def quarantine_invalid_json(
     quarantine_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate deterministic filename
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_part = run_id if run_id else "no_run"
     filename = f"{schema_name}__{run_part}__{timestamp}.json"
     quarantine_path = quarantine_dir / filename
@@ -187,7 +188,7 @@ def quarantine_invalid_json(
     # Build quarantine record
     quarantine_record = {
         "schema_name": schema_name,
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "run_id": run_id,
         "intended_path": str(intended_path),
         "error": str(error),
@@ -206,8 +207,8 @@ def write_json_strict(
     data: dict,
     output_path: Path,
     schema_name: str,
-    run_id: str | None = None,
-    quarantine_dir: Path | None = None,
+    run_id: typing.Optional[str] = None,
+    quarantine_dir: typing.Optional[Path] = None,
     allow_raw_in_quarantine: bool = False,
 ) -> None:
     """Write JSON with strict schema validation and quarantine on failure.

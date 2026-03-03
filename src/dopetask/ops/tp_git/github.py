@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -61,9 +62,9 @@ def pr_create(
     *,
     tp_id: str,
     title: str,
-    body: str | None = None,
-    body_file: Path | None = None,
-    repo: Path | None = None,
+    body: typing.Optional[str] = None,
+    body_file: typing.Optional[Path] = None,
+    repo: typing.Optional[Path] = None,
 ) -> dict[str, Any]:
     """Push TP branch and open PR via gh."""
     repo_root = resolve_repo_root(repo)
@@ -97,7 +98,7 @@ def pr_create(
     return viewed
 
 
-def pr_status(*, tp_id: str, repo: Path | None = None) -> dict[str, Any]:
+def pr_status(*, tp_id: str, repo: typing.Optional[Path] = None) -> dict[str, Any]:
     """Return local/worktree status plus PR metadata if available."""
     repo_root = resolve_repo_root(repo)
     worktree_path = _worktree_for_tp(repo_root, tp_id)
@@ -124,7 +125,7 @@ def merge_pr(
     *,
     tp_id: str,
     mode: str = "squash",
-    repo: Path | None = None,
+    repo: typing.Optional[Path] = None,
 ) -> dict[str, Any]:
     """Attempt auto-merge and fail closed when unsupported."""
     if mode not in {"squash", "merge", "rebase"}:

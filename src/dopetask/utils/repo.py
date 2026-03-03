@@ -1,6 +1,7 @@
 """Repository root detection and project type inference."""
 
 import fnmatch
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -10,6 +11,7 @@ from dopetask.utils.repo_config import (
     RepoConfig,
     load_repo_config,
 )
+from dopetask.utils.toml_compat import tomllib
 
 ProjectType = Literal["python", "node", "go", "rust", "unknown"]
 
@@ -37,7 +39,7 @@ class RepoScope:
 
 def detect_repo_root(
     start: Path,
-    repo_root_override: Path | None = None,
+    repo_root_override: typing.Optional[Path] = None,
 ) -> RepoInfo:
     """
     Detect repository root and project type.
@@ -145,7 +147,7 @@ def find_dopetask_repo_root(
     start_path: Path,
     *,
     allow_pyproject_fallback: bool = True,
-) -> Path | None:
+) -> typing.Optional[Path]:
     """
     Find dopeTask repository root by searching for .dopetaskroot marker.
 
@@ -160,8 +162,6 @@ def find_dopetask_repo_root(
     Returns:
         Path to repo root, or None if not found
     """
-    import tomllib
-
     current = start_path.resolve()
 
     while True:
@@ -249,8 +249,8 @@ def require_dopetask_repo_root(
 
 def detect_repo_scope(
     start: Path,
-    repo_root_override: Path | None = None,
-    project_root_override: Path | None = None,
+    repo_root_override: typing.Optional[Path] = None,
+    project_root_override: typing.Optional[Path] = None,
 ) -> RepoScope:
     """
     Detect workspace and project roots for mono-repo support.
@@ -342,7 +342,7 @@ def _detect_workspace_root(start: Path) -> tuple[Path, str]:
 def _detect_project_root(
     start: Path,
     workspace_root: Path,
-    config: RepoConfig | None,
+    config: typing.Optional[RepoConfig],
 ) -> tuple[Path, str, ProjectType]:
     """
     Detect project root within workspace using markers.
@@ -403,7 +403,7 @@ def _detect_project_root(
 
 def _infer_project_type_from_config(
     directory: Path,
-    config: RepoConfig | None,
+    config: typing.Optional[RepoConfig],
 ) -> ProjectType:
     """Infer project type from directory markers using config or defaults."""
     if config and config.project_markers:
@@ -419,7 +419,7 @@ def _infer_project_type_from_config(
 
 def scan_projects(
     workspace_root: Path,
-    config: RepoConfig | None = None,
+    config: typing.Optional[RepoConfig] = None,
 ) -> list[RepoInfo]:
     """
     Scan workspace for all project roots.

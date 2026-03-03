@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from typing import TYPE_CHECKING
 
 from typer.testing import CliRunner
@@ -149,7 +150,7 @@ def test_doctor_warns_when_envrc_present_direnv_missing(tmp_path: Path, monkeypa
     repo_root.mkdir(parents=True, exist_ok=True)
     (repo_root / ".envrc").write_text(EXPECTED_ENVRC, encoding="utf-8")
 
-    def _fake_which(binary: str) -> str | None:
+    def _fake_which(binary: str) -> typing.Optional[str]:
         if binary == "direnv":
             return None
         if binary == "git":

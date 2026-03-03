@@ -7,7 +7,7 @@ CLI entrypoint after install: `dopetask`
 
 ## Release Process
 
-1. Bump version in `pyproject.toml`
+1. Bump version in `pyproject.toml` and `src/dopetask/__init__.py`
 2. Commit
 3. Tag: `git tag vX.Y.Z`
 4. Push tag
@@ -15,11 +15,11 @@ CLI entrypoint after install: `dopetask`
 
 ## Release checklist
 
-1. Update version
-2. Changelog
-3. Verify
+1. Update version in both version sources of truth
+2. Move release notes from `Unreleased` into a dated version entry in `CHANGELOG.md`
+3. Verify locally
 4. Tag
-5. Publish
+5. Publish from CI
 
 ## Preparing the release
 
@@ -53,7 +53,11 @@ uv build
 
 Do not publish from laptops or local developer machines. Publishing occurs in CI only after a release tag is pushed.
 
-If your repo uses a local release verification script, run it before tagging.
+If you want the repo’s local verification wrapper, run:
+
+```bash
+bash scripts/taskx_release_local.sh
+```
 
 ## Tagging and publishing
 
@@ -80,10 +84,9 @@ After pushing the tag, your GitHub Actions release workflow should:
 
 ## Security & Provenance Gates
 
-1. Dependency scan must pass (`pip-audit --strict`) in CI.
-2. Release artifact provenance attestation is generated in CI.
-3. Container provenance attestation is generated in CI.
-4. Release remains tag-gated and fails on tag/version mismatch.
+1. Release artifact provenance attestation is generated in CI.
+2. Release hashes are generated in CI for the built distribution files.
+3. Release remains tag-gated and fails on tag/version mismatch.
 
 ## Provenance Expectations
 
